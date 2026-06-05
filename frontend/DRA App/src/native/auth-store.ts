@@ -1,5 +1,7 @@
-import type { UserData } from "./types";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { auth, setToken, clearToken } from "./api";
+import type { BackendUser } from "./api";
+import type { UserData } from "./types";
 
 const USERS_KEY = "dra.studentProfiles";
 const SESSION_KEY = "dra.activeStudentId";
@@ -36,35 +38,83 @@ async function writeUsers(users: UserData[]) {
   window.localStorage.setItem(USERS_KEY, JSON.stringify(users));
 }
 
-function normalizeUserId(studentId: string) {
-  return studentId.trim().replace(/\s+/g, "").toUpperCase();
+// DD/MM/YYYY → YYYY-MM-DD for the backend date_of_birth field
+function parseDobToISO(dob: string): string | undefined {
+  if (!dob) return undefined;
+  const parts = dob.split("/");
+  if (parts.length !== 3) return undefined;
+  const [d, m, y] = parts;
+  if (!d || !m || !y) return undefined;
+  return `${y}-${m.padStart(2, "0")}-${d.padStart(2, "0")}`;
+}
+
+function backendUserToUserData(u: BackendUser): UserData {
+  return {
+    studentId: u.user_id,
+    fullName: u.full_name,
+    email: u.email,
+    university: u.university ?? "",
+    course: u.course ?? "",
+    yearOfStudy: u.year_of_study != null ? String(u.year_of_study) : "",
+    participationType: u.participation_type?.toLowerCase() === "team" ? "Team" : "Individual",
+    teamName: u.team_name ?? "",
+    age: "",
+    dateOfBirth: "",
+    phoneNumber: "",
+    password: "",
+  };
 }
 
 export async function generateStudentId() {
   const users = await readUsers();
   const year = "2026";
-  const next = users.reduce((max, user) => {
-    if (!user.studentId.startsWith(year) || user.studentId.length !== 12) return max;
-    const sequence = Number(user.studentId.slice(4));
-    return Number.isFinite(sequence) ? Math.max(max, sequence) : max;
-  }, 0) + 1;
+  const next =
+    users.reduce((max, user) => {
+      if (!user.studentId.startsWith(year) || user.studentId.length !== 12) return max;
+      const sequence = Number(user.studentId.slice(4));
+      return Number.isFinite(sequence) ? Math.max(max, sequence) : max;
+    }, 0) + 1;
   return `${year}${String(next).padStart(8, "0")}`;
 }
 
-export async function saveRegisteredUser(user: UserData) {
-  const users = await readUsers();
-  const normalizedUser = { ...user, studentId: normalizeUserId(user.studentId), password: user.password.trim() };
-  const withoutDuplicate = users.filter((item) => normalizeUserId(item.studentId) !== normalizedUser.studentId && item.email.toLowerCase() !== normalizedUser.email.toLowerCase());
-  await writeUsers([...withoutDuplicate, normalizedUser]);
-  await setActiveStudentId(normalizedUser.studentId);
-  return normalizedUser;
+export async function saveRegisteredUser(user: UserData): Promise<UserData> {
+  const { user: backendUser, token } = await auth.register({
+    full_name: user.fullName,
+    email: user.email,
+    password: user.password,
+    age: user.age ? parseInt(user.age) : undefined,
+    date_of_birth: parseDobToISO(user.dateOfBirth),
+    phone_number: user.phoneNumber || undefined,
+    university: user.university || undefined,
+    course: user.course || undefined,
+    year_of_study: user.yearOfStudy ? parseInt(user.yearOfStudy) : undefined,
+    participation_type: user.participationType.toLowerCase(),
+    team_name: user.teamName || undefined,
+  });
+
+  setToken(token);
+  const cachedUser = backendUserToUserData(backendUser);
+  const existing = await readUsers();
+  const deduped = existing.filter((u) => u.studentId !== cachedUser.studentId && u.email !== cachedUser.email);
+  await writeUsers([...deduped, cachedUser]);
+  await setActiveStudentId(cachedUser.studentId);
+  return cachedUser;
 }
 
-export async function signInUser(studentId: string, password: string) {
-  const normalized = normalizeUserId(studentId);
-  const normalizedPassword = password.trim();
-  const users = await readUsers();
-  return users.find((user) => normalizeUserId(user.studentId) === normalized && user.password.trim() === normalizedPassword) || null;
+// Note: signature changed — now accepts email instead of studentId to match /auth/login
+export async function signInUser(email: string, password: string): Promise<UserData | null> {
+  try {
+    const { user: backendUser, token } = await auth.login(email, password);
+    setToken(token);
+    const cachedUser = backendUserToUserData(backendUser);
+    const existing = await readUsers();
+    const deduped = existing.filter((u) => u.studentId !== cachedUser.studentId);
+    await writeUsers([...deduped, cachedUser]);
+    await setActiveStudentId(cachedUser.studentId);
+    return cachedUser;
+  } catch {
+    return null;
+  }
 }
 
 export async function setActiveStudentId(studentId: string) {
@@ -76,14 +126,17 @@ export async function setActiveStudentId(studentId: string) {
   window.localStorage.setItem(SESSION_KEY, studentId);
 }
 
-export async function getActiveUser() {
-  const activeId = hasStorage() ? window.localStorage.getItem(SESSION_KEY) : (await AsyncStorage.getItem(SESSION_KEY)) || memoryActiveStudentId;
+export async function getActiveUser(): Promise<UserData | null> {
+  const activeId = hasStorage()
+    ? window.localStorage.getItem(SESSION_KEY)
+    : (await AsyncStorage.getItem(SESSION_KEY)) || memoryActiveStudentId;
   if (!activeId) return null;
   const users = await readUsers();
   return users.find((user) => user.studentId === activeId) || null;
 }
 
 export async function clearActiveUser() {
+  clearToken();
   memoryActiveStudentId = "";
   if (!hasStorage()) {
     await AsyncStorage.removeItem(SESSION_KEY);
