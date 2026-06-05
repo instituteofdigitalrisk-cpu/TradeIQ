@@ -6,16 +6,16 @@ import { C, font } from "../constants";
 import type { UserData } from "../types";
 import { AppButton, Field, GlassCard, HeaderMini } from "../components/ui";
 
-export function SignInPage({ onSubmit, onBack }: { onSubmit: (studentId: string, password: string) => Promise<UserData | null>; onBack: () => void }) {
-  const [studentId, setStudentId] = useState("");
+export function SignInPage({ onSubmit, onBack }: { onSubmit: (email: string, password: string) => Promise<UserData | null>; onBack: () => void }) {
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
   const handleSubmit = async () => {
     setSubmitting(true);
-    const user = await onSubmit(studentId, password);
-    if (!user) setError("No matching User ID and password found.");
+    const user = await onSubmit(email, password);
+    if (!user) setError("Invalid email or password.");
     setSubmitting(false);
   };
 
@@ -28,12 +28,12 @@ export function SignInPage({ onSubmit, onBack }: { onSubmit: (studentId: string,
             Back
           </Text>
         </TouchableOpacity>
-        <HeaderMini title="Log In" subtitle="Use your User ID and password" />
+        <HeaderMini title="Log In" subtitle="Use your email and password" />
         <GlassCard style={{ padding: 18, gap: 15 }} accent={C.cyan}>
-          <Field label="User ID / Student ID" value={studentId} onChangeText={(value) => {
+          <Field label="Email" value={email} onChangeText={(value) => {
             setError("");
-            setStudentId(value.toUpperCase());
-          }} placeholder="202600000001" />
+            setEmail(value);
+          }} placeholder="john@university.edu" keyboardType="email-address" />
           <Field label="Password" value={password} onChangeText={(value) => {
             setError("");
             setPassword(value);
@@ -43,7 +43,7 @@ export function SignInPage({ onSubmit, onBack }: { onSubmit: (studentId: string,
               {error}
             </Text>
           ) : null}
-          <AppButton label={submitting ? "Signing In..." : "Sign In"} onPress={handleSubmit} disabled={submitting || !studentId.trim() || !password.trim()} icon={<LogIn size={18} color={C.green} />} />
+          <AppButton label={submitting ? "Signing In..." : "Sign In"} onPress={handleSubmit} disabled={submitting || !email.trim() || !password.trim()} icon={<LogIn size={18} color={C.green} />} />
         </GlassCard>
       </ScrollView>
     </SafeAreaView>

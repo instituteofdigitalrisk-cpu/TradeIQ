@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { ActivityIndicator, View } from "react-native";
 import type { Flow, UserData } from "./types";
-import { getActiveUser, saveRegisteredUser, setActiveStudentId, signInUser } from "./auth-store";
+import { getActiveUser, saveRegisteredUser, signInUser } from "./auth-store";
 import { LandingPage } from "./pages/landing-page";
 import { RegistrationPage } from "./pages/registration-page";
 import { OnboardingPage } from "./pages/onboarding-page";
@@ -42,10 +42,9 @@ export default function ChallengeApp() {
     return (
       <SignInPage
         onBack={() => setFlow("landing")}
-        onSubmit={async (studentId, password) => {
-          const user = await signInUser(studentId, password);
+        onSubmit={async (email, password) => {
+          const user = await signInUser(email, password);
           if (!user) return null;
-          await setActiveStudentId(user.studentId);
           setUserData(user);
           setFlow("app");
           return user;
