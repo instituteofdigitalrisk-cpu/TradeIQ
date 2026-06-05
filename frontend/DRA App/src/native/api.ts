@@ -152,9 +152,21 @@ export const portfolio = {
 // ── Market ─────────────────────────────────────────────────────────────────────
 export type MarketPrice = { ticker: string; price: number };
 
+export type StockSearchResult = {
+  ticker: string;
+  name: string | null;
+  exchange: string | null;
+  sector: string | null;
+  type: string | null;
+};
+
 export const market = {
   getPrice(ticker: string): Promise<MarketPrice> {
     return apiFetch<MarketPrice>(`/market/price/${ticker}`);
+  },
+
+  search(query: string): Promise<{ results: StockSearchResult[] }> {
+    return apiFetch(`/market/search?q=${encodeURIComponent(query)}`);
   },
 };
 

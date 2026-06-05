@@ -1,9 +1,10 @@
-import { Check, DownloadCloud, Plus, X } from "lucide-react-native";
-import { useEffect, useMemo, useState } from "react";
-import { ScrollView, Text, TouchableOpacity, useWindowDimensions, View } from "react-native";
-import { assetOptions, C, font, glossary, glossaryTerms, sectorOptions } from "../constants";
+import { Check, Plus, X } from "lucide-react-native";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { ActivityIndicator, ScrollView, Text, TextInput, TouchableOpacity, useWindowDimensions, View } from "react-native";
+import { C, font, glossary, glossaryTerms, sectorOptions } from "../constants";
 import { getPortfolioDraft, savePortfolioDraft } from "../portfolio-store";
-import { portfolio } from "../api";
+import { market, portfolio } from "../api";
+import type { StockSearchResult } from "../api";
 import type { Position, PortfolioSetup, UserData } from "../types";
 import { wordCount } from "../utils";
 import { AppButton, Field, GlassCard, Pill, SectionTitle } from "../components/ui";
@@ -16,14 +17,13 @@ function today() {
 }
 
 function makeTrade(studentId: string, index: number): Position {
-  const ticker = assetOptions[index % assetOptions.length];
   return {
     id: `${Date.now()}-${index}`,
     tradeId: `TRD${String(index + 1).padStart(6, "0")}`,
     studentId,
     addedBy: studentId,
     tradeDate: today(),
-    stockTicker: ticker,
+    stockTicker: "",
     stockName: "",
     sector: "Technology",
     allocationPercent: 10,
@@ -53,41 +53,128 @@ function OptionRow({ label, options, value, onChange }: { label: string; options
   );
 }
 
-async function fetchQuote(ticker: string) {
-  const symbol = ticker.trim().toUpperCase();
-  if (!symbol) return null;
-  try {
-    const yahoo = await fetch(`https://query1.finance.yahoo.com/v7/finance/quote?symbols=${encodeURIComponent(symbol)}`);
-    const json = await yahoo.json();
-    const quote = json?.quoteResponse?.result?.[0];
-    if (quote) {
-      return {
-        stockName: quote.longName || quote.shortName || symbol,
-        sector: quote.sector || "Foreign Stock",
-        price: quote.regularMarketPrice ? String(quote.regularMarketPrice) : "",
-      };
-    }
-  } catch {
-    // The browser may block Yahoo CORS; Finnhub is the optional keyed fallback.
-  }
+function StockSearchField({
+  ticker,
+  onSelect,
+}: {
+  ticker: string;
+  onSelect: (data: { ticker: string; name: string; sector: string; buyPrice: string; currentSellPrice: string }) => void;
+}) {
+  const [query, setQuery] = useState(ticker);
+  const [results, setResults] = useState<StockSearchResult[]>([]);
+  const [searching, setSearching] = useState(false);
+  const [showResults, setShowResults] = useState(false);
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const key = process.env.EXPO_PUBLIC_FINNHUB_API_KEY;
-  if (!key) return null;
-  try {
-    const [profileResponse, quoteResponse] = await Promise.all([
-      fetch(`https://finnhub.io/api/v1/stock/profile2?symbol=${encodeURIComponent(symbol)}&token=${key}`),
-      fetch(`https://finnhub.io/api/v1/quote?symbol=${encodeURIComponent(symbol)}&token=${key}`),
-    ]);
-    const profile = await profileResponse.json();
-    const quote = await quoteResponse.json();
-    return {
-      stockName: profile.name || symbol,
-      sector: profile.finnhubIndustry || "Foreign Stock",
-      price: quote.c ? String(quote.c) : "",
-    };
-  } catch {
-    return null;
-  }
+  const handleChange = (text: string) => {
+    setQuery(text.toUpperCase());
+    setShowResults(false);
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    if (text.length < 2) {
+      setResults([]);
+      return;
+    }
+    debounceRef.current = setTimeout(async () => {
+      setSearching(true);
+      try {
+        const res = await market.search(text);
+        setResults(res.results.slice(0, 6));
+        setShowResults(res.results.length > 0);
+      } catch {
+        setResults([]);
+      } finally {
+        setSearching(false);
+      }
+    }, 400);
+  };
+
+  const handleSelect = async (result: StockSearchResult) => {
+    setQuery(result.ticker);
+    setShowResults(false);
+    setResults([]);
+    setSearching(true);
+    try {
+      const priceData = await market.getPrice(result.ticker);
+      const priceStr = String(priceData.price);
+      onSelect({
+        ticker: result.ticker,
+        name: result.name ?? result.ticker,
+        sector: result.sector ?? "Foreign Stock",
+        buyPrice: priceStr,
+        currentSellPrice: priceStr,
+      });
+    } catch {
+      onSelect({
+        ticker: result.ticker,
+        name: result.name ?? result.ticker,
+        sector: result.sector ?? "Foreign Stock",
+        buyPrice: "",
+        currentSellPrice: "",
+      });
+    } finally {
+      setSearching(false);
+    }
+  };
+
+  return (
+    <View style={{ gap: 4 }}>
+      <Text selectable style={{ color: C.text2, fontFamily: font.medium, fontSize: 10, textTransform: "uppercase" }}>
+        Search Stock
+      </Text>
+      <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
+        <TextInput
+          value={query}
+          onChangeText={handleChange}
+          placeholder="Name or ticker — e.g. Infosys, AAPL"
+          placeholderTextColor={C.text2}
+          style={{
+            flex: 1,
+            height: 50,
+            borderRadius: 14,
+            borderWidth: 1,
+            borderColor: C.border,
+            paddingHorizontal: 14,
+            color: C.text0,
+            fontFamily: font.regular,
+            fontSize: 14,
+            backgroundColor: "rgba(255,255,255,0.04)",
+          }}
+        />
+        {searching && <ActivityIndicator size="small" color={C.cyan} />}
+      </View>
+      {showResults && results.length > 0 && (
+        <View style={{ borderRadius: 12, borderWidth: 1, borderColor: C.border, overflow: "hidden", marginTop: 2 }}>
+          {results.map((result, idx) => (
+            <TouchableOpacity
+              key={result.ticker}
+              onPress={() => handleSelect(result)}
+              style={{
+                flexDirection: "row",
+                alignItems: "center",
+                justifyContent: "space-between",
+                paddingHorizontal: 14,
+                paddingVertical: 10,
+                backgroundColor: idx % 2 === 0 ? "rgba(255,255,255,0.03)" : "rgba(255,255,255,0.055)",
+                borderBottomWidth: idx < results.length - 1 ? 1 : 0,
+                borderBottomColor: C.border,
+              }}
+            >
+              <View style={{ flex: 1 }}>
+                <Text selectable style={{ color: C.cyan, fontFamily: font.mono, fontSize: 13 }}>{result.ticker}</Text>
+                <Text selectable style={{ color: C.text1, fontSize: 12, marginTop: 1 }}>{result.name ?? "—"}</Text>
+              </View>
+              <View style={{ alignItems: "flex-end" }}>
+                <Text selectable style={{ color: C.text2, fontSize: 11 }}>{result.exchange ?? ""}</Text>
+                {result.sector ? (
+                  <Text selectable style={{ color: C.text2, fontSize: 10, marginTop: 1 }}>{result.sector}</Text>
+                ) : null}
+              </View>
+            </TouchableOpacity>
+          ))}
+        </View>
+      )}
+    </View>
+  );
 }
 
 export function PortfolioBuilder({ userData }: { userData: UserData | null }) {
@@ -105,7 +192,6 @@ export function PortfolioBuilder({ userData }: { userData: UserData | null }) {
   const [activeGlossary, setActiveGlossary] = useState<string | null>(null);
   const [submitted, setSubmitted] = useState(false);
   const [draftStatus, setDraftStatus] = useState("");
-  const [quoteStatus, setQuoteStatus] = useState("");
 
   useEffect(() => {
     let active = true;
@@ -193,29 +279,6 @@ export function PortfolioBuilder({ userData }: { userData: UserData | null }) {
     }
   }
 
-  const enrichPosition = async (id: string, ticker: string) => {
-    setQuoteStatus(`Fetching ${ticker.toUpperCase()} quote...`);
-    const quote = await fetchQuote(ticker);
-    if (!quote) {
-      setQuoteStatus("Quote API unavailable. Add stock name, sector, and price manually.");
-      return;
-    }
-    setPositions((prev) =>
-      prev.map((position) =>
-        position.id === id
-          ? {
-              ...position,
-              stockName: quote.stockName,
-              sector: quote.sector,
-              currentSellPrice: quote.price,
-              buyPrice: position.buyPrice || quote.price,
-            }
-          : position,
-      ),
-    );
-    setQuoteStatus(`${ticker.toUpperCase()} data updated.`);
-  };
-
   const statusText = useMemo(() => {
     if (overLimit) return "Total allocation exceeds 100%. Reduce position weights.";
     if (!meetsMin) return `Need min 3 sectors and max 30% per asset. Currently ${uniqueSectors} sectors.`;
@@ -279,11 +342,6 @@ export function PortfolioBuilder({ userData }: { userData: UserData | null }) {
             <Text selectable style={{ color: C.cyan, fontFamily: font.medium, fontSize: 12 }}>Add</Text>
           </TouchableOpacity>}
         />
-        {quoteStatus ? (
-          <Text selectable style={{ color: quoteStatus.includes("unavailable") ? C.red : C.green, fontFamily: font.medium, fontSize: 12 }}>
-            {quoteStatus}
-          </Text>
-        ) : null}
         {positions.map((position, index) => (
           <View key={position.id} style={{ gap: 10, padding: 12, borderRadius: 12, backgroundColor: "rgba(255,255,255,0.045)", borderColor: C.border, borderWidth: 1, borderTopWidth: 3, borderTopColor: colors[index % colors.length] }}>
             <View style={{ flexDirection: "row", gap: 10 }}>
@@ -297,15 +355,25 @@ export function PortfolioBuilder({ userData }: { userData: UserData | null }) {
             <Field label="User ID" value={position.studentId} onChangeText={() => undefined} placeholder="202600000001" />
             <Field label="Added By" value={position.addedBy} onChangeText={(value) => updatePosition(position.id, "addedBy", value.toUpperCase())} placeholder="202600000002" />
             <Field label="Trade Date" value={position.tradeDate} onChangeText={(value) => updatePosition(position.id, "tradeDate", value)} placeholder="01/06/2026" />
-            <OptionRow label="Stock Ticker" options={assetOptions} value={position.stockTicker} onChange={(value) => updatePosition(position.id, "stockTicker", value)} />
-            <View style={{ flexDirection: "row", gap: 10, alignItems: "flex-end" }}>
-              <View style={{ flex: 1 }}>
-                <Field label="Stock Ticker" value={position.stockTicker} onChangeText={(value) => updatePosition(position.id, "stockTicker", value.toUpperCase())} placeholder="AAPL" />
-              </View>
-              <TouchableOpacity onPress={() => enrichPosition(position.id, position.stockTicker)} style={{ height: 50, paddingHorizontal: 12, borderRadius: 14, alignItems: "center", justifyContent: "center", backgroundColor: "rgba(49,230,255,0.12)", borderColor: "rgba(49,230,255,0.28)", borderWidth: 1 }}>
-                <DownloadCloud size={18} color={C.cyan} />
-              </TouchableOpacity>
-            </View>
+            <StockSearchField
+              ticker={position.stockTicker}
+              onSelect={(data) => {
+                setPositions((prev) =>
+                  prev.map((p) =>
+                    p.id === position.id
+                      ? {
+                          ...p,
+                          stockTicker: data.ticker,
+                          stockName: data.name,
+                          sector: data.sector,
+                          buyPrice: data.buyPrice,
+                          currentSellPrice: data.currentSellPrice,
+                        }
+                      : p,
+                  ),
+                );
+              }}
+            />
             <Field label="Stock Name" value={position.stockName} onChangeText={(value) => updatePosition(position.id, "stockName", value)} placeholder="Apple Inc" />
             <OptionRow label="Sector" options={sectorOptions} value={position.sector} onChange={(value) => updatePosition(position.id, "sector", value)} />
             <View style={{ flexDirection: "row", gap: 10 }}>

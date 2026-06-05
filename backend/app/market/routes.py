@@ -107,3 +107,34 @@ def get_current_price(ticker):
         return jsonify({"ticker": ticker.upper(), "price": price}), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+
+
+# ─────────────────────────────────────────
+# GET /market/search?q=<query>
+# Returns: list of matching equity results from Yahoo Finance
+# ─────────────────────────────────────────
+
+@market_bp.get("/search")
+@jwt_required()
+def search_stocks():
+    q = request.args.get("q", "").strip()
+    if len(q) < 2:
+        return jsonify({"results": []}), 200
+    try:
+        import yfinance as yf
+        search = yf.Search(q, max_results=10)
+        quotes = search.quotes or []
+        formatted = [
+            {
+                "ticker":   r.get("symbol"),
+                "name":     r.get("longname") or r.get("shortname"),
+                "exchange": r.get("exchDisp"),
+                "sector":   r.get("sectorDisp"),
+                "type":     r.get("typeDisp"),
+            }
+            for r in quotes
+            if r.get("symbol") and r.get("quoteType") == "EQUITY"
+        ]
+        return jsonify({"results": formatted[:8]}), 200
+    except Exception as e:
+        return jsonify({"results": [], "error": str(e)}), 200
