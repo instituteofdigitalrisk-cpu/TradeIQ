@@ -23,12 +23,8 @@ def create_app() -> Flask:
     app.register_blueprint(portfolio_bp)
     app.register_blueprint(analytics_bp)
 
-    # Create tables if they don't exist (dev only — skipped if DB unreachable)
     with app.app_context():
-        try:
-            db.create_all()
-        except Exception:
-            pass
+        db.create_all()
 
     @app.get("/health")
     def health():

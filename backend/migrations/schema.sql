@@ -2,7 +2,7 @@ CREATE DATABASE IF NOT EXISTS tradeiq;
 USE tradeiq;
 
 
-CREATE TABLE users (
+CREATE TABLE IF NOT EXISTS users (
     user_id VARCHAR(20) PRIMARY KEY,
 
     full_name VARCHAR(100) NOT NULL,
@@ -34,7 +34,7 @@ CREATE TABLE users (
 
 
 
-CREATE TABLE portfolio_setup (
+CREATE TABLE IF NOT EXISTS portfolio_setup (
 
     portfolio_id INT AUTO_INCREMENT PRIMARY KEY,
 
@@ -59,7 +59,7 @@ CREATE TABLE portfolio_setup (
 );
 
 
-CREATE TABLE trade_log (
+CREATE TABLE IF NOT EXISTS trade_log (
 
     trade_id VARCHAR(20) PRIMARY KEY,
 
@@ -103,7 +103,7 @@ CREATE TABLE trade_log (
 
 
 
-CREATE TABLE holdings (
+CREATE TABLE IF NOT EXISTS holdings (
 
     holding_id INT AUTO_INCREMENT PRIMARY KEY,
 
@@ -132,7 +132,7 @@ CREATE TABLE holdings (
 );
 
 
-CREATE TABLE investment_thesis (
+CREATE TABLE IF NOT EXISTS investment_thesis (
 
     thesis_id INT AUTO_INCREMENT PRIMARY KEY,
 
@@ -163,7 +163,7 @@ CREATE TABLE investment_thesis (
 
 
 
-CREATE TABLE thesis_scores (
+CREATE TABLE IF NOT EXISTS thesis_scores (
 
     score_id INT AUTO_INCREMENT PRIMARY KEY,
 
@@ -191,7 +191,7 @@ CREATE TABLE thesis_scores (
 
 
 
-CREATE TABLE risk_metrics (
+CREATE TABLE IF NOT EXISTS risk_metrics (
 
     risk_id INT AUTO_INCREMENT PRIMARY KEY,
 
@@ -217,7 +217,7 @@ CREATE TABLE risk_metrics (
 
 
 
-CREATE TABLE weekly_scores (
+CREATE TABLE IF NOT EXISTS weekly_scores (
 
     score_id INT AUTO_INCREMENT PRIMARY KEY,
 
@@ -254,7 +254,7 @@ CREATE TABLE weekly_scores (
 
 
 
-CREATE TABLE leaderboard (
+CREATE TABLE IF NOT EXISTS leaderboard (
 
     leaderboard_id INT AUTO_INCREMENT PRIMARY KEY,
 
@@ -284,7 +284,7 @@ CREATE TABLE leaderboard (
 );
 
 
-CREATE TABLE reports (
+CREATE TABLE IF NOT EXISTS reports (
 
     report_id INT AUTO_INCREMENT PRIMARY KEY,
 
