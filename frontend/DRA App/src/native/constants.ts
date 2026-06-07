@@ -29,22 +29,6 @@ export const prizePoolImage = require("../imports/prize-pool.jpeg");
 
 export const backgrounds = ["None", "Basic", "Intermediate", "Advanced"];
 
-export const tickers = [
-  { name: "S&P 500", price: "5,289", change: "+0.46%", up: true },
-  { name: "NASDAQ", price: "17,019", change: "+0.83%", up: true },
-  { name: "DOW", price: "38,686", change: "-0.12%", up: false },
-  { name: "AAPL", price: "201.00", change: "+1.18%", up: true },
-  { name: "MSFT", price: "425.52", change: "+0.62%", up: true },
-  { name: "NVDA", price: "1,096.33", change: "+2.04%", up: true },
-  { name: "AMZN", price: "181.28", change: "-0.28%", up: false },
-  { name: "TSLA", price: "176.19", change: "+0.91%", up: true },
-  { name: "USD/INR", price: "83.42", change: "-0.09%", up: false },
-  { name: "GOLD", price: "2,342", change: "+0.41%", up: true },
-] as const;
-
-export const perfData = [10000, 10140, 10380, 10620, 10580, 10720, 10810];
-export const benchmarkData = [10000, 10090, 10220, 10380, 10410, 10480, 10510];
-
 export const assetOptions = [
   "AAPL",
   "MSFT",
