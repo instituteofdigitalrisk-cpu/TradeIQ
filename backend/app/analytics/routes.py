@@ -847,7 +847,7 @@ def _leaderboard_entry_payload(entry):
     data = entry.to_dict()
     metrics = _portfolio_metrics(entry.user_id) or {}
     data["portfolio_value"] = metrics.get("portfolio_value", 10000.0)
-    data["team_name"] = entry.user.team_name if entry.user else None
+    data["team_name"] = getattr(entry.user, "team_name", None) if entry.user else None
     return data
 
 
