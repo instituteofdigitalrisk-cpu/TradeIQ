@@ -1,11 +1,13 @@
 import { useEffect, useState } from "react";
+import type React from "react";
 import { useFonts as useLoraFonts, Lora_400Regular, Lora_600SemiBold, Lora_700Bold } from "@expo-google-fonts/lora";
 import { useFonts as useNeutonFonts, Neuton_700Bold, Neuton_800ExtraBold } from "@expo-google-fonts/neuton";
-import { ActivityIndicator, View } from "react-native";
+import { SafeAreaProvider, useSafeAreaInsets } from "react-native-safe-area-context";
+import { ActivityIndicator, Text, useWindowDimensions, View } from "react-native";
 import type { Flow, UserData } from "./types";
 import { clearActiveUser, getActiveUser, saveRegisteredUser, signInUser, signInWithGoogle } from "./auth-store";
 import { setUnauthorizedHandler } from "./api";
-import Toast, { BaseToast, ErrorToast } from "react-native-toast-message";
+import Toast from "react-native-toast-message";
 import { LandingPage } from "./pages/landing-page";
 import { RegistrationPage } from "./pages/registration-page";
 import { OnboardingPage } from "./pages/onboarding-page";
@@ -13,31 +15,45 @@ import { PaymentPage } from "./pages/payment-page";
 import { MainApp } from "./pages/main-app";
 import { SignInPage } from "./pages/sign-in-page";
 
-const toastConfig = {
-  success: (props: any) => (
-    <BaseToast
-      {...props}
+function ThemedToast(props: any, accent: string) {
+  const { text1, text2 } = props;
+  return (
+    <View
       style={{
-        borderLeftColor: "#32E875",
-        backgroundColor: "rgba(255,255,255,0.06)",
-        borderRadius: 14,
+        alignSelf: "center",
+        maxWidth: 420,
+        minWidth: 240,
+        paddingHorizontal: 18,
+        paddingVertical: 14,
+        borderRadius: 16,
         borderWidth: 1,
-        borderColor: "#32E875",
+        borderColor: `${accent}99`,
+        borderLeftWidth: 4,
+        borderLeftColor: accent,
+        backgroundColor: "rgba(10,16,32,0.98)",
+        boxShadow: `0 18px 48px rgba(0,0,0,0.45), 0 0 26px ${accent}33`,
+        gap: 4,
       }}
-      contentContainerStyle={{
-        paddingHorizontal: 15,
-      }}
-      text1Style={{
-        color: "#32E875",
-        fontSize: 14,
-        fontWeight: "700",
-      }}
-      text2Style={{
-        color: "#FFFFFF",
-        fontSize: 12,
-      }}
-    />
-  ),
+    >
+      {text1 ? (
+        <Text numberOfLines={2} style={{ color: accent, fontSize: 14, fontWeight: "700" }}>
+          {text1}
+        </Text>
+      ) : null}
+      {text2 ? (
+        <Text numberOfLines={4} style={{ color: "#c7d0ea", fontSize: 12, lineHeight: 17 }}>
+          {text2}
+        </Text>
+      ) : null}
+    </View>
+  );
+}
+
+const toastConfig = {
+  success: (props: any) => ThemedToast(props, "#1ee6a3"),
+  error: (props: any) => ThemedToast(props, "#ff5f7e"),
+  info: (props: any) => ThemedToast(props, "#31e6ff"),
+  warning: (props: any) => ThemedToast(props, "#ffd166"),
 };
 
 export default function ChallengeApp() {
@@ -46,6 +62,15 @@ export default function ChallengeApp() {
   const [booting, setBooting] = useState(true);
   const [loraLoaded] = useLoraFonts({ Lora_400Regular, Lora_600SemiBold, Lora_700Bold });
   const [neutonLoaded] = useNeutonFonts({ Neuton_700Bold, Neuton_800ExtraBold });
+  const insets = useSafeAreaInsets();
+  const toastTopOffset = insets.top + 12; // sits just under the notch/status bar, always
+
+  const withToast = (screen: React.ReactNode) => (
+    <>
+      {screen}
+      <Toast config={toastConfig} position="top" topOffset={toastTopOffset} visibilityTime={5500} />
+    </>
+  );
 
   useEffect(() => {
     let active = true;
@@ -69,16 +94,30 @@ export default function ChallengeApp() {
   }, []);
 
   if (booting || !loraLoaded || !neutonLoaded) {
-    return (
+    return withToast(
       <View style={{ flex: 1, alignItems: "center", justifyContent: "center", backgroundColor: "#060810" }}>
         <ActivityIndicator color="#31E6FF" />
       </View>
     );
   }
 
-  if (flow === "landing") return <LandingPage onExplore={() => setFlow("register")} />;
+  if (flow === "landing") {
+    return withToast(
+      <LandingPage
+        onExplore={async () => {
+          const activeUser = await getActiveUser();
+          if (activeUser) {
+            setUserData(activeUser);
+            setFlow("app");
+            return;
+          }
+          setFlow("register");
+        }}
+      />
+    );
+  }
   if (flow === "signin") {
-    return (
+    return withToast(
       <SignInPage
         onBack={() => setFlow("landing")}
         onSubmit={async (email, password) => {
@@ -92,21 +131,11 @@ export default function ChallengeApp() {
             return err instanceof Error ? err.message : "Sign in failed";
           }
         }}
-        onGoogleSignIn={async () => {
-          try {
-            const { user, isNewUser } = await signInWithGoogle();
-            setUserData(user);
-            setFlow(isNewUser ? "onboarding" : "app");
-            return user;
-          } catch (err) {
-            return err instanceof Error ? err.message : "Google sign in failed";
-          }
-        }}
       />
     );
   }
   if (flow === "register") {
-    return (
+    return withToast(
       <RegistrationPage
         onSignIn={() => setFlow("signin")}
         onSubmit={async (data) => {
@@ -119,7 +148,7 @@ export default function ChallengeApp() {
             const { user, isNewUser } = await signInWithGoogle();
             setUserData(user);
             setFlow(isNewUser ? "onboarding" : "app");
-            return user;
+             return { user, isNewUser }; 
           } catch (err) {
             return err instanceof Error ? err.message : "Google registration failed";
           }
@@ -127,11 +156,10 @@ export default function ChallengeApp() {
       />
     );
   }
-  if (flow === "onboarding") return <OnboardingPage onComplete={() => setFlow("payment")} />;
-  if (flow === "payment") return <PaymentPage onComplete={() => setFlow("app")} />;
+  if (flow === "onboarding") return withToast(<OnboardingPage onComplete={() => setFlow("payment")} />);
+  if (flow === "payment") return withToast(<PaymentPage onComplete={() => setFlow("app")} />);
 
-return (
-  <>
+  return withToast(
     <MainApp
       userData={userData}
       onLogout={() => {
@@ -140,9 +168,6 @@ return (
         setFlow("landing");
       }}
     />
-
-   <Toast config={toastConfig} />
-  </>
-);
+  );
 }
 

@@ -240,6 +240,81 @@ export const portfolio = {
   },
 };
 
+// ── Watchlist ──────────────────────────────────────────────────────────────────
+export type BackendWatchlistItem = {
+  watchlist_id: number;
+  user_id: string;
+  stock_ticker: string;
+  stock_name: string;
+  sector: string | null;
+  allocation_percent: number;
+  amount_invested: number;
+  quantity: number;
+  buy_price: number;
+  current_sell_price: number;
+  trade_type: "BUY" | "SELL";
+  tag1: string | null;
+  tag2: string | null;
+  tag3: string | null;
+  thesis: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+export const watchlist = {
+  list(userId: string): Promise<{ user_id: string; watchlist: BackendWatchlistItem[]; count: number }> {
+    return apiFetch(`/portfolio/watchlist/${userId}`);
+  },
+
+  add(payload: {
+    stock_ticker: string;
+    stock_name?: string;
+    sector?: string;
+    allocation_percent?: number;
+    amount_invested?: number;
+    quantity?: number;
+    buy_price?: number;
+    current_sell_price?: number;
+    trade_type?: "BUY" | "SELL";
+    tag1?: string;
+    tag2?: string;
+    tag3?: string;
+    thesis?: string;
+  }): Promise<{ message: string; item: BackendWatchlistItem }> {
+    return apiFetch("/portfolio/watchlist", {
+      method: "POST",
+      body: JSON.stringify(payload),
+    });
+  },
+
+  update(
+    watchlistId: number,
+    payload: Partial<{
+      stock_name: string;
+      sector: string;
+      allocation_percent: number;
+      amount_invested: number;
+      quantity: number;
+      buy_price: number;
+      current_sell_price: number;
+      trade_type: "BUY" | "SELL";
+      tag1: string;
+      tag2: string;
+      tag3: string;
+      thesis: string;
+    }>
+  ): Promise<{ message: string; item: BackendWatchlistItem }> {
+    return apiFetch(`/portfolio/watchlist/${watchlistId}`, {
+      method: "PUT",
+      body: JSON.stringify(payload),
+    });
+  },
+
+  remove(watchlistId: number): Promise<{ message: string; watchlist_id: number }> {
+    return apiFetch(`/portfolio/watchlist/${watchlistId}`, { method: "DELETE" });
+  },
+};
+
 // ── Market ─────────────────────────────────────────────────────────────────────
 export type MarketPrice = { ticker: string; price: number };
 

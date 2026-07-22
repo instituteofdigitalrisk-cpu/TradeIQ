@@ -2,17 +2,18 @@ import uuid
 import hashlib
 import os
 from datetime import date, datetime, timezone
-from functools import lru_cache
 
 from flask import Blueprint, jsonify, request
 from flask_jwt_extended import create_access_token
-import jwt
-import requests
+from google.auth.transport import requests as google_requests
+from google.oauth2 import id_token as google_id_token
 
 from app.extensions import db
 from app.models import User, PortfolioSetup
 
 auth_bp = Blueprint("auth", __name__, url_prefix="/auth")
+
+_google_request = google_requests.Request()
 
 
 def _hash_password(password: str) -> str:
@@ -28,36 +29,75 @@ def _get_firebase_project_id() -> str:
     return os.getenv("FIREBASE_PROJECT_ID", "tradeiq-26")
 
 
-@lru_cache(maxsize=1)
-def _get_firebase_public_certs() -> dict:
-    response = requests.get(
-        "https://www.googleapis.com/robot/v1/metadata/x509/securetoken@system.gserviceaccount.com",
-        timeout=5,
+def _get_google_web_client_id() -> str:
+    # The OAuth "web" client id from google-services.json (oauth_client entry
+    # with client_type 3) — only relevant if a native Google Sign-In SDK is
+    # ever wired up; the current web app uses Firebase's signInWithPopup
+    # instead, which is verified separately below.
+    return os.getenv(
+        "GOOGLE_WEB_CLIENT_ID",
+        "1013397127798-nb34o20mn4qd26opc8etp7mth7aqqe7i.apps.googleusercontent.com",
     )
-    response.raise_for_status()
-    return response.json()
 
 
 def _verify_firebase_id_token(id_token: str) -> dict:
-    project_id = _get_firebase_project_id()
-    unverified_header = jwt.get_unverified_header(id_token)
-    cert = _get_firebase_public_certs().get(unverified_header.get("kid"))
-    if not cert:
-        _get_firebase_public_certs.cache_clear()
-        cert = _get_firebase_public_certs().get(unverified_header.get("kid"))
-    if not cert:
-        raise ValueError("Could not find Firebase public key for token.")
+    """Verify a token issued by the Firebase Auth SDK (issuer securetoken.google.com/<project>).
 
-    payload = jwt.decode(
-        id_token,
-        cert,
-        algorithms=["RS256"],
-        audience=project_id,
-        issuer=f"https://securetoken.google.com/{project_id}",
-    )
-    if payload.get("exp", 0) < datetime.now(timezone.utc).timestamp():
-        raise ValueError("Firebase token has expired.")
+    This is what the web app's signInWithPopup()/getIdToken() flow sends.
+
+    Deliberately uses google-auth's own verifier instead of manually fetching
+    Firebase's x509 certs and calling PyJWT's jwt.decode() with the resulting
+    key object: PyJWT's RSAAlgorithm.prepare_key() rejects the key unless it
+    passes `isinstance(key, RSAPublicKey)` against the `cryptography`
+    package's classes, and that check can fail across certain PyJWT/
+    cryptography version combinations even for a perfectly valid key —
+    surfacing as "Could not parse the provided public key." google-auth does
+    its own RSA verification and never goes through that code path.
+    """
+    project_id = _get_firebase_project_id()
+    payload = google_id_token.verify_firebase_token(id_token, _google_request, audience=project_id)
+    if not payload:
+        raise ValueError("Could not verify Firebase ID token.")
+    expected_issuer = f"https://securetoken.google.com/{project_id}"
+    if payload.get("iss") != expected_issuer:
+        raise ValueError("Wrong issuer for Firebase ID token.")
     return payload
+
+
+def _verify_google_oauth_id_token(id_token: str) -> dict:
+    """Verify a raw Google Sign-In ID token (issuer accounts.google.com).
+
+    This is what native "Sign in with Google" SDKs (e.g.
+    @react-native-google-signin/google-signin) hand back when configured
+    with a webClientId/serverClientId — not currently used by this app's web
+    flow, but kept so a native client can plug in later without more
+    backend changes.
+    """
+    client_id = _get_google_web_client_id()
+    payload = google_id_token.verify_oauth2_token(id_token, _google_request, client_id)
+    if payload.get("iss") not in ("accounts.google.com", "https://accounts.google.com"):
+        raise ValueError("Wrong issuer for Google ID token.")
+    return payload
+
+
+def _verify_google_sign_in_token(id_token: str) -> dict:
+    """Accept either a Firebase ID token (current web signInWithPopup flow) or
+    a raw Google OAuth2 ID token (future native Google Sign-In), whichever
+    the client actually sent. Firebase is tried first since that's what this
+    app currently produces.
+    """
+    errors = []
+    try:
+        return _verify_firebase_id_token(id_token)
+    except Exception as exc:
+        errors.append(f"firebase: {exc}")
+
+    try:
+        return _verify_google_oauth_id_token(id_token)
+    except Exception as exc:
+        errors.append(f"google-oauth2: {exc}")
+
+    raise ValueError(" / ".join(errors))
 
 
 def _ensure_default_portfolio(user_id: str) -> None:

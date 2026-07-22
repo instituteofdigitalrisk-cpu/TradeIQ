@@ -25,6 +25,7 @@ class User(db.Model):
     portfolio   = db.relationship("PortfolioSetup",  backref="user", uselist=False)
     trades      = db.relationship("TradeLog",        backref="user")
     holdings    = db.relationship("Holding",         backref="user")
+    watchlist   = db.relationship("Watchlist",       backref="user")
     risk        = db.relationship("RiskMetrics",     backref="user", uselist=False)
     scores      = db.relationship("WeeklyScore",     backref="user")
     leaderboard = db.relationship("Leaderboard",     backref="user")
@@ -143,6 +144,59 @@ class Holding(db.Model):
             "current_price": float(self.current_price or 0),
             "market_value":  float(self.market_value or 0),
             "profit_loss":   float(self.profit_loss or 0),
+        }
+
+
+# ─────────────────────────────────────────
+# watchlist
+#
+# Stocks the user is tracking but has NOT committed capital to yet. Kept
+# entirely separate from trade_log / holdings on purpose: scoring, the
+# allocation summary, and "active holdings" all read only from those two
+# tables, so a watchlist entry never affects a score or an allocation % —
+# only a real trade (via POST /portfolio/trade) does that.
+# ─────────────────────────────────────────
+
+class Watchlist(db.Model):
+    __tablename__ = "watchlist"
+
+    watchlist_id       = db.Column(db.Integer,     primary_key=True, autoincrement=True)
+    user_id             = db.Column(db.String(20),  db.ForeignKey("users.user_id", ondelete="CASCADE"), nullable=False)
+    stock_ticker        = db.Column(db.String(20),  nullable=False)
+    stock_name          = db.Column(db.String(100))
+    sector               = db.Column(db.String(100))
+    allocation_percent  = db.Column(db.Numeric(5, 2))
+    amount_invested      = db.Column(db.Numeric(15, 2))
+    quantity             = db.Column(db.Integer)
+    buy_price            = db.Column(db.Numeric(15, 2))
+    current_sell_price  = db.Column(db.Numeric(15, 2))
+    trade_type           = db.Column(db.Enum("BUY", "SELL"), default="BUY")
+    tag1                 = db.Column(db.String(100))
+    tag2                 = db.Column(db.String(100))
+    tag3                 = db.Column(db.String(100))
+    thesis                = db.Column(db.Text)
+    created_at           = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at           = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    def to_dict(self):
+        return {
+            "watchlist_id":       self.watchlist_id,
+            "user_id":            self.user_id,
+            "stock_ticker":       self.stock_ticker,
+            "stock_name":         self.stock_name,
+            "sector":             self.sector,
+            "allocation_percent": float(self.allocation_percent or 0),
+            "amount_invested":    float(self.amount_invested or 0),
+            "quantity":           self.quantity,
+            "buy_price":          float(self.buy_price or 0),
+            "current_sell_price": float(self.current_sell_price or 0),
+            "trade_type":         self.trade_type,
+            "tag1":               self.tag1,
+            "tag2":               self.tag2,
+            "tag3":               self.tag3,
+            "thesis":             self.thesis,
+            "created_at":         str(self.created_at),
+            "updated_at":         str(self.updated_at),
         }
 
 

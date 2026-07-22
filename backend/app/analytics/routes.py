@@ -15,13 +15,9 @@ from app.models import (
 )
 from app.market.pipeline import YahooFinancePipeline
 from app.scoring.final_scoring_engine import TradeIQScoringEngine
-import time
 
 analytics_bp = Blueprint("analytics", __name__, url_prefix="/analytics")
 pipeline     = YahooFinancePipeline()
-_leaderboard_cache = {}
-REFRESH_INTERVAL_SECONDS = 300
-
 OPENAI_SCORE_MODEL = os.getenv("OPENAI_SCORE_MODEL", "gpt-4.1-mini")
 
 
@@ -843,20 +839,49 @@ def _copy_score_to_leaderboard(score, rank_position):
     return entry
 
 
-def _rerank_week(week_number):
-    users = _student_users()
-    scores_by_user_id = {
-        score.user_id: score
-        for score in WeeklyScore.query.filter_by(week_number=week_number).all()
+def _leaderboard_user_payload(user, week_number, score, metrics, rank_position):
+    return {
+        "user_id": user.user_id,
+        "full_name": user.full_name,
+        "university": user.university,
+        "team_name": getattr(user, "team_name", None),
+        "week_number": week_number,
+        "portfolio_score": float(score.portfolio_score or 0),
+        "risk_score": float(score.risk_score or 0),
+        "thesis_score": float(score.thesis_score or 0),
+        "execution_score": float(score.execution_score or 0),
+        "strategy_score": float(score.strategy_score or 0),
+        "final_score": float(score.final_score or 0),
+        "rank_position": rank_position,
+        "portfolio_value": float(metrics.get("portfolio_value", 0) or 0),
     }
 
+
+def _rerank_week(week_number):
+    users = _student_users()
+    scores_by_user_id = {}
+    metrics_by_user_id = {}
+
     for user in users:
-        if user.user_id not in scores_by_user_id:
-            scores_by_user_id[user.user_id] = _upsert_week_score(
-                user.user_id,
-                week_number,
-                _zero_scorecard(),
-            )
+        payload, error = _score_payload(user.user_id)
+        if error:
+            scorecard = _zero_scorecard()
+            metrics = {
+                "portfolio_value": 0.0,
+                "desk_return_expansion": 0.0,
+                "available_cash_depot": 0.0,
+                "holdings_value": 0.0,
+                "net_profit": 0.0,
+            }
+        else:
+            scorecard = payload["scores"]
+            metrics = payload["metrics"]
+        scores_by_user_id[user.user_id] = _upsert_week_score(
+            user.user_id,
+            week_number,
+            scorecard,
+        )
+        metrics_by_user_id[user.user_id] = metrics
 
     db.session.flush()
 
@@ -870,14 +895,26 @@ def _rerank_week(week_number):
         ),
     )
 
+    entries = []
     for index, user in enumerate(ranked_users, start=1):
         score = scores_by_user_id[user.user_id]
         score.rank_position = index
         _copy_score_to_leaderboard(score, index)
+        entries.append(
+            _leaderboard_user_payload(
+                user,
+                week_number,
+                score,
+                metrics_by_user_id[user.user_id],
+                index,
+            )
+        )
+
+    return entries
 
 
 def _refresh_leaderboard_week(week_number):
-    _rerank_week(week_number)
+    return _rerank_week(week_number)
 
 
 def _leaderboard_entry_payload(entry):
@@ -896,28 +933,13 @@ def _leaderboard_entry_payload(entry):
 def get_leaderboard():
     week = request.args.get("week", default=date.today().isocalendar()[1], type=int)
 
-    now = time.time()
-    last_refresh = _leaderboard_cache.get(week)
-    registered_count = len(_student_users())
-    ranked_count = _leaderboard_entries_query(week).count()
-
-    if (
-        last_refresh is None
-        or (now - last_refresh) > REFRESH_INTERVAL_SECONDS
-        or ranked_count != registered_count
-    ):
-        _refresh_leaderboard_week(week)
-        db.session.commit()
-        _leaderboard_cache[week] = now
-
-    entries = _leaderboard_entries_query(week).order_by(
-        Leaderboard.rank_position.asc()
-    ).all()
+    entries = _refresh_leaderboard_week(week)
+    db.session.commit()
 
     return jsonify({
         "week":    week,
         "count":   len(entries),
-        "entries": [_leaderboard_entry_payload(e) for e in entries],
+        "entries": entries,
     }), 200
 
 # ─────────────────────────────────────────

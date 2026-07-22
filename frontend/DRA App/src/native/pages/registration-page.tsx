@@ -2,9 +2,10 @@ import { ChevronRight } from "lucide-react-native";
 import { useEffect, useState } from "react";
 import { ScrollView, Text, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import Toast from "react-native-toast-message";
 import { C, font } from "../constants";
 import { generateStudentId } from "../auth-store";
-import type { UserData } from "../types";
+import type { GoogleAuthResult, UserData } from "../types";
 import { formatDobInput, getAge, parseDob } from "../utils";
 import { AppButton, AuthDivider, ErrorNotice, Field, GlassCard, GoogleAuthButton, HeaderMini, StepDots } from "../components/ui";
 
@@ -14,7 +15,7 @@ export function RegistrationPage({
   onSignIn,
 }: {
   onSubmit: (data: UserData) => void | Promise<void>;
-  onGoogleRegister: () => Promise<UserData | string | null>;
+  onGoogleRegister: () => Promise<GoogleAuthResult | string | null>;
   onSignIn: () => void;
 }) {
   const [form, setForm] = useState<UserData>({
@@ -84,9 +85,20 @@ export function RegistrationPage({
     try {
       setSubmitting(true);
       await onSubmit({ ...form, phoneNumber: form.phoneNumber.replace(/\D/g, ""), age: String(getAge(parsedDob)) });
+      Toast.show({
+        type: "success",
+        text1: "Account created successfully",
+        text2: "Your TradeIQ profile is ready. Complete onboarding to enter the challenge dashboard.",
+      });
     } catch (err) {
       const message = err instanceof Error ? err.message : "Registration failed. Please try again.";
-      setSubmitError(message.toLowerCase().includes("email") ? "An account with this email already exists. Login or use another email." : message);
+      const professionalMessage = message.toLowerCase().includes("email") ? "An account with this email already exists. Login or use another email." : message;
+      setSubmitError(professionalMessage);
+      Toast.show({
+        type: "error",
+        text1: "Registration could not be completed",
+        text2: professionalMessage,
+      });
     } finally {
       setSubmitting(false);
     }
@@ -97,7 +109,19 @@ export function RegistrationPage({
     setGoogleSubmitting(true);
     const result = await onGoogleRegister();
     if (!result || typeof result === "string") {
-      setSubmitError(typeof result === "string" ? result : "Google registration failed. Please try again.");
+      const message = typeof result === "string" ? result : "Google registration failed. Please try again.";
+      setSubmitError(message);
+      Toast.show({
+        type: "error",
+        text1: "Google registration failed",
+        text2: message,
+      });
+    } else {
+      Toast.show({
+        type: "success",
+        text1: "Account connected successfully",
+        text2: "Your Google account is linked. Continue to complete your challenge setup.",
+      });
     }
     setGoogleSubmitting(false);
   };

@@ -1,19 +1,20 @@
-import { Trash2, TrendingDown, TrendingUp } from "lucide-react-native";
+import { Check, Pencil, Plus, Trash2, TrendingDown, TrendingUp, X } from "lucide-react-native";
 import { useEffect, useState } from "react";
-import { ActivityIndicator, ScrollView, Text, TouchableOpacity, View, Alert } from "react-native";
+import { ActivityIndicator, ScrollView, Text, TextInput, TouchableOpacity, useWindowDimensions, View } from "react-native";
 import Toast from "react-native-toast-message";
 import { C, font } from "../constants";
-import { analytics, market, portfolio } from "../api";
-import type { BackendHolding, BackendTrade, BackendWeeklyScore, MarketIndex, PortfolioSummary } from "../api";
+import { analytics, market, portfolio, watchlist } from "../api";
+import type { BackendHolding, BackendTrade, BackendWatchlistItem, BackendWeeklyScore, MarketIndex, PortfolioSummary } from "../api";
 import { Legend, LineChart } from "../components/charts";
 import { GlassCard, Progress, SectionTitle } from "../components/ui";
 import { getMarketIndices } from "../market-store";
+import { getTourSeen, setTourSeen } from "../tour-store";
 
 const CHART_POINTS = 7;
 const INDIAN_TICKERS = ["^NSEI", "^BSESN", "^CNXIT", "^CNXPHARMA"];
 const TRENDING_TICKERS = ["AAPL", "MSFT", "NVDA", "AMZN", "TSLA"];
 
-type DashboardTab = "portfolio" | "overview" | "allocation" | "market";
+type DashboardTab = "portfolio" | "watchlist" | "overview" | "allocation" | "market";
 type ActiveHolding = {
   id: string;
   ticker: string;
@@ -25,6 +26,34 @@ type ActiveHolding = {
   quantity: number;
   allocationPercent: number;
   pnl: number;
+};
+
+const dashboardGuide: Record<DashboardTab, { title: string; body: string; accent: string }> = {
+  portfolio: {
+    title: "Portfolio",
+    body: "Review submitted stocks, live prices, allocation weight, and P&L. This is where your active holdings become easy to monitor.",
+    accent: C.cyan,
+  },
+  watchlist: {
+    title: "Watchlist",
+    body: "Stocks you saved but haven't committed to yet. Tap one to edit its quantity or thesis, tap + to move it into your active holdings, or delete it if you're no longer interested.",
+    accent: C.gold,
+  },
+  overview: {
+    title: "Overview",
+    body: "Compare your portfolio movement against the benchmark to understand whether returns are coming from skill or market direction.",
+    accent: C.green,
+  },
+  allocation: {
+    title: "Allocation",
+    body: "Check how much capital is invested versus held as cash. Keep this balanced before final submission.",
+    accent: C.purple,
+  },
+  market: {
+    title: "Market",
+    body: "Track major movers and index signals before choosing stocks or adjusting your thesis.",
+    accent: C.gold,
+  },
 };
 
 function sampleAndNormalize(records: { Close: number }[], points: number): number[] {
@@ -75,6 +104,7 @@ export function Dashboard({ userName, studentId }: { userName: string; studentId
   const [tab, setTab] = useState<DashboardTab>("portfolio");
   const tabs: { id: DashboardTab; label: string }[] = [
     { id: "portfolio", label: "Portfolio" },
+    { id: "watchlist", label: "Watchlist" },
     { id: "overview", label: "Overview" },
     { id: "allocation", label: "Allocation" },
     { id: "market", label: "Market" },
@@ -90,6 +120,21 @@ export function Dashboard({ userName, studentId }: { userName: string; studentId
   const [scoreLoading, setScoreLoading] = useState(true);
   const [deletingTicker, setDeletingTicker] = useState<string | null>(null);
   const [deleteError, setDeleteError] = useState("");
+  const [watchlistItems, setWatchlistItems] = useState<BackendWatchlistItem[]>([]);
+  const [watchlistLoading, setWatchlistLoading] = useState(true);
+  const [watchlistError, setWatchlistError] = useState("");
+  const [editingWatchlistId, setEditingWatchlistId] = useState<number | null>(null);
+  const [editQuantity, setEditQuantity] = useState("");
+  const [editThesis, setEditThesis] = useState("");
+  const [savingWatchlistId, setSavingWatchlistId] = useState<number | null>(null);
+  const [promotingWatchlistId, setPromotingWatchlistId] = useState<number | null>(null);
+  const [deletingWatchlistId, setDeletingWatchlistId] = useState<number | null>(null);
+  const [guideIndex, setGuideIndex] = useState(0);
+  const [guideVisible, setGuideVisible] = useState(false);
+  const [tabRowLayout, setTabRowLayout] = useState({ width: 0, height: 0 });
+  const [tabAnchors, setTabAnchors] = useState<Record<string, { x: number; width: number }>>({});
+  const { width: windowWidth } = useWindowDimensions();
+  const tourKey = `dra.tourSeen.dashboard.${studentId || "guest"}`;
 
   const refreshSummary = async () => {
     if (!studentId) return;
@@ -140,10 +185,58 @@ export function Dashboard({ userName, studentId }: { userName: string; studentId
     }
   };
 
+  const refreshWatchlist = async () => {
+    if (!studentId) return;
+    setWatchlistLoading(true);
+    setWatchlistError("");
+    try {
+      const response = await watchlist.list(studentId);
+      setWatchlistItems(response.watchlist);
+    } catch (error) {
+      setWatchlistError(error instanceof Error ? error.message : "Could not load your watchlist.");
+    } finally {
+      setWatchlistLoading(false);
+    }
+  };
+
   useEffect(() => {
     if (!studentId) return;
     void refreshSummary();
   }, [studentId]);
+
+  useEffect(() => {
+    if (!studentId) return;
+    let active = true;
+    getTourSeen(tourKey).then((seen) => {
+      if (!active || seen) return;
+      setGuideIndex(0);
+      setGuideVisible(true);
+    });
+    return () => {
+      active = false;
+    };
+  }, [studentId]);
+
+  useEffect(() => {
+    if (!guideVisible) return;
+    const timer = setInterval(() => {
+      setGuideIndex((index) => {
+        const next = index + 1;
+        if (next >= tabs.length) {
+          setGuideVisible(false);
+          void setTourSeen(tourKey);
+          return index;
+        }
+        return next;
+      });
+    }, 5000);
+    return () => clearInterval(timer);
+  }, [guideVisible, tourKey]);
+
+  const dismissGuide = () => {
+    setGuideVisible(false);
+    void setTourSeen(tourKey);
+  };
 
   useEffect(() => {
     if (!studentId) return;
@@ -161,6 +254,11 @@ export function Dashboard({ userName, studentId }: { userName: string; studentId
       clearInterval(timer);
     };
   }, [studentId, summary?.total_capital]);
+
+  useEffect(() => {
+    if (!studentId) return;
+    void refreshWatchlist();
+  }, [studentId]);
 
   useEffect(() => {
     getMarketIndices()
@@ -245,6 +343,79 @@ export function Dashboard({ userName, studentId }: { userName: string; studentId
     }
   };
 
+  const startEditingWatchlistItem = (item: BackendWatchlistItem) => {
+    if (editingWatchlistId === item.watchlist_id) {
+      setEditingWatchlistId(null);
+      return;
+    }
+    setEditingWatchlistId(item.watchlist_id);
+    setEditQuantity(String(item.quantity || 0));
+    setEditThesis(item.thesis || "");
+  };
+
+  const handleSaveWatchlistEdit = async (item: BackendWatchlistItem) => {
+    setSavingWatchlistId(item.watchlist_id);
+    try {
+      const quantity = Math.max(0, Math.round(Number(editQuantity) || 0));
+      const { item: updated } = await watchlist.update(item.watchlist_id, { quantity, thesis: editThesis });
+      setWatchlistItems((items) => items.map((w) => (w.watchlist_id === item.watchlist_id ? updated : w)));
+      setEditingWatchlistId(null);
+      Toast.show({ type: "success", text1: "Watchlist updated", text2: `${item.stock_ticker} saved.` });
+    } catch (error) {
+      Toast.show({ type: "error", text1: "Update failed", text2: error instanceof Error ? error.message : `Could not update ${item.stock_ticker}.` });
+    } finally {
+      setSavingWatchlistId(null);
+    }
+  };
+
+  const handlePromoteWatchlistItem = async (item: BackendWatchlistItem) => {
+    setPromotingWatchlistId(item.watchlist_id);
+    try {
+      await portfolio.executeTrade({
+        stock_ticker: item.stock_ticker,
+        stock_name: item.stock_name || item.stock_ticker,
+        sector: item.sector || undefined,
+        trade_type: item.trade_type === "SELL" ? "SELL" : "BUY",
+        quantity: Math.max(1, Math.round(item.quantity || 1)),
+        buy_price: item.buy_price || undefined,
+        current_sell_price: item.current_sell_price || item.buy_price || undefined,
+        tag1: item.tag1 || undefined,
+        tag2: item.tag2 || undefined,
+        tag3: item.tag3 || undefined,
+        thesis: item.thesis || undefined,
+        amount_invested: item.amount_invested || undefined,
+      });
+      await watchlist.remove(item.watchlist_id);
+      setWatchlistItems((items) => items.filter((w) => w.watchlist_id !== item.watchlist_id));
+      await refreshSummary();
+      await refreshHoldings();
+      analytics.computeScores(studentId).catch(() => null);
+      Toast.show({
+        type: "success",
+        text1: "Added to Portfolio",
+        text2: `${item.stock_ticker} moved from Watchlist to your active holdings.`,
+      });
+    } catch (error) {
+      Toast.show({ type: "error", text1: "Could not submit", text2: error instanceof Error ? error.message : `Could not submit ${item.stock_ticker}.` });
+    } finally {
+      setPromotingWatchlistId(null);
+    }
+  };
+
+  const handleDeleteWatchlistItem = async (item: BackendWatchlistItem) => {
+    setDeletingWatchlistId(item.watchlist_id);
+    try {
+      await watchlist.remove(item.watchlist_id);
+      setWatchlistItems((items) => items.filter((w) => w.watchlist_id !== item.watchlist_id));
+      if (editingWatchlistId === item.watchlist_id) setEditingWatchlistId(null);
+      Toast.show({ type: "info", text1: "Removed from Watchlist", text2: `${item.stock_ticker} removed.` });
+    } catch (error) {
+      Toast.show({ type: "error", text1: "Delete failed", text2: error instanceof Error ? error.message : `Could not delete ${item.stock_ticker}.` });
+    } finally {
+      setDeletingWatchlistId(null);
+    }
+  };
+
   return (
     <View style={{ gap: 16 }}>
       <View>
@@ -254,29 +425,91 @@ export function Dashboard({ userName, studentId }: { userName: string; studentId
         <View style={{ height: 1, marginTop: 14, backgroundColor: C.border }} />
       </View>
 
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8 }}>
-        {tabs.map((item) => {
-          const active = tab === item.id;
+      <View onLayout={(e) => setTabRowLayout({ width: e.nativeEvent.layout.width, height: e.nativeEvent.layout.height })}>
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8 }}>
+          {tabs.map((item, index) => {
+            const active = tab === item.id;
+            const pointedAt = guideVisible && tabs[guideIndex]?.id === item.id;
+            return (
+              <TouchableOpacity
+                key={item.id}
+                onLayout={(e) => {
+                  const { x, width } = e.nativeEvent.layout;
+                  setTabAnchors((prev) => ({ ...prev, [item.id]: { x, width } }));
+                }}
+                onPress={() => {
+                  setTab(item.id);
+                  if (!guideVisible) setGuideIndex(index);
+                }}
+                style={{
+                  paddingHorizontal: 14,
+                  paddingVertical: 10,
+                  borderRadius: 999,
+                  backgroundColor: active ? "rgba(49,230,255,0.14)" : "rgba(255,255,255,0.05)",
+                  borderColor: pointedAt ? dashboardGuide[item.id].accent : active ? C.cyan : C.border,
+                  borderWidth: pointedAt ? 2 : 1,
+                  boxShadow: pointedAt ? `0 0 0 4px ${dashboardGuide[item.id].accent}22, 0 0 18px ${dashboardGuide[item.id].accent}55` : undefined,
+                }}
+              >
+                <Text selectable style={{ color: active ? C.cyan : C.text2, fontFamily: font.medium, fontSize: 12 }}>
+                  {item.label}
+                </Text>
+              </TouchableOpacity>
+            );
+          })}
+        </ScrollView>
+
+        {guideVisible ? (() => {
+          const pointedTab = tabs[guideIndex]?.id ?? tabs[0].id;
+          const guide = dashboardGuide[pointedTab];
+          const anchor = tabAnchors[pointedTab];
+          const boxWidth = tabRowLayout.width > 0 ? Math.min(300, windowWidth - 40, Math.max(tabRowLayout.width, 220)) : Math.min(300, windowWidth - 40);
+          const maxLeft = Math.max(tabRowLayout.width - boxWidth, 0);
+          const boxLeft = anchor ? Math.min(Math.max(anchor.x + anchor.width / 2 - boxWidth / 2, 0), maxLeft) : 0;
+          const arrowLeft = anchor
+            ? Math.min(Math.max(anchor.x + anchor.width / 2 - boxLeft - 7, 12), boxWidth - 26)
+            : boxWidth / 2 - 7;
           return (
-            <TouchableOpacity
-              key={item.id}
-              onPress={() => setTab(item.id)}
-              style={{
-                paddingHorizontal: 14,
-                paddingVertical: 10,
-                borderRadius: 999,
-                backgroundColor: active ? "rgba(49,230,255,0.14)" : "rgba(255,255,255,0.05)",
-                borderColor: active ? C.cyan : C.border,
-                borderWidth: 1,
-              }}
-            >
-              <Text selectable style={{ color: active ? C.cyan : C.text2, fontFamily: font.medium, fontSize: 12 }}>
-                {item.label}
-              </Text>
-            </TouchableOpacity>
+            <View style={{ marginLeft: boxLeft, width: boxWidth, marginTop: 10 }}>
+              <View
+                style={{
+                  marginLeft: arrowLeft,
+                  width: 12,
+                  height: 12,
+                  marginBottom: -7,
+                  backgroundColor: "rgba(10,16,32,0.98)",
+                  borderColor: `${guide.accent}77`,
+                  borderTopWidth: 1,
+                  borderLeftWidth: 1,
+                  transform: [{ rotate: "45deg" }],
+                }}
+              />
+              <View style={{ padding: 14, borderRadius: 14, borderWidth: 1, borderColor: `${guide.accent}77`, backgroundColor: "rgba(10,16,32,0.98)", boxShadow: `0 14px 34px ${guide.accent}22`, gap: 8 }}>
+                <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
+                  <Text selectable style={{ color: guide.accent, fontFamily: font.medium, fontSize: 11, textTransform: "uppercase" }}>
+                    Quick Tour {guideIndex + 1}/{tabs.length}
+                  </Text>
+                  <View style={{ flex: 1, height: 1, backgroundColor: `${guide.accent}55` }} />
+                  <TouchableOpacity accessibilityLabel="Skip tour" onPress={dismissGuide} style={{ width: 22, height: 22, borderRadius: 11, alignItems: "center", justifyContent: "center", backgroundColor: "rgba(255,255,255,0.06)", borderColor: C.border, borderWidth: 1 }}>
+                    <X size={12} color={C.text1} />
+                  </TouchableOpacity>
+                </View>
+                <Text selectable style={{ color: C.text0, fontFamily: font.heading, fontSize: 16, textTransform: "uppercase" }}>
+                  {guide.title}
+                </Text>
+                <Text selectable style={{ color: C.text1, fontSize: 12, lineHeight: 17 }}>
+                  {guide.body}
+                </Text>
+                <View style={{ flexDirection: "row", gap: 6, marginTop: 2 }}>
+                  {tabs.map((item, index) => (
+                    <View key={item.id} style={{ flex: 1, height: 3, borderRadius: 3, backgroundColor: index <= guideIndex ? guide.accent : C.bg3 }} />
+                  ))}
+                </View>
+              </View>
+            </View>
           );
-        })}
-      </ScrollView>
+        })() : null}
+      </View>
 
       {tab === "portfolio" ? (
         <GlassCard style={{ padding: 16, gap: 14, backgroundColor: "rgba(10,16,32,0.96)" }} accent={C.cyan}>
@@ -340,6 +573,136 @@ export function Dashboard({ userName, studentId }: { userName: string; studentId
                   >
                     <Trash2 size={18} color={C.red} />
                   </TouchableOpacity>
+                </View>
+              );
+            })
+          )}
+        </GlassCard>
+      ) : null}
+
+      {tab === "watchlist" ? (
+        <GlassCard style={{ padding: 16, gap: 14, backgroundColor: "rgba(10,16,32,0.96)" }} accent={C.gold}>
+          <SectionTitle
+            title={`Watchlist (${watchlistItems.length})`}
+            accent={C.gold}
+            right={<Text selectable style={{ color: C.text2, fontFamily: font.mono, fontSize: 11 }}>Tap a stock to edit</Text>}
+          />
+          {watchlistError ? (
+            <View style={{ padding: 12, borderRadius: 10, borderWidth: 1, borderColor: "rgba(255,95,126,0.38)", backgroundColor: "rgba(255,95,126,0.10)" }}>
+              <Text selectable style={{ color: C.red, fontSize: 12, lineHeight: 17 }}>
+                {watchlistError}
+              </Text>
+            </View>
+          ) : null}
+          {watchlistLoading && watchlistItems.length === 0 ? (
+            <ActivityIndicator color={C.gold} />
+          ) : watchlistItems.length === 0 ? (
+            <View style={{ padding: 14, borderRadius: 12, borderWidth: 1, borderColor: C.border, backgroundColor: "rgba(255,255,255,0.035)" }}>
+              <Text selectable style={{ color: C.text2, fontSize: 12 }}>
+                Nothing saved yet. Use Save to Watchlist on the Portfolio page to track a stock here before you commit capital to it.
+              </Text>
+            </View>
+          ) : (
+            watchlistItems.map((item) => {
+              const isEditing = editingWatchlistId === item.watchlist_id;
+              const isSaving = savingWatchlistId === item.watchlist_id;
+              const isPromoting = promotingWatchlistId === item.watchlist_id;
+              const isDeleting = deletingWatchlistId === item.watchlist_id;
+              const busy = isSaving || isPromoting || isDeleting;
+              return (
+                <View key={item.watchlist_id} style={{ borderRadius: 14, borderWidth: 1, borderColor: isEditing ? `${C.gold}77` : C.border, backgroundColor: isEditing ? "rgba(255,209,102,0.06)" : "rgba(255,255,255,0.035)", overflow: "hidden" }}>
+                  <TouchableOpacity
+                    activeOpacity={0.78}
+                    onPress={() => startEditingWatchlistItem(item)}
+                    style={{ flexDirection: "row", flexWrap: "wrap", alignItems: "center", gap: 14, padding: 14 }}
+                  >
+                    <View style={{ width: 54, height: 44, borderRadius: 10, borderWidth: 1, borderColor: `${C.gold}66`, backgroundColor: "rgba(255,209,102,0.10)", alignItems: "center", justifyContent: "center" }}>
+                      <Text selectable numberOfLines={1} style={{ color: C.gold, fontFamily: font.mono, fontSize: 12 }}>{item.stock_ticker}</Text>
+                    </View>
+                    <View style={{ flex: 1.4, minWidth: 170 }}>
+                      <Text selectable numberOfLines={1} style={{ color: C.text0, fontFamily: font.medium, fontSize: 15 }}>{item.stock_name}</Text>
+                      <Text selectable numberOfLines={1} style={{ color: C.text2, fontFamily: font.mono, fontSize: 10, marginTop: 3, textTransform: "uppercase" }}>{item.sector || "Unclassified"}</Text>
+                    </View>
+                    <View style={{ minWidth: 100 }}>
+                      <Text selectable style={{ color: C.text2, fontFamily: font.mono, fontSize: 10, textTransform: "uppercase" }}>Allocation</Text>
+                      <Text selectable style={{ color: C.text1, fontFamily: font.mono, fontSize: 13, marginTop: 4 }}>{item.allocation_percent}%</Text>
+                    </View>
+                    <View style={{ minWidth: 100 }}>
+                      <Text selectable style={{ color: C.text2, fontFamily: font.mono, fontSize: 10, textTransform: "uppercase" }}>Buy Price</Text>
+                      <Text selectable style={{ color: C.text1, fontFamily: font.mono, fontSize: 13, marginTop: 4 }}>{formatMoney(item.buy_price)}</Text>
+                    </View>
+                    <View style={{ minWidth: 90 }}>
+                      <Text selectable style={{ color: C.text2, fontFamily: font.mono, fontSize: 10, textTransform: "uppercase" }}>Quantity</Text>
+                      <Text selectable style={{ color: C.text1, fontFamily: font.mono, fontSize: 13, marginTop: 4 }}>{item.quantity}</Text>
+                    </View>
+
+                    <View style={{ flexDirection: "row", gap: 8, marginLeft: "auto" }}>
+                      <TouchableOpacity
+                        accessibilityLabel={`Add ${item.stock_ticker} to portfolio`}
+                        disabled={busy}
+                        onPress={(event) => {
+                          event.stopPropagation();
+                          void handlePromoteWatchlistItem(item);
+                        }}
+                        style={{ width: 42, height: 42, borderRadius: 10, alignItems: "center", justifyContent: "center", backgroundColor: "rgba(30,230,163,0.10)", borderColor: "rgba(30,230,163,0.38)", borderWidth: 1, opacity: busy ? 0.55 : 1 }}
+                      >
+                        {isPromoting ? <ActivityIndicator size="small" color={C.green} /> : <Plus size={18} color={C.green} />}
+                      </TouchableOpacity>
+                      <TouchableOpacity
+                        accessibilityLabel={`Delete ${item.stock_ticker} from watchlist`}
+                        disabled={busy}
+                        onPress={(event) => {
+                          event.stopPropagation();
+                          void handleDeleteWatchlistItem(item);
+                        }}
+                        style={{ width: 42, height: 42, borderRadius: 10, alignItems: "center", justifyContent: "center", backgroundColor: "rgba(255,95,126,0.10)", borderColor: "rgba(255,95,126,0.38)", borderWidth: 1, opacity: busy ? 0.55 : 1 }}
+                      >
+                        {isDeleting ? <ActivityIndicator size="small" color={C.red} /> : <Trash2 size={18} color={C.red} />}
+                      </TouchableOpacity>
+                      <View style={{ width: 42, height: 42, borderRadius: 10, alignItems: "center", justifyContent: "center", backgroundColor: "rgba(255,255,255,0.05)", borderColor: C.border2, borderWidth: 1 }}>
+                        <Pencil size={16} color={C.text1} />
+                      </View>
+                    </View>
+                  </TouchableOpacity>
+
+                  {isEditing ? (
+                    <View style={{ padding: 14, paddingTop: 0, gap: 10 }}>
+                      <View style={{ height: 1, backgroundColor: C.border }} />
+                      <View style={{ flexDirection: "row", gap: 10, alignItems: "flex-end" }}>
+                        <View style={{ width: 110 }}>
+                          <Text selectable style={{ color: C.text2, fontFamily: font.mono, fontSize: 10, textTransform: "uppercase", marginBottom: 6 }}>Quantity</Text>
+                          <TextInput
+                            value={editQuantity}
+                            onChangeText={setEditQuantity}
+                            keyboardType="number-pad"
+                            placeholder="0"
+                            placeholderTextColor={C.text2}
+                            style={{ borderRadius: 10, borderWidth: 1, borderColor: C.border2, backgroundColor: "rgba(255,255,255,0.05)", color: C.text0, paddingHorizontal: 12, paddingVertical: 10, fontFamily: font.mono, fontSize: 13 }}
+                          />
+                        </View>
+                        <TouchableOpacity
+                          disabled={isSaving}
+                          onPress={() => void handleSaveWatchlistEdit(item)}
+                          style={{ flexDirection: "row", alignItems: "center", gap: 6, paddingHorizontal: 14, paddingVertical: 11, borderRadius: 10, backgroundColor: "rgba(255,209,102,0.14)", borderColor: `${C.gold}66`, borderWidth: 1, opacity: isSaving ? 0.6 : 1 }}
+                        >
+                          {isSaving ? <ActivityIndicator size="small" color={C.gold} /> : <Check size={14} color={C.gold} />}
+                          <Text selectable style={{ color: C.gold, fontFamily: font.medium, fontSize: 12 }}>Save</Text>
+                        </TouchableOpacity>
+                      </View>
+                      <View>
+                        <Text selectable style={{ color: C.text2, fontFamily: font.mono, fontSize: 10, textTransform: "uppercase", marginBottom: 6 }}>Thesis</Text>
+                        <TextInput
+                          value={editThesis}
+                          onChangeText={setEditThesis}
+                          placeholder="Why this stock?"
+                          placeholderTextColor={C.text2}
+                          multiline
+                          numberOfLines={3}
+                          style={{ borderRadius: 10, borderWidth: 1, borderColor: C.border2, backgroundColor: "rgba(255,255,255,0.05)", color: C.text0, paddingHorizontal: 12, paddingVertical: 10, fontFamily: font.regular, fontSize: 13, lineHeight: 18, minHeight: 64, textAlignVertical: "top" }}
+                        />
+                      </View>
+                    </View>
+                  ) : null}
                 </View>
               );
             })

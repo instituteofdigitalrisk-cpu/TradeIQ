@@ -1,28 +1,43 @@
-import { Check, Trash2, X } from "lucide-react-native";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { Check, X } from "lucide-react-native";
+import { useEffect, useRef, useState } from "react";
 import { ActivityIndicator, Modal, Pressable, ScrollView, Text, TextInput, TouchableOpacity, useWindowDimensions, View } from "react-native";
+import Toast from "react-native-toast-message";
 import { C, font, glossary, glossaryTerms, sectorOptions } from "../constants";
-import { getPortfolioDraft, savePortfolioDraft } from "../portfolio-store";
-import { analytics, market, portfolio } from "../api";
-import type { BackendTrade, StockSearchResult } from "../api";
-import type { Position, PortfolioSetup, UserData } from "../types";
+import { getTourSeen, setTourSeen } from "../tour-store";
+import { analytics, market, portfolio, watchlist } from "../api";
+import type { StockSearchResult } from "../api";
+import type { Position, UserData } from "../types";
 import { wordCount } from "../utils";
 import { AppButton, Field, GlassCard, Pill, SectionTitle } from "../components/ui";
 
 const tagOptions = ["Earnings Play", "Macro Tailwind", "Valuation Gap", "Momentum", "Risk Hedge", "(optional)"];
-const tableColumns = [
-  { key: "ticker", label: "Ticker", width: 92 },
-  { key: "name", label: "Stock", width: 190 },
-  { key: "sector", label: "Sector", width: 150 },
-  { key: "type", label: "Type", width: 78 },
-  { key: "allocation", label: "Alloc.", width: 84 },
-  { key: "amount", label: "Amount", width: 112 },
-  { key: "buy", label: "Buy", width: 92 },
-  { key: "price", label: "Current", width: 96 },
-  { key: "thesis", label: "Thesis", width: 180 },
-  { key: "action", label: "", width: 64 },
-] as const;
-
+const MAX_SINGLE_ALLOCATION = 30;
+const portfolioGuide = [
+  {
+    title: "Step 1: Search a stock",
+    body: "Choose one stock, confirm the sector, and keep the thesis short and decision-ready.",
+    accent: C.cyan,
+    target: "Select Stock panel, highlighted below",
+  },
+  {
+    title: "Step 2: Set allocation",
+    body: "Set how much of your capital to commit to this stock. A single position cannot exceed 30% of total capital.",
+    accent: C.green,
+    target: "Allocation panel, highlighted below",
+  },
+  {
+    title: "Step 3: Save to Watchlist",
+    body: "Not ready to commit capital yet? Save to Watchlist to track the stock and its price. You can edit it or submit it later from the Watchlist tab on your Dashboard.",
+    accent: C.gold,
+    target: "Save to Watchlist button, highlighted below",
+  },
+  {
+    title: "Step 4: Submit",
+    body: "Ready now? Submit adds the stock straight to your active holdings — only submitted stocks count toward your allocation and score.",
+    accent: C.purple,
+    target: "Submit button, highlighted below",
+  },
+];
 function today() {
   return new Date().toLocaleDateString("en-GB");
 }
@@ -47,41 +62,6 @@ function makeTrade(studentId: string, index: number, capital: number): Position 
     tag3: "(optional)",
     thesis: "",
   };
-}
-
-function money(value: number) {
-  return `$${Number(value || 0).toLocaleString("en-US", { maximumFractionDigits: 2 })}`;
-}
-
-function displayDate(value: string) {
-  const parsed = new Date(value);
-  return Number.isNaN(parsed.getTime()) ? value : parsed.toLocaleDateString("en-GB");
-}
-
-function tradeToPosition(trade: BackendTrade, index: number, studentId: string): Position {
-  return {
-    id: `server-${trade.trade_id}`,
-    tradeId: trade.trade_id,
-    studentId,
-    addedBy: studentId,
-    tradeDate: displayDate(trade.trade_date),
-    stockTicker: trade.stock_ticker ?? "",
-    stockName: trade.stock_name ?? trade.stock_ticker ?? "",
-    sector: trade.sector ?? "Technology",
-    allocationPercent: Number(trade.allocation_percent || 0),
-    amountInvested: money(trade.amount_invested),
-    buyPrice: String(trade.buy_price || ""),
-    currentSellPrice: String(trade.current_sell_price || trade.buy_price || ""),
-    tradeType: trade.trade_type === "SELL" ? "Sell" : "Buy",
-    tag1: trade.tag1 ?? "Earnings Play",
-    tag2: trade.tag2 ?? "Macro Tailwind",
-    tag3: trade.tag3 ?? "(optional)",
-    thesis: trade.thesis ?? "",
-  };
-}
-
-function isSubmittedPosition(position: Position) {
-  return position.id.startsWith("server-");
 }
 
 function OptionRow({ label, options, value, onChange }: { label: string; options: string[]; value: string; onChange: (value: string) => void }) {
@@ -134,91 +114,6 @@ function CompactSelect({ label, options, value, onChange }: { label: string; opt
           </View>
         </Pressable>
       </Modal>
-    </View>
-  );
-}
-
-function DraftTradesTable({
-  positions,
-  selectedId,
-  onSelect,
-  onDelete,
-}: {
-  positions: Position[];
-  selectedId: string | null;
-  onSelect: (position: Position) => void;
-  onDelete: (id: string) => void;
-}) {
-  return (
-    <View style={{ borderRadius: 12, borderWidth: 1, borderColor: C.border, overflow: "hidden", backgroundColor: "rgba(255,255,255,0.035)" }}>
-      <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-        <View>
-          <View style={{ flexDirection: "row", backgroundColor: "rgba(49,230,255,0.10)", borderBottomColor: C.border, borderBottomWidth: 1 }}>
-            {tableColumns.map((column) => (
-              <View key={column.key} style={{ width: column.width, paddingHorizontal: 10, paddingVertical: 10 }}>
-                <Text selectable style={{ color: C.cyan, fontFamily: font.medium, fontSize: 10, textTransform: "uppercase" }}>
-                  {column.label}
-                </Text>
-              </View>
-            ))}
-          </View>
-          {positions.map((position, index) => {
-            const cells = [
-              position.stockTicker || "-",
-              position.stockName || "Select a stock",
-              position.sector || "-",
-              position.tradeType,
-              `${position.allocationPercent || 0}%`,
-              position.amountInvested || "-",
-              position.buyPrice || "-",
-              position.currentSellPrice || "-",
-              position.thesis ? `${position.thesis.slice(0, 52)}${position.thesis.length > 52 ? "..." : ""}` : "-",
-            ];
-            return (
-              <TouchableOpacity
-                key={position.id}
-                activeOpacity={0.78}
-                onPress={() => onSelect(position)}
-                style={{
-                  flexDirection: "row",
-                  alignItems: "center",
-                  backgroundColor: selectedId === position.id ? "rgba(49,230,255,0.12)" : index % 2 === 0 ? "rgba(255,255,255,0.025)" : "rgba(255,255,255,0.052)",
-                  borderBottomColor: selectedId === position.id ? "rgba(49,230,255,0.28)" : C.border,
-                  borderBottomWidth: index < positions.length - 1 ? 1 : 0,
-                }}
-              >
-                {cells.map((value, cellIndex) => (
-                  <View key={`${position.id}-${cellIndex}`} style={{ width: tableColumns[cellIndex].width, paddingHorizontal: 10, paddingVertical: 11 }}>
-                    <Text
-                      selectable
-                      numberOfLines={2}
-                      style={{
-                        color: cellIndex === 0 ? C.text0 : C.text1,
-                        fontFamily: cellIndex === 0 || cellIndex >= 4 ? font.mono : font.regular,
-                        fontSize: cellIndex === 8 ? 11 : 12,
-                        lineHeight: 16,
-                      }}
-                    >
-                      {value}
-                    </Text>
-                  </View>
-                ))}
-                <View style={{ width: tableColumns[9].width, paddingHorizontal: 10, paddingVertical: 7, alignItems: "center" }}>
-                  <TouchableOpacity
-                    onPress={(event) => {
-                      event.stopPropagation();
-                      onDelete(position.id);
-                    }}
-                    style={{ width: 34, height: 34, borderRadius: 10, alignItems: "center", justifyContent: "center", borderColor: "rgba(255,95,126,0.34)", borderWidth: 1, backgroundColor: "rgba(255,95,126,0.10)" }}
-                  >
-                    <Trash2 size={15} color={C.red} />
-                  </TouchableOpacity>
-                </View>
-              </TouchableOpacity>
-            );
-          })}
-        </View>
-      </ScrollView>
     </View>
   );
 }
@@ -362,120 +257,94 @@ export function PortfolioBuilder({ userData, onSubmitSuccess }: { userData: User
   const { width } = useWindowDimensions();
   const isNarrow = width < 430;
   const [capitalAmount, setCapitalAmount] = useState(10000);
-  const [positions, setPositions] = useState<Position[]>([]);
+  const [committedPercent, setCommittedPercent] = useState(0);
+  const [tradeSequence, setTradeSequence] = useState(1);
   const [currentPosition, setCurrentPosition] = useState<Position>(() => makeTrade(studentId, 0, capitalAmount));
-  const [editingId, setEditingId] = useState<string | null>(null);
-  const [setup, setSetup] = useState<PortfolioSetup>({
-    studentId,
-    totalCapital: "$10,000",
-    riskAppetite: "Moderate",
-    investmentHorizon: "1 Month",
-    competitionRound: "June 2026",
-  });
   const [activeGlossary, setActiveGlossary] = useState<string | null>(null);
   const [submitted, setSubmitted] = useState(false);
   const [draftStatus, setDraftStatus] = useState("");
+  const [guideIndex, setGuideIndex] = useState(0);
+  const [guideVisible, setGuideVisible] = useState(false);
+  const tourKey = `dra.tourSeen.portfolio.${studentId || "guest"}`;
 
-  useEffect(() => {
-    let active = true;
-    setDraftStatus("Loading saved portfolio...");
-    async function loadSavedPortfolio() {
-      try {
-        const draft = await getPortfolioDraft(studentId);
-        if (!active) return;
-        if (draft && draft.positions.length > 0) {
-          setSetup(draft.setup);
-          setPositions(draft.positions);
-          setCurrentPosition(makeTrade(studentId, draft.positions.length, capitalAmount));
-          setEditingId(null);
-          setDraftStatus(`Draft restored from ${new Date(draft.updatedAt).toLocaleString()}.`);
-          return;
-        }
-
-        if (userData?.studentId) {
-          const response = await portfolio.getTrades(userData.studentId);
-          if (!active) return;
-          const savedPositions = response.trades
-            .slice()
-            .reverse()
-            .map((trade, index) => tradeToPosition(trade, index, studentId));
-          if (savedPositions.length > 0) {
-            const nextSetup = draft?.setup ?? {
-              studentId,
-              totalCapital: "$10,000",
-              riskAppetite: "Moderate",
-              investmentHorizon: "1 Month",
-              competitionRound: "June 2026",
-            };
-            setSetup(nextSetup);
-            setPositions(savedPositions);
-            setCurrentPosition(makeTrade(studentId, savedPositions.length, capitalAmount));
-            setEditingId(null);
-            setDraftStatus(`${savedPositions.length} previously submitted stock${savedPositions.length === 1 ? "" : "s"} loaded.`);
-            return;
-          }
-        }
-
-        if (!active) return;
-        setSetup({
-          studentId,
-          totalCapital: "$10,000",
-          riskAppetite: "Moderate",
-          investmentHorizon: "1 Month",
-          competitionRound: "June 2026",
-        });
-        setPositions([]);
-        setCurrentPosition(makeTrade(studentId, 0, capitalAmount));
-        setEditingId(null);
-        setDraftStatus("");
-      } catch (err) {
-        if (!active) return;
-        setSetup({
-          studentId,
-          totalCapital: "$10,000",
-          riskAppetite: "Moderate",
-          investmentHorizon: "1 Month",
-          competitionRound: "June 2026",
-        });
-        setPositions([]);
-        setCurrentPosition(makeTrade(studentId, 0, capitalAmount));
-        setEditingId(null);
-        setDraftStatus(err instanceof Error ? `Saved stocks could not load: ${err.message}` : "Saved stocks could not load.");
-      }
-    }
-    void loadSavedPortfolio();
-    return () => {
-      active = false;
-    };
-  }, [capitalAmount, studentId, userData?.studentId]);
+  const refreshCapitalSummary = (id: string) =>
+    portfolio.getSummary(id)
+      .then((s) => {
+        setCapitalAmount(s.total_capital);
+        setCommittedPercent(s.total_capital > 0 ? Math.round((s.holdings_value / s.total_capital) * 1000) / 10 : 0);
+        setCurrentPosition((prev) => ({
+          ...prev,
+          amountInvested: `$${Math.round((s.total_capital * Number(prev.allocationPercent || 0)) / 100).toLocaleString()}`,
+        }));
+      })
+      .catch(() => {});
 
   useEffect(() => {
     if (!userData?.studentId) return;
-    portfolio.getSummary(userData.studentId)
-      .then((s) => {
-        setCapitalAmount(s.total_capital);
-        setSetup((prev) => ({ ...prev, totalCapital: `$${s.total_capital.toLocaleString()}` }));
-        setCurrentPosition((prev) => {
-          if (editingId) return prev;
-          return {
-            ...prev,
-            amountInvested: `$${Math.round((s.total_capital * Number(prev.allocationPercent || 0)) / 100).toLocaleString()}`,
-          };
-        });
+    let active = true;
+    void refreshCapitalSummary(userData.studentId);
+
+    Promise.all([watchlist.list(userData.studentId).catch(() => ({ count: 0 })), portfolio.getTrades(userData.studentId).catch(() => ({ count: 0 }))])
+      .then(([w, t]) => {
+        if (!active) return;
+        const nextSequence = (w.count || 0) + (t.count || 0) + 1;
+        setTradeSequence(nextSequence);
+        setCurrentPosition((prev) => ({ ...prev, tradeId: `TRD${String(nextSequence).padStart(6, "0")}` }));
       })
       .catch(() => {});
-  }, [editingId, userData?.studentId]);
 
-  const totalAllocation = positions.reduce((sum, position) => sum + (Number(position.allocationPercent) || 0), 0);
-  const draftPositions = positions.filter((position) => !isSubmittedPosition(position));
-  const uniqueSectors = new Set(positions.map((position) => position.sector).filter(Boolean)).size;
-  const overLimit = totalAllocation > 100;
-  const meetsMin = uniqueSectors >= 3 && positions.every((position) => position.allocationPercent <= 30);
-  const colors = [C.purple, C.cyan, C.green, C.gold, C.red, C.text2];
+    return () => {
+      active = false;
+    };
+  }, [userData?.studentId]);
 
-  const resetCurrentPosition = (nextIndex = positions.length) => {
-    setCurrentPosition(makeTrade(studentId, nextIndex, capitalAmount));
-    setEditingId(null);
+  useEffect(() => {
+    let active = true;
+    getTourSeen(tourKey).then((seen) => {
+      if (!active || seen) return;
+      setGuideIndex(0);
+      setGuideVisible(true);
+    });
+    return () => {
+      active = false;
+    };
+  }, [tourKey]);
+
+  useEffect(() => {
+    if (!guideVisible) return;
+    const timer = setInterval(() => {
+      setGuideIndex((index) => {
+        const next = index + 1;
+        if (next >= portfolioGuide.length) {
+          setGuideVisible(false);
+          void setTourSeen(tourKey);
+          return index;
+        }
+        return next;
+      });
+    }, 5000);
+    return () => clearInterval(timer);
+  }, [guideVisible, tourKey]);
+
+  const dismissPortfolioGuide = () => {
+    setGuideVisible(false);
+    void setTourSeen(tourKey);
+  };
+
+  const hasCurrentStock = Boolean(currentPosition.stockTicker.trim());
+  const allocationPercent = Number(currentPosition.allocationPercent || 0);
+  const exceedsSingleCap = hasCurrentStock && allocationPercent > MAX_SINGLE_ALLOCATION;
+
+  const notify = (type: "success" | "error" | "info" | "warning", text1: string, text2: string) => {
+    Toast.show({ type, text1, text2 });
+  };
+
+  const resetCurrentPosition = () => {
+    setTradeSequence((seq) => {
+      const nextSequence = seq + 1;
+      setCurrentPosition({ ...makeTrade(studentId, 0, capitalAmount), tradeId: `TRD${String(nextSequence).padStart(6, "0")}` });
+      return nextSequence;
+    });
   };
 
   const updateCurrentPosition = (field: keyof Position, value: string | number) => {
@@ -486,119 +355,94 @@ export function PortfolioBuilder({ userData, onSubmitSuccess }: { userData: User
     });
   };
 
-  const selectPositionForEditing = (position: Position) => {
-    setCurrentPosition(position);
-    setEditingId(position.id);
-    setDraftStatus(`${position.stockTicker || "Selected stock"} loaded for editing.`);
-  };
-
-  const removePosition = async (id: string) => {
-    const nextPositions = positions.filter((position) => position.id !== id);
-    setPositions(nextPositions);
-    if (editingId === id) resetCurrentPosition(nextPositions.length);
-    const draft = await savePortfolioDraft(studentId, setup, nextPositions);
-    setSetup(draft.setup);
-    setPositions(draft.positions);
-    setDraftStatus(`Stock removed from the draft table. ${draft.positions.length} saved stock${draft.positions.length === 1 ? "" : "s"} remaining.`);
-  };
-
-  const saveDraft = async () => {
-    const hasCurrentStock = Boolean(currentPosition.stockTicker.trim());
-    const normalizedCurrent: Position = {
-      ...currentPosition,
-      id: editingId ?? currentPosition.id,
-      studentId,
-      addedBy: currentPosition.addedBy || studentId,
-      tradeId: editingId ? currentPosition.tradeId : `TRD${String(positions.length + 1).padStart(6, "0")}`,
+  const tradeFieldsFromCurrent = () => {
+    const rawAmount = parseFloat(currentPosition.amountInvested.replace(/[^0-9.]/g, "")) || 0;
+    const rawPrice = parseFloat(currentPosition.buyPrice.replace(/[^0-9.]/g, "")) || 0;
+    const quantity = rawPrice > 0 && rawAmount > 0 ? Math.max(1, Math.round(rawAmount / rawPrice)) : 1;
+    return {
+      stock_ticker: currentPosition.stockTicker,
+      stock_name: currentPosition.stockName || currentPosition.stockTicker,
+      sector: currentPosition.sector || undefined,
+      allocation_percent: allocationPercent,
+      amount_invested: rawAmount > 0 ? rawAmount : undefined,
+      quantity,
+      buy_price: rawPrice,
+      current_sell_price: parseFloat(currentPosition.currentSellPrice.replace(/[^0-9.]/g, "")) || rawPrice,
+      trade_type: (currentPosition.tradeType === "Sell" ? "SELL" : "BUY") as "BUY" | "SELL",
+      tag1: currentPosition.tag1 === "(optional)" ? undefined : currentPosition.tag1 || undefined,
+      tag2: currentPosition.tag2 === "(optional)" ? undefined : currentPosition.tag2 || undefined,
+      tag3: currentPosition.tag3 === "(optional)" ? undefined : currentPosition.tag3 || undefined,
+      thesis: currentPosition.thesis || undefined,
     };
-    const nextPositions = hasCurrentStock
-      ? editingId
-        ? positions.map((position) => (position.id === editingId ? normalizedCurrent : position))
-        : [...positions, normalizedCurrent]
-      : positions;
+  };
 
-    const draft = await savePortfolioDraft(studentId, setup, nextPositions);
-    setSetup(draft.setup);
-    setPositions(draft.positions);
-    resetCurrentPosition(draft.positions.length);
-    setDraftStatus(hasCurrentStock ? "Stock saved to the draft table. The form is ready for the next stock." : "Draft saved.");
+  const saveToWatchlist = async () => {
+    if (!hasCurrentStock) {
+      notify("warning", "Add a stock first", "Search and select a stock before saving it to your Watchlist.");
+      return;
+    }
+    if (exceedsSingleCap) {
+      const message = `A single position cannot exceed ${MAX_SINGLE_ALLOCATION}% of total capital. Currently set to ${allocationPercent}%.`;
+      setDraftStatus(message);
+      notify("warning", "Allocation too high", message);
+      return;
+    }
+    try {
+      const { item } = await watchlist.add(tradeFieldsFromCurrent());
+      const message = `${item.stock_ticker} saved to your Watchlist. Track it there, or come back anytime to submit it.`;
+      setDraftStatus(message);
+      notify("success", "Saved to Watchlist", `${item.stock_ticker} is now in your Watchlist. Edit or submit it anytime from the Watchlist tab on your Dashboard.`);
+      resetCurrentPosition();
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "Could not save to watchlist.";
+      setDraftStatus(message);
+      notify("error", "Save failed", message);
+    }
   };
 
   async function submitToBackend() {
     if (!userData?.studentId) {
       setDraftStatus("Not logged in.");
+      notify("error", "Submission failed", "You must be logged in to submit.");
       return;
     }
-    setDraftStatus("Submitting trades to server...");
-    let successCount = 0;
+    if (!hasCurrentStock) {
+      notify("warning", "Add a stock first", "Search and select a stock before submitting.");
+      return;
+    }
+    if (exceedsSingleCap) {
+      const message = `A single position cannot exceed ${MAX_SINGLE_ALLOCATION}% of total capital. Currently set to ${allocationPercent}%.`;
+      setDraftStatus(message);
+      notify("warning", "Allocation too high", message);
+      return;
+    }
+    setDraftStatus("Submitting to server...");
     try {
-      if (draftPositions.length === 0) {
-        setDraftStatus("No new draft stocks to submit. Previously submitted stocks are already saved.");
-        return;
-      }
-      if (overLimit) {
-        setDraftStatus("Total allocation exceeds 100%. Reduce position weights before submitting.");
-        return;
-      }
-      if (!meetsMin) {
-        setDraftStatus("Portfolio must include at least 3 sectors and keep every asset at or below 30% before submitting.");
-        return;
-      }
-
-      for (const position of draftPositions) {
-        const enteredPrice = parseFloat(position.buyPrice.replace(/[^0-9.]/g, ""));
-        const rawAmount = parseFloat(position.amountInvested.replace(/[^0-9.]/g, ""));
-        const rawPrice = enteredPrice > 0 ? enteredPrice : 1;
-        const quantity =
-          rawPrice > 0 && rawAmount > 0 ? Math.max(1, Math.round(rawAmount / rawPrice)) : 1;
-
-        await portfolio.executeTrade({
-          stock_ticker: position.stockTicker,
-          stock_name: position.stockName || position.stockTicker,
-          sector: position.sector || undefined,
-          trade_type: position.tradeType === "Buy" ? "BUY" : "SELL",
-          quantity,
-          buy_price: rawPrice,
-          current_sell_price: parseFloat(position.currentSellPrice.replace(/[^0-9.]/g, "")) || rawPrice,
-          tag1: position.tag1 === "(optional)" ? undefined : position.tag1 || undefined,
-          tag2: position.tag2 === "(optional)" ? undefined : position.tag2 || undefined,
-          tag3: position.tag3 === "(optional)" ? undefined : position.tag3 || undefined,
-          thesis: position.thesis || undefined,
-          amount_invested: rawAmount > 0 ? rawAmount : undefined,
-        });
-        successCount++;
-      }
+      const { trade } = await portfolio.executeTrade(tradeFieldsFromCurrent());
       try {
         await analytics.computeScores(userData.studentId);
-        setDraftStatus(`${successCount}/${draftPositions.length} trade(s) submitted successfully. Score and leaderboard updated.`);
+        setDraftStatus(`${trade.stock_ticker} submitted successfully. It now appears in your active holdings. Score and leaderboard updated.`);
+        notify("success", "Stock submitted", `${trade.stock_ticker} is now an active holding and counts toward your allocation and score.`);
       } catch {
-        setDraftStatus(`${successCount}/${draftPositions.length} trade(s) submitted successfully. Score will update after the next scoring run.`);
+        setDraftStatus(`${trade.stock_ticker} submitted successfully. It now appears in your active holdings.`);
+        notify("success", "Stock submitted", `${trade.stock_ticker} is now an active holding. Your score will update after the next scoring run.`);
       }
-      await savePortfolioDraft(studentId, setup, []);
-      const response = await portfolio.getTrades(userData.studentId);
-      const savedPositions = response.trades
-        .slice()
-        .reverse()
-        .map((trade, index) => tradeToPosition(trade, index, studentId));
-      setPositions(savedPositions);
-      resetCurrentPosition(savedPositions.length);
-      portfolio.getSummary(userData.studentId)
-        .then((s) => setCapitalAmount(s.total_capital))
-        .catch(() => {});
+      void refreshCapitalSummary(userData.studentId);
       setSubmitted(true);
+      resetCurrentPosition();
       onSubmitSuccess?.();
     } catch (err) {
-      setDraftStatus(
-        `${successCount}/${draftPositions.length} submitted. Error: ${err instanceof Error ? err.message : "Submission failed"}`
-      );
+      const message = err instanceof Error ? err.message : "Submission failed";
+      setDraftStatus(message);
+      notify("error", "Submission failed", message);
     }
   }
 
-  const statusText = useMemo(() => {
-    if (overLimit) return "Total allocation exceeds 100%. Reduce position weights.";
-    if (!meetsMin) return `Need min 3 sectors and max 30% per asset. Currently ${uniqueSectors} sectors.`;
-    return "Meets diversification requirements.";
-  }, [meetsMin, overLimit, uniqueSectors]);
+  const statusText = exceedsSingleCap
+    ? `Exceeds the ${MAX_SINGLE_ALLOCATION}% single-position limit.`
+    : hasCurrentStock
+      ? `Within the ${MAX_SINGLE_ALLOCATION}% single-position limit.`
+      : "Select a stock to set its allocation.";
 
   return (
     <View style={{ gap: 16 }}>
@@ -624,35 +468,96 @@ export function PortfolioBuilder({ userData, onSubmitSuccess }: { userData: User
         </Text>
       </View>
 
+      {guideVisible ? (() => {
+        const guide = portfolioGuide[guideIndex];
+        return (
+          <View style={{ alignSelf: "flex-start", width: Math.min(320, width - 32), padding: 14, borderRadius: 14, borderWidth: 1, borderColor: `${guide.accent}77`, backgroundColor: "rgba(10,16,32,0.98)", boxShadow: `0 14px 34px ${guide.accent}22`, gap: 8 }}>
+            <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
+              <Text selectable style={{ color: guide.accent, fontFamily: font.medium, fontSize: 11, textTransform: "uppercase" }}>
+                Quick Tour {guideIndex + 1}/{portfolioGuide.length}
+              </Text>
+              <View style={{ flex: 1, height: 1, backgroundColor: `${guide.accent}55` }} />
+              <TouchableOpacity accessibilityLabel="Skip tour" onPress={dismissPortfolioGuide} style={{ width: 22, height: 22, borderRadius: 11, alignItems: "center", justifyContent: "center", backgroundColor: "rgba(255,255,255,0.06)", borderColor: C.border, borderWidth: 1 }}>
+                <X size={12} color={C.text1} />
+              </TouchableOpacity>
+            </View>
+            <Text selectable style={{ color: C.text0, fontFamily: font.heading, fontSize: 15, textTransform: "uppercase" }}>
+              {guide.title}
+            </Text>
+            <Text selectable style={{ color: C.text1, fontSize: 12, lineHeight: 17 }}>
+              {guide.body}
+            </Text>
+            <Text selectable style={{ color: guide.accent, fontSize: 11, fontFamily: font.medium }}>
+              → {guide.target}
+            </Text>
+            <View style={{ flexDirection: "row", gap: 6, marginTop: 2 }}>
+              {portfolioGuide.map((step, index) => (
+                <View key={step.title} style={{ flex: 1, height: 3, borderRadius: 3, backgroundColor: index <= guideIndex ? guide.accent : C.bg3 }} />
+              ))}
+            </View>
+          </View>
+        );
+      })() : null}
+
       
-      <GlassCard style={{ padding: 16, gap: 14, backgroundColor: "rgba(8,35,33,0.82)", borderColor: overLimit ? "rgba(255,95,126,0.34)" : "rgba(30,230,163,0.30)" }} accent={overLimit ? C.red : C.green}>
-        <SectionTitle title="Allocation" accent={overLimit ? C.red : C.green} right={<Text selectable style={{ color: overLimit ? C.red : C.green, fontFamily: font.mono, fontSize: 16 }}>{totalAllocation}%</Text>} />
-        <Text selectable style={{ color: C.text2, fontSize: 12, lineHeight: 17 }}>
-          Keep total allocation within 100%, use at least 3 sectors, and cap each asset at 30%.
-        </Text>
-        <View style={{ flexDirection: "row", height: 14, borderRadius: 14, overflow: "hidden", gap: 2 }}>
-          {positions.map((position, index) => (
-            <View key={position.id} style={{ width: `${Math.min(position.allocationPercent, 30)}%`, minWidth: position.allocationPercent > 0 ? 2 : 0, backgroundColor: colors[index % colors.length] }} />
-          ))}
+      <GlassCard
+        style={{
+          padding: 16,
+          gap: 14,
+          backgroundColor: "rgba(8,35,33,0.82)",
+          borderColor: exceedsSingleCap ? "rgba(255,95,126,0.34)" : "rgba(30,230,163,0.30)",
+          ...(guideVisible && guideIndex === 1 ? { borderWidth: 2, borderColor: portfolioGuide[1].accent, boxShadow: `0 0 0 4px ${portfolioGuide[1].accent}22, 0 0 22px ${portfolioGuide[1].accent}55` } : null),
+        }}
+        accent={exceedsSingleCap ? C.red : C.green}
+      >
+        <SectionTitle title="Allocation" accent={C.purple} />
+
+        <View style={{ gap: 6 }}>
+          <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
+            <Text selectable style={{ color: C.text2, fontSize: 11, textTransform: "uppercase" }}>Committed across active holdings</Text>
+            <Text selectable style={{ color: C.purple, fontFamily: font.mono, fontSize: 25 }}>{committedPercent}%</Text>
+          </View>
+          <View style={{ height: 14, borderRadius: 14, overflow: "hidden", backgroundColor: "rgba(255,255,255,0.06)" }}>
+            <View style={{ width: `${Math.min(committedPercent, 100)}%`, height: "100%", backgroundColor: C.purple }} />
+          </View>   
+          <Text selectable style={{ color: C.text2, fontSize: 11, lineHeight: 15 }}>
+            Rises only once a stock is Submitted — Watchlist entries don't count.
+          </Text>
         </View>
-        <Text selectable style={{ color: meetsMin && !overLimit ? C.green : C.red, fontFamily: font.medium, fontSize: 12 }}>
-          {statusText}
-        </Text>
+
+        <View style={{ height: 1, backgroundColor: C.border }} />
+
+        <View style={{ gap: 6 }}>
+          <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
+            <Text selectable style={{ color: C.text2, fontSize: 11, textTransform: "uppercase" }}>This stock's allocation</Text>
+            <Text selectable style={{ color: exceedsSingleCap ? C.red : C.green, fontFamily: font.mono, fontSize: 15 }}>{allocationPercent}%</Text>
+          </View>
+          <Text selectable style={{ color: C.text2, fontSize: 11, lineHeight: 15 }}>
+            A single position cannot exceed {MAX_SINGLE_ALLOCATION}% of total capital (${capitalAmount.toLocaleString()}).
+          </Text>
+          <View style={{ height: 14, borderRadius: 14, overflow: "hidden", backgroundColor: "rgba(255,255,255,0.06)" }}>
+            <View style={{ width: `${Math.min(allocationPercent, 100)}%`, height: "100%", backgroundColor: exceedsSingleCap ? C.red : C.green }} />
+          </View>
+          <Text selectable style={{ color: exceedsSingleCap ? C.red : hasCurrentStock ? C.green : C.text2, fontFamily: font.medium, fontSize: 12 }}>
+            {statusText}
+          </Text>
+        </View>
+
       </GlassCard>
 
-      <GlassCard style={{ padding: 16, gap: 12, backgroundColor: "rgba(10,16,32,0.94)", borderColor: "rgba(49,230,255,0.24)" }} accent={C.cyan}>
+      <GlassCard style={{ padding: 16, gap: 12, backgroundColor: "rgba(10,16,32,0.94)", borderColor: "rgba(49,230,255,0.24)", ...(guideVisible && guideIndex === 0 ? { borderWidth: 2, borderColor: portfolioGuide[0].accent, boxShadow: `0 0 0 4px ${portfolioGuide[0].accent}22, 0 0 22px ${portfolioGuide[0].accent}55` } : null) }} accent={C.cyan}>
         <SectionTitle
-          title={editingId ? "Edit Stock" : "Select Stock"}
+          title="Select Stock"
           accent={C.cyan}
-          right={<TouchableOpacity onPress={() => resetCurrentPosition(positions.length)} style={{ flexDirection: "row", alignItems: "center", gap: 6, paddingHorizontal: 12, paddingVertical: 8, borderRadius: 999, backgroundColor: "rgba(255,255,255,0.06)", borderColor: C.border2, borderWidth: 1 }}>
+          right={<TouchableOpacity onPress={resetCurrentPosition} style={{ flexDirection: "row", alignItems: "center", gap: 6, paddingHorizontal: 12, paddingVertical: 8, borderRadius: 999, backgroundColor: "rgba(255,255,255,0.06)", borderColor: C.border2, borderWidth: 1 }}>
             <X size={14} color={C.text1} />
             <Text selectable style={{ color: C.text1, fontFamily: font.medium, fontSize: 12 }}>Clear</Text>
           </TouchableOpacity>}
         />
         <Text selectable style={{ color: C.text2, fontSize: 12, lineHeight: 17 }}>
-          Fill one stock at a time. Save Draft records it in the table below, clears the form, and lets you add the next stock.
+          Fill in one stock, then choose Save to Watchlist to track it without committing capital, or Submit to add it straight to your active holdings.
         </Text>
-        <View style={{ gap: 10, padding: 12, borderRadius: 12, backgroundColor: "rgba(255,255,255,0.045)", borderColor: C.border, borderWidth: 1, borderTopWidth: 3, borderTopColor: editingId ? C.gold : C.cyan }}>
+        <View style={{ gap: 10, padding: 12, borderRadius: 12, backgroundColor: "rgba(255,255,255,0.045)", borderColor: C.border, borderWidth: 1, borderTopWidth: 3, borderTopColor: C.cyan }}>
           <View style={{ flexDirection: "row", gap: 10 }}>
             <View style={{ flex: 1 }}>
               <Field label="Trade ID" value={currentPosition.tradeId} onChangeText={() => undefined} placeholder="TRD000001" />
@@ -690,6 +595,11 @@ export function PortfolioBuilder({ userData, onSubmitSuccess }: { userData: User
               <Field label="Amount Invested" value={currentPosition.amountInvested} onChangeText={(value) => updateCurrentPosition("amountInvested", value)} placeholder="$2,000" />
             </View>
           </View>
+          {exceedsSingleCap ? (
+            <Text selectable style={{ color: C.red, fontSize: 11, lineHeight: 16 }}>
+              {allocationPercent}% exceeds the {MAX_SINGLE_ALLOCATION}% single-position limit. Lower it before saving or submitting.
+            </Text>
+          ) : null}
           <View style={{ flexDirection: "row", gap: 10 }}>
             <View style={{ flex: 1 }}>
               <Field label="Buy Price" value={currentPosition.buyPrice} onChangeText={(value) => updateCurrentPosition("buyPrice", value)} placeholder="$189.50" keyboardType="decimal-pad" />
@@ -738,13 +648,25 @@ export function PortfolioBuilder({ userData, onSubmitSuccess }: { userData: User
       </GlassCard>
 
       <View style={{ flexDirection: isNarrow ? "column" : "row", gap: 10 }}>
-        <View style={{ flex: 1 }}>
-          <AppButton label={editingId ? "Update Draft" : "Save Draft"} onPress={() => void saveDraft()} variant="ghost" />
+        <View
+          style={{
+            flex: 1,
+            borderRadius: 18,
+            ...(guideVisible && guideIndex === 2 ? { boxShadow: `0 0 0 4px ${portfolioGuide[2].accent}22, 0 0 22px ${portfolioGuide[2].accent}55` } : null),
+          }}
+        >
+          <AppButton label="Save to Watchlist" onPress={() => void saveToWatchlist()} variant="ghost" disabled={!hasCurrentStock || exceedsSingleCap} />
         </View>
-        <View style={{ flex: 1 }}>
+        <View
+          style={{
+            flex: 1,
+            borderRadius: 18,
+            ...(guideVisible && guideIndex === 3 ? { boxShadow: `0 0 0 4px ${portfolioGuide[3].accent}22, 0 0 22px ${portfolioGuide[3].accent}55` } : null),
+          }}
+        >
           <AppButton label="Submit" onPress={() => {
             void submitToBackend();
-          }} disabled={draftPositions.length === 0 || overLimit || !meetsMin} />
+          }} disabled={!hasCurrentStock || exceedsSingleCap} />
         </View>
       </View>
     </View>

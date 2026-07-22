@@ -5,7 +5,7 @@ from flask import Blueprint, jsonify, request
 from flask_jwt_extended import jwt_required, get_jwt_identity
 
 from app.extensions import db
-from app.models import User, PortfolioSetup, TradeLog, Holding
+from app.models import User, PortfolioSetup, TradeLog, Holding, Watchlist
 from app.market.pipeline import YahooFinancePipeline
 
 portfolio_bp = Blueprint("portfolio", __name__, url_prefix="/portfolio")
@@ -351,3 +351,104 @@ def get_trades(user_id):
         "trades":  [t.to_dict() for t in trades],
         "count":   len(trades),
     }), 200
+
+
+# ─────────────────────────────────────────
+# GET /portfolio/watchlist/<user_id>
+# Stocks the user is tracking but hasn't submitted as a real trade yet.
+# ─────────────────────────────────────────
+
+@portfolio_bp.get("/watchlist/<string:user_id>")
+@jwt_required()
+def get_watchlist(user_id):
+    items = Watchlist.query.filter_by(user_id=user_id)\
+                            .order_by(Watchlist.created_at.desc())\
+                            .all()
+    return jsonify({
+        "user_id":   user_id,
+        "watchlist": [w.to_dict() for w in items],
+        "count":     len(items),
+    }), 200
+
+
+# ─────────────────────────────────────────
+# POST /portfolio/watchlist
+# Body: { stock_ticker, stock_name?, sector?, allocation_percent?,
+#         amount_invested?, quantity?, buy_price?, current_sell_price?,
+#         trade_type?, tag1?, tag2?, tag3?, thesis? }
+# ─────────────────────────────────────────
+
+@portfolio_bp.post("/watchlist")
+@jwt_required()
+def add_watchlist_item():
+    user_id = get_jwt_identity()
+    data = request.get_json(silent=True)
+    if not data or not data.get("stock_ticker"):
+        return jsonify({"error": "stock_ticker required"}), 400
+
+    item = Watchlist(
+        user_id=user_id,
+        stock_ticker=data["stock_ticker"].upper(),
+        stock_name=data.get("stock_name") or data["stock_ticker"].upper(),
+        sector=data.get("sector"),
+        allocation_percent=data.get("allocation_percent") or 0,
+        amount_invested=data.get("amount_invested") or 0,
+        quantity=data.get("quantity") or 0,
+        buy_price=data.get("buy_price") or 0,
+        current_sell_price=data.get("current_sell_price") or data.get("buy_price") or 0,
+        trade_type=(data.get("trade_type") or "BUY").upper(),
+        tag1=data.get("tag1"),
+        tag2=data.get("tag2"),
+        tag3=data.get("tag3"),
+        thesis=data.get("thesis"),
+    )
+    db.session.add(item)
+    db.session.commit()
+
+    return jsonify({"message": "Added to watchlist", "item": item.to_dict()}), 201
+
+
+# ─────────────────────────────────────────
+# PUT /portfolio/watchlist/<watchlist_id>
+# Partial update — quantity/thesis are the fields the UI edits inline, but
+# any field can be sent.
+# ─────────────────────────────────────────
+
+@portfolio_bp.put("/watchlist/<int:watchlist_id>")
+@jwt_required()
+def update_watchlist_item(watchlist_id):
+    user_id = get_jwt_identity()
+    item = Watchlist.query.filter_by(watchlist_id=watchlist_id, user_id=user_id).first()
+    if not item:
+        return jsonify({"error": "Watchlist item not found"}), 404
+
+    data = request.get_json(silent=True) or {}
+    for field in ("stock_name", "sector", "buy_price", "current_sell_price", "trade_type", "tag1", "tag2", "tag3", "thesis"):
+        if field in data:
+            setattr(item, field, data[field])
+    if "allocation_percent" in data:
+        item.allocation_percent = data["allocation_percent"]
+    if "amount_invested" in data:
+        item.amount_invested = data["amount_invested"]
+    if "quantity" in data:
+        item.quantity = data["quantity"]
+
+    db.session.commit()
+    return jsonify({"message": "Watchlist item updated", "item": item.to_dict()}), 200
+
+
+# ─────────────────────────────────────────
+# DELETE /portfolio/watchlist/<watchlist_id>
+# ─────────────────────────────────────────
+
+@portfolio_bp.delete("/watchlist/<int:watchlist_id>")
+@jwt_required()
+def delete_watchlist_item(watchlist_id):
+    user_id = get_jwt_identity()
+    item = Watchlist.query.filter_by(watchlist_id=watchlist_id, user_id=user_id).first()
+    if not item:
+        return jsonify({"error": "Watchlist item not found"}), 404
+
+    db.session.delete(item)
+    db.session.commit()
+    return jsonify({"message": "Removed from watchlist", "watchlist_id": watchlist_id}), 200

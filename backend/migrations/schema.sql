@@ -125,6 +125,19 @@ CREATE TABLE IF NOT EXISTS holdings (
         ON DELETE CASCADE
 );
 
+CREATE TABLE watchlist (
+  watchlist_id INT AUTO_INCREMENT PRIMARY KEY,
+  user_id VARCHAR(20) NOT NULL,
+  stock_ticker VARCHAR(20) NOT NULL,
+  stock_name VARCHAR(100), sector VARCHAR(100),
+  allocation_percent DECIMAL(5,2), amount_invested DECIMAL(15,2),
+  quantity INT, buy_price DECIMAL(15,2), current_sell_price DECIMAL(15,2),
+  trade_type ENUM('BUY','SELL') DEFAULT 'BUY',
+  tag1 VARCHAR(100), tag2 VARCHAR(100), tag3 VARCHAR(100), thesis TEXT,
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  CONSTRAINT fk_watchlist_user FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE
+);
 
 CREATE TABLE IF NOT EXISTS investment_thesis (
 
