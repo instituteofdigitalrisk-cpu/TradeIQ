@@ -7,6 +7,7 @@ from app.services.market_service import (
     price_history as service_price_history,
     benchmark as service_benchmark,
     current_price as service_current_price,
+    batch_prices as service_batch_prices,
     indices as service_indices,
     search as service_search,
     MarketError,
@@ -56,6 +57,15 @@ def get_benchmark():
 def get_current_price(ticker):
     result = service_current_price(ticker)
     return jsonify(result), 200
+
+
+@market_bp.get("/prices")
+@limiter.limit("60 per minute")
+@jwt_required()
+def get_batch_prices():
+    tickers_raw = request.args.get("tickers", "")
+    tickers = [ticker.strip() for ticker in tickers_raw.split(",") if ticker.strip()]
+    return jsonify(service_batch_prices(tickers)), 200
 
 
 @market_bp.get("/indices")

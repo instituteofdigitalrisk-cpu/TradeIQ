@@ -19,6 +19,9 @@ services:
     env_file: ./backend/.env
     environment:
       FLASK_APP: run.py
+      DB_HOST: mysql
+      DB_PORT: 3306
+      DB_PASSWORD: ""
     depends_on:
       - mysql
     ports:

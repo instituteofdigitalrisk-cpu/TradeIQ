@@ -67,6 +67,25 @@ function holdingToActiveHolding(holding: BackendHolding, totalCapital: number): 
   };
 }
 
+function tradeToActiveHolding(trade: BackendTrade, totalCapital: number): ActiveHolding {
+  const quantity = Number(trade.quantity || 0);
+  const buyPrice = Number(trade.buy_price || 0);
+  const currentPrice = Number(trade.current_sell_price || buyPrice || 0);
+  const investment = Number(trade.amount_invested || buyPrice * quantity || 0);
+  return {
+    id: `trade-${trade.trade_id}`,
+    ticker: trade.stock_ticker,
+    name: trade.stock_name || trade.stock_ticker,
+    sector: trade.sector || "Unclassified",
+    buyPrice,
+    currentPrice,
+    investment,
+    quantity,
+    allocationPercent: Number(trade.allocation_percent || 0) || (totalCapital > 0 ? (investment / totalCapital) * 100 : 0),
+    pnl: (currentPrice - buyPrice) * quantity,
+  };
+}
+
 function isoDate(d: Date): string {
   return d.toISOString().split("T")[0];
 }
@@ -108,33 +127,38 @@ export function Dashboard({ userName, studentId }: { userName: string; studentId
     if (!studentId) return;
     setHoldingsLoading(true);
     try {
-      const [response, tradesResponse] = await Promise.all([
-        portfolio.getHoldings(studentId),
-        portfolio.getTrades(studentId).catch(() => ({ trades: [] as BackendTrade[] })),
-      ]);
+      const tradesResponse = await portfolio.getTrades(studentId).catch(() => ({ trades: [] as BackendTrade[] }));
       const totalCapital = summary?.total_capital ?? 10000;
-      const latestTradeByTicker = new Map<string, BackendTrade>();
+      const optimisticHoldings = tradesResponse.trades.map((trade) => tradeToActiveHolding(trade, totalCapital));
 
-      tradesResponse.trades
-        .slice()
-        .reverse()
-        .forEach((trade) => {
-          const ticker = trade.stock_ticker?.toUpperCase();
-          if (!ticker) return;
-          latestTradeByTicker.set(ticker, trade);
-        });
+      if (optimisticHoldings.length > 0) {
+        setActiveHoldings(optimisticHoldings);
+        setHoldingsLoading(false);
+      }
 
+      const tickers = tradesResponse.trades
+        .map((trade) => trade.stock_ticker)
+        .filter((ticker): ticker is string => Boolean(ticker));
+
+      const [response, batchPrices] = await Promise.all([
+        portfolio.getHoldings(studentId),
+        tickers.length > 0 ? market.getBatchPrices(tickers).catch(() => null) : Promise.resolve(null),
+      ]);
+
+      const priceMap = batchPrices?.prices || {};
       setActiveHoldings(response.holdings.map((holding) => {
         const ticker = holding.stock_ticker?.toUpperCase();
-        const latestTrade = latestTradeByTicker.get(ticker);
+        const livePrice = ticker ? priceMap[ticker]?.price : undefined;
         return holdingToActiveHolding({
           ...holding,
-          sector: holding.sector ?? latestTrade?.sector,
-          allocation_percent: holding.allocation_percent ?? latestTrade?.allocation_percent,
+          current_price: livePrice ?? holding.current_price,
+          price_stale: ticker ? priceMap[ticker]?.is_stale : holding.price_stale,
         }, totalCapital);
       }));
     } catch {
-      setActiveHoldings([]);
+      if (activeHoldings.length === 0) {
+        setActiveHoldings([]);
+      }
     } finally {
       setHoldingsLoading(false);
     }
@@ -218,12 +242,6 @@ export function Dashboard({ userName, studentId }: { userName: string; studentId
       try {
         await portfolio.deleteHolding(holding.ticker);
       } catch {
-        // Generate idempotency key for fallback sell trade
-        const idempotencyKey =
-          typeof crypto !== "undefined" && crypto.randomUUID
-            ? crypto.randomUUID()
-            : `trade-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
-
         await portfolio.executeTrade({
           stock_ticker: holding.ticker,
           stock_name: holding.name,
@@ -232,7 +250,6 @@ export function Dashboard({ userName, studentId }: { userName: string; studentId
           quantity: Math.max(1, Math.floor(holding.quantity)),
           current_sell_price: holding.currentPrice,
           amount_invested: holding.currentPrice * holding.quantity,
-          idempotency_key: idempotencyKey,
         });
       }
       setActiveHoldings((items) => items.filter((item) => item.ticker !== holding.ticker));

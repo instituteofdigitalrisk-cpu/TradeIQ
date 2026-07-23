@@ -11,7 +11,7 @@ from app.market.pipeline import YahooFinancePipeline
 
 pipeline = YahooFinancePipeline()
 
-FRESH_TTL_SECONDS = 60          # 1 minute fresh cache window
+FRESH_TTL_SECONDS = 900         # 15 minute fresh cache window
 FALLBACK_TTL_SECONDS = 86400    # 24 hour last-known-good fallback window
 
 INDICES_CACHE_KEY = "market:indices"
@@ -100,30 +100,96 @@ def get_price_with_staleness(ticker: str) -> dict:
     if not ticker:
         return {"price": None, "is_stale": True, "source": "unavailable"}
 
-    ticker = ticker.upper()
-    fresh_key = f"price:fresh:{ticker}"
-    fallback_key = f"price:last_known:{ticker}"
+    return get_prices_with_staleness([ticker]).get(
+        ticker.upper(),
+        {"price": None, "is_stale": True, "source": "unavailable"},
+    )
 
-    # Tier 1: Check fresh cache
-    cached_fresh = cache_get(fresh_key)
-    if cached_fresh is not None:
-        return {"price": cached_fresh["price"], "is_stale": False, "source": "cache"}
 
-    # Live fetch attempt
-    live_price = _fetch_with_timeout(lambda: pipeline.get_current_price(ticker), timeout=8)
+def _fetch_batch_live_prices(tickers: list[str]) -> dict[str, float | None]:
+    """Fetch multiple tickers in one network round-trip when possible."""
+    unique_tickers = list(dict.fromkeys(ticker.upper() for ticker in tickers if ticker))
+    if not unique_tickers:
+        return {}
 
-    if live_price is not None and live_price > 0:
-        payload = {"price": float(live_price), "fetched_at": _time.time()}
-        cache_set(fresh_key, payload, FRESH_TTL_SECONDS)
-        cache_set(fallback_key, payload, FALLBACK_TTL_SECONDS)
-        return {"price": float(live_price), "is_stale": False, "source": "live"}
+    prices: dict[str, float | None] = {ticker: None for ticker in unique_tickers}
 
-    # Tier 2: Live fetch failed -> Fallback to last known good price
-    cached_fallback = cache_get(fallback_key)
-    if cached_fallback is not None:
-        return {"price": cached_fallback["price"], "is_stale": True, "source": "cache"}
+    try:
+        batch = yf.Tickers(" ".join(unique_tickers))
+    except Exception:
+        return prices
 
-    return {"price": None, "is_stale": True, "source": "unavailable"}
+    for ticker in unique_tickers:
+        try:
+            stock = batch.tickers.get(ticker)
+            if stock is None:
+                continue
+
+            last_price = None
+            try:
+                fast_info = getattr(stock, "fast_info", None)
+                if fast_info is not None:
+                    last_price = fast_info.get("lastPrice")
+            except Exception:
+                last_price = None
+
+            if last_price is None:
+                hist = stock.history(period="1d")
+                if hist is not None and not hist.empty:
+                    last_price = float(hist["Close"].iloc[-1])
+
+            if last_price is not None and float(last_price) > 0:
+                prices[ticker] = float(last_price)
+        except Exception:
+            continue
+
+    return prices
+
+
+def get_prices_with_staleness(tickers: list[str]) -> dict[str, dict]:
+    """Bulk lookup for current prices with cache + stale fallback semantics."""
+    results: dict[str, dict] = {}
+    pending: list[str] = []
+
+    for raw_ticker in tickers:
+        if not raw_ticker:
+            continue
+
+        ticker = _validate_ticker(raw_ticker)
+        fresh_key = f"price:fresh:{ticker}"
+        fallback_key = f"price:last_known:{ticker}"
+
+        cached_fresh = cache_get(fresh_key)
+        if cached_fresh is not None:
+            results[ticker] = {"price": cached_fresh["price"], "is_stale": False, "source": "cache"}
+            continue
+
+        pending.append(ticker)
+
+    live_prices = _fetch_batch_live_prices(pending) if pending else {}
+    for ticker in pending:
+        live_price = live_prices.get(ticker)
+        fresh_key = f"price:fresh:{ticker}"
+        fallback_key = f"price:last_known:{ticker}"
+
+        if live_price is not None and live_price > 0:
+            payload = {"price": float(live_price), "fetched_at": _time.time()}
+            cache_set(fresh_key, payload, FRESH_TTL_SECONDS)
+            cache_set(fallback_key, payload, FALLBACK_TTL_SECONDS)
+            results[ticker] = {"price": float(live_price), "is_stale": False, "source": "live"}
+            continue
+
+        cached_fallback = cache_get(fallback_key)
+        if cached_fallback is not None:
+            results[ticker] = {"price": cached_fallback["price"], "is_stale": True, "source": "cache"}
+        else:
+            results[ticker] = {"price": None, "is_stale": True, "source": "unavailable"}
+
+    return results
+
+
+def batch_prices(tickers: list[str]) -> dict:
+    return {"prices": get_prices_with_staleness(tickers)}
 
 
 def current_price(ticker: str) -> dict:

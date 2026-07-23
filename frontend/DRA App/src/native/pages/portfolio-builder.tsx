@@ -511,18 +511,23 @@ export function StockSearchField({
 
 export function PortfolioBuilderPage({
   user,
+  userData,
   portfolioSetup,
   onOpenGlossary,
+  onSubmitSuccess,
 }: {
-  user: UserData;
-  portfolioSetup: PortfolioSetup;
+  user?: UserData | null;
+  userData?: UserData | null;
+  portfolioSetup?: PortfolioSetup;
   onOpenGlossary?: (termKey?: string) => void;
+  onSubmitSuccess?: () => void;
 }) {
   const { width } = useWindowDimensions();
   const isMobile = width < 720;
 
-  const capital = portfolioSetup.totalCapital || 100000;
-  const studentId = user.userId || "student-1";
+  const activeUser = user ?? userData ?? null;
+  const capital = Number(portfolioSetup?.totalCapital || 100000);
+  const studentId = activeUser?.studentId || "student-1";
 
   const [positions, setPositions] = useState<Position[]>([]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
@@ -544,9 +549,9 @@ export function PortfolioBuilderPage({
         } else {
           // Check for draft locally
           const draft = await getPortfolioDraft(studentId);
-          if (draft && draft.length > 0) {
-            setPositions(draft);
-            setSelectedId(draft[0].id);
+          if (draft && draft.positions.length > 0) {
+            setPositions(draft.positions);
+            setSelectedId(draft.positions[0].id);
           } else {
             const initPos = [makeTrade(studentId, 0, capital)];
             setPositions(initPos);
@@ -556,9 +561,9 @@ export function PortfolioBuilderPage({
       } catch (err) {
         console.warn("Failed loading portfolio trades:", err);
         const draft = await getPortfolioDraft(studentId);
-        if (draft && draft.length > 0) {
-          setPositions(draft);
-          setSelectedId(draft[0].id);
+        if (draft && draft.positions.length > 0) {
+          setPositions(draft.positions);
+          setSelectedId(draft.positions[0].id);
         } else {
           const initPos = [makeTrade(studentId, 0, capital)];
           setPositions(initPos);
@@ -574,7 +579,7 @@ export function PortfolioBuilderPage({
   // Sync draft updates locally
   useEffect(() => {
     if (!loading && positions.length > 0) {
-      void savePortfolioDraft(studentId, positions);
+      void savePortfolioDraft(studentId, portfolioSetup ?? { studentId, totalCapital: String(capital), riskAppetite: "Moderate", investmentHorizon: "1 year", competitionRound: "Round 1" }, positions);
     }
   }, [positions, loading, studentId]);
 
@@ -672,6 +677,7 @@ export function PortfolioBuilderPage({
         setPositions(loaded);
         setSelectedId(loaded[0]?.id || null);
       }
+      onSubmitSuccess?.();
     } catch (err) {
       setErrorMessage(err instanceof Error ? err.message : "Trade execution failed");
     } finally {
@@ -693,7 +699,7 @@ export function PortfolioBuilderPage({
 
   return (
     <ScrollView contentContainerStyle={{ padding: isMobile ? 16 : 28, gap: 20 }}>
-      <SectionTitle title="Portfolio Builder" subtitle="Construct, execute, and refine your trade positions" />
+      <SectionTitle title="Portfolio Builder" right={<Text selectable style={{ color: C.text2, fontFamily: font.mono, fontSize: 11 }}>Construct, execute, and refine your trade positions</Text>} />
 
       {serverMessage ? (
         <View style={{ padding: 12, borderRadius: 10, backgroundColor: "rgba(49,230,255,0.15)", borderWidth: 1, borderColor: C.cyan }}>
@@ -709,8 +715,8 @@ export function PortfolioBuilderPage({
 
       <GlassCard style={{ gap: 16 }}>
         <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
-          <Text style={{ color: C.text0, fontFamily: font.semibold, fontSize: 16 }}>Positions Overview</Text>
-          <AppButton title="+ Add Position" onPress={handleAddTrade} variant="secondary" />
+          <Text style={{ color: C.text0, fontFamily: font.medium, fontSize: 16 }}>Positions Overview</Text>
+          <AppButton label="+ Add Position" onPress={handleAddTrade} />
         </View>
 
         <DraftTradesTable
@@ -723,7 +729,7 @@ export function PortfolioBuilderPage({
 
       {activePosition ? (
         <GlassCard style={{ gap: 18 }}>
-          <Text style={{ color: C.cyan, fontFamily: font.semibold, fontSize: 15 }}>
+          <Text style={{ color: C.cyan, fontFamily: font.medium, fontSize: 15 }}>
             Edit Position: {activePosition.stockTicker || "New Trade"}
           </Text>
 
@@ -759,6 +765,7 @@ export function PortfolioBuilderPage({
             <Field
               label="Allocation (%)"
               value={String(activePosition.allocationPercent)}
+              placeholder="Enter allocation percent"
               onChangeText={(val) => {
                 const num = parseFloat(val) || 0;
                 updateActivePosition({
@@ -771,12 +778,14 @@ export function PortfolioBuilderPage({
             <Field
               label="Buy Price ($)"
               value={activePosition.buyPrice}
+              placeholder="Enter buy price"
               onChangeText={(buyPrice) => updateActivePosition({ buyPrice })}
               keyboardType="numeric"
             />
             <Field
               label="Current/Target Price ($)"
               value={activePosition.currentSellPrice}
+              placeholder="Enter current or target price"
               onChangeText={(currentSellPrice) => updateActivePosition({ currentSellPrice })}
               keyboardType="numeric"
             />
@@ -822,7 +831,7 @@ export function PortfolioBuilderPage({
 
           <View style={{ marginTop: 8 }}>
             <AppButton
-              title={submitting ? "Executing Trade..." : "Execute & Save Position"}
+              label={submitting ? "Executing Trade..." : "Execute & Save Position"}
               onPress={() => void handleExecuteTrade()}
               disabled={submitting}
             />
@@ -832,3 +841,5 @@ export function PortfolioBuilderPage({
     </ScrollView>
   );
 }
+
+export { PortfolioBuilderPage as PortfolioBuilder };

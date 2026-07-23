@@ -273,6 +273,11 @@ export const market = {
     return apiFetch<MarketPrice>(`/market/price/${encodeURIComponent(ticker)}`);
   },
 
+  getBatchPrices(tickers: string[]): Promise<{ prices: Record<string, MarketPrice> }> {
+    const qs = tickers.map((ticker) => encodeURIComponent(ticker)).join(",");
+    return apiFetch<{ prices: Record<string, MarketPrice> }>(`/market/prices?tickers=${qs}`);
+  },
+
   search(query: string): Promise<{ results: StockSearchResult[] }> {
     return apiFetch(`/market/search?q=${encodeURIComponent(query)}`);
   },

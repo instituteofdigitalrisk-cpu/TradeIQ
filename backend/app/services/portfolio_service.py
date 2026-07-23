@@ -4,7 +4,7 @@ import re
 from datetime import date
 from sqlalchemy.exc import IntegrityError
 
-from app.services.market_service import get_price_with_staleness
+from app.services.market_service import get_price_with_staleness, get_prices_with_staleness
 from app.repositories import portfolio_repository
 from app.market.pipeline import YahooFinancePipeline
 
@@ -31,6 +31,12 @@ def _get_price_info(ticker: str) -> dict:
 def _get_live_price(ticker: str):
     info = _get_price_info(ticker)
     return info["price"]
+
+
+def _get_price_info_map(tickers: list[str]) -> dict[str, dict]:
+    if not tickers:
+        return {}
+    return get_prices_with_staleness(tickers)
 
 
 def _holding_payload(holding) -> dict:
@@ -263,9 +269,10 @@ def get_holdings(user_id: str) -> dict:
         h for h in portfolio_repository.find_active_holdings(user_id)
         if float(h.quantity or 0) > 0
     ]
+    price_info_map = _get_price_info_map([h.stock_ticker for h in holdings])
     payloads = []
     for h in holdings:
-        price_info = _get_price_info(h.stock_ticker)
+        price_info = price_info_map.get(h.stock_ticker.upper()) or _get_price_info(h.stock_ticker)
         payload = _holding_payload(h)
         payload["price_stale"] = price_info["is_stale"]  # Surface per-holding staleness
         payloads.append(payload)
@@ -310,12 +317,13 @@ def get_summary(user_id: str) -> dict:
 
     holdings = portfolio_repository.find_active_holdings(user_id)
     any_stale = False
+    price_info_map = _get_price_info_map([holding.stock_ticker for holding in holdings if float(holding.quantity or 0) > 0])
 
     for holding in holdings:
         if float(holding.quantity or 0) <= 0:
             continue
 
-        price_info = _get_price_info(holding.stock_ticker)
+        price_info = price_info_map.get(holding.stock_ticker.upper()) or _get_price_info(holding.stock_ticker)
         current_price = float(price_info["price"] or holding.current_price or holding.avg_buy_price or 0)
 
         if price_info["is_stale"]:
