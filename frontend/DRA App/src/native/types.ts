@@ -4,6 +4,18 @@ export type Flow = "landing" | "signin" | "register" | "onboarding" | "payment" 
 export type MainTab = "dashboard" | "portfolio" | "scores" | "leaderboard" | "courses";
 export type GoogleAuthResult = { user: UserData; isNewUser: boolean };
 
+export type RegistrationFormData = {
+  studentId: string;
+  name: string;
+  email: string;
+  phone: string;
+  college: string;
+  degree: string;
+  passoutYear: string;
+  password: string;
+  acceptedTerms: boolean;
+};
+
 export type UserData = {
   studentId: string;
   fullName: string;

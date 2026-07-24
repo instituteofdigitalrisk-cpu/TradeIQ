@@ -139,17 +139,13 @@ type GoogleAuthResponse = AuthResponse & { is_new_user: boolean };
 
 export const auth = {
   register(payload: {
+    student_id: string;
     full_name: string;
     email: string;
+    phone: string;
+    college: string;
+    degree: string;
     password: string;
-    age?: number;
-    date_of_birth?: string;
-    phone_number?: string;
-    university?: string;
-    course?: string;
-    year_of_study?: number;
-    participation_type?: string;
-    team_name?: string;
   }): Promise<AuthResponse> {
     return apiFetch<AuthResponse>("/auth/register", {
       method: "POST",

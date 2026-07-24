@@ -3,7 +3,7 @@ import { GoogleAuthProvider, signInWithPopup } from "firebase/auth";
 import { auth, setToken, clearToken } from "./api";
 import type { BackendUser } from "./api";
 import { firebaseAuth } from "../firebase";
-import type { UserData } from "./types";
+import type { RegistrationFormData, UserData } from "./types";
 
 const USERS_KEY = "dra.studentProfiles";
 const SESSION_KEY = "dra.activeStudentId";
@@ -40,16 +40,6 @@ async function writeUsers(users: UserData[]) {
   window.localStorage.setItem(USERS_KEY, JSON.stringify(users));
 }
 
-// DD/MM/YYYY → YYYY-MM-DD for the backend date_of_birth field
-function parseDobToISO(dob: string): string | undefined {
-  if (!dob) return undefined;
-  const parts = dob.split("/");
-  if (parts.length !== 3) return undefined;
-  const [d, m, y] = parts;
-  if (!d || !m || !y) return undefined;
-  return `${y}-${m.padStart(2, "0")}-${d.padStart(2, "0")}`;
-}
-
 function backendUserToUserData(u: BackendUser): UserData {
   return {
     studentId: u.user_id,
@@ -76,16 +66,15 @@ export async function generateStudentId() {
   return `${year}${String(next).padStart(8, "0")}`;
 }
 
-export async function saveRegisteredUser(user: UserData): Promise<UserData> {
+export async function saveRegisteredUser(user: RegistrationFormData): Promise<UserData> {
   const { user: backendUser, token } = await auth.register({
-    full_name: user.fullName,
+    student_id: user.studentId,
+    full_name: user.name,
     email: user.email,
+    phone: user.phone,
+    college: user.college,
+    degree: user.degree,
     password: user.password,
-    age: user.age ? parseInt(user.age) : undefined,
-    date_of_birth: parseDobToISO(user.dateOfBirth),
-    phone_number: user.phoneNumber || undefined,
-    university: user.university || undefined,
-    year_of_study: user.yearOfStudy ? parseInt(user.yearOfStudy) : undefined,
   });
 
   setToken(token);

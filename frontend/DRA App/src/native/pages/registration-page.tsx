@@ -5,7 +5,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import Toast from "react-native-toast-message";
 import { C, font } from "../constants";
 import { generateStudentId } from "../auth-store";
-import type { GoogleAuthResult, UserData } from "../types";
+import type { GoogleAuthResult, RegistrationFormData } from "../types";
 import {
   AppButton,
   AuthDivider,
@@ -23,11 +23,11 @@ export function RegistrationPage({
   onGoogleRegister,
   onSignIn,
 }: {
-  onSubmit: (data: UserData) => void | Promise<void>;
+  onSubmit: (data: RegistrationFormData) => void | Promise<void>;
   onGoogleRegister: () => Promise<GoogleAuthResult | string | null>;
   onSignIn: () => void;
 }) {
-  const [formData, setFormData] = useState<UserData>({
+  const [formData, setFormData] = useState<RegistrationFormData>({
     studentId: "",
     name: "",
     email: "",
@@ -44,13 +44,22 @@ export function RegistrationPage({
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    setFormData((prev) => ({
-      ...prev,
-      studentId: generateStudentId(),
-    }));
+    let cancelled = false;
+
+    const loadStudentId = async () => {
+      const studentId = await generateStudentId();
+      if (!cancelled) {
+        setFormData((prev) => ({ ...prev, studentId }));
+      }
+    };
+
+    void loadStudentId();
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
-  const handleChange = (key: keyof UserData, value: string | boolean) => {
+  const handleChange = (key: keyof RegistrationFormData, value: string | boolean) => {
     setFormData((prev) => ({ ...prev, [key]: value }));
     if (errors[key]) {
       setErrors((prev) => {
@@ -123,7 +132,7 @@ export function RegistrationPage({
     <SafeAreaView style={{ flex: 1, backgroundColor: C.bg0 }}>
       <ScrollView
         contentContainerStyle={{ padding: 20, gap: 20, paddingBottom: 40 }}
-        showsVerticalScrollViewScrollIndicator={false}
+        showsVerticalScrollIndicator={false}
       >
         <HeaderMini title="TradeIQ" subtitle="Create your student trader account" />
         <StepDots current={0} />

@@ -237,6 +237,10 @@ def register():
         return jsonify({"error": f"Missing fields: {', '.join(missing)}"}), 400
 
     email = data["email"].strip().lower()
+    requested_user_id = (data.get("student_id") or "").strip()
+    user_id = requested_user_id or _make_user_id()
+    if len(user_id) > 20:
+        return jsonify({"error": "student_id must be 20 characters or fewer"}), 400
 
     # Idempotent Check: Safely handle duplicate/double-tap registration requests
     existing_user = User.query.filter_by(email=email).first()
@@ -247,16 +251,22 @@ def register():
             "user_id": existing_user.user_id
         }), 409
 
+    if User.query.filter_by(user_id=user_id).first():
+        return jsonify({
+            "error": "Student ID already registered",
+            "user_id": user_id,
+        }), 409
+
     try:
         user = User(
-            user_id=_make_user_id(),
+            user_id=user_id,
             full_name=data["full_name"].strip(),
             email=email,
             password_hash=_hash_password(data["password"]),
             age=data.get("age"),
             date_of_birth=data.get("date_of_birth"),
-            phone_number=data.get("phone_number"),
-            university=data.get("university"),
+            phone_number=data.get("phone") or data.get("phone_number"),
+            university=data.get("college") or data.get("university"),
             year_of_study=data.get("year_of_study"),
             role=data.get("role", "student"),
         )

@@ -1,4 +1,5 @@
-import { ChevronLeft, LogIn, Mail, ShieldCheck, KeyRound } from "lucide-react-native";
+import { ChevronLeft, LogIn, Mail } from "lucide-react-native";
+import { sendPasswordResetEmail } from "firebase/auth";
 import { useState } from "react";
 import { ScrollView, Text, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -6,9 +7,9 @@ import Toast from "react-native-toast-message";
 import { C, font } from "../constants";
 import type { UserData } from "../types";
 import { AppButton, ErrorNotice, Field, GlassCard, HeaderMini } from "../components/ui";
-import { auth } from "../api";
+import { firebaseAuth } from "../../firebase";
 
-type Step = "signin" | "request" | "verify" | "reset";
+type Step = "signin" | "request";
 
 export function SignInPage({
   onSubmit,
@@ -27,10 +28,6 @@ export function SignInPage({
 
   // Forgot-password state
   const [resetEmail, setResetEmail] = useState("");
-  const [code, setCode] = useState("");
-  const [resetToken, setResetToken] = useState("");
-  const [newPassword, setNewPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
   const [resetError, setResetError] = useState("");
   const [resetSubmitting, setResetSubmitting] = useState(false);
 
@@ -51,7 +48,7 @@ export function SignInPage({
     setSubmitting(false);
   };
 
-  // Step 1: Request 6-digit OTP
+  // Firebase sends a direct password-reset link to the user's email.
   const handleRequestCode = async () => {
     setResetError("");
     if (!resetEmail.trim()) {
@@ -60,72 +57,16 @@ export function SignInPage({
     }
     setResetSubmitting(true);
     try {
-      await auth.forgotPassword(resetEmail.trim().toLowerCase());
+      await sendPasswordResetEmail(firebaseAuth, resetEmail.trim().toLowerCase());
       Toast.show({
         type: "success",
-        text1: "Code sent",
-        text2: "Check your inbox for a verification code.",
+        text1: "Reset email sent",
+        text2: "Check your inbox or spam folder for the password reset link.",
       });
-      setStep("verify");
-    } catch (err) {
-      setResetError(err instanceof Error ? err.message : "Could not send the code. Please try again.");
-    } finally {
-      setResetSubmitting(false);
-    }
-  };
-
-  // Step 2: Verify OTP
-  const handleVerifyCode = async () => {
-    setResetError("");
-    if (!code.trim() || code.length !== 6) {
-      setResetError("Enter the full 6-digit code from your email.");
-      return;
-    }
-    setResetSubmitting(true);
-    try {
-      const res = await auth.verifyResetCode(resetEmail.trim().toLowerCase(), code.trim());
-      if (res.reset_token) {
-        setResetToken(res.reset_token);
-        setStep("reset");
-      } else {
-        setResetError("Invalid or expired code.");
-      }
-    } catch (err) {
-      setResetError(err instanceof Error ? err.message : "Invalid or expired code.");
-    } finally {
-      setResetSubmitting(false);
-    }
-  };
-
-  // Step 3: Save new password
-  const handleResetPassword = async () => {
-    setResetError("");
-    if (newPassword.length < 6) {
-      setResetError("Password must be at least 6 characters.");
-      return;
-    }
-    if (newPassword !== confirmPassword) {
-      setResetError("Passwords do not match.");
-      return;
-    }
-    setResetSubmitting(true);
-    try {
-      await auth.resetPassword(resetToken, newPassword);
-      Toast.show({
-        type: "success",
-        text1: "Password reset",
-        text2: "You can now sign in with your new password.",
-      });
-      setEmail(resetEmail);
-      setPassword("");
-      setResetEmail("");
-      setCode("");
-      setResetToken("");
-      setNewPassword("");
-      setConfirmPassword("");
       setStep("signin");
     } catch (err) {
-      setResetError(err instanceof Error ? err.message : "Could not reset your password. Please try again.");
+      console.error("Firebase Reset Error:", err);
+      setResetError(err instanceof Error ? err.message : "Could not send the reset email. Please try again.");
     } finally {
       setResetSubmitting(false);
     }
@@ -146,7 +87,7 @@ export function SignInPage({
       <SafeAreaView style={{ flex: 1, backgroundColor: C.bg0 }} edges={["top", "left", "right"]}>
         <ScrollView contentInsetAdjustmentBehavior="automatic" style={{ flex: 1 }} contentContainerStyle={{ padding: 20, gap: 18, paddingBottom: 40, maxWidth: 620, width: "100%", alignSelf: "center" }}>
           {backButton(() => { setResetError(""); setStep("signin"); })}
-          <HeaderMini title="Forgot Password" subtitle="We'll email you a 6-digit verification code." />
+          <HeaderMini title="Forgot Password" subtitle="We'll email you a password reset link." />
           <GlassCard style={{ padding: 18, gap: 15 }} accent={C.cyan}>
             <Field
               label="Registered Email"
@@ -157,79 +98,10 @@ export function SignInPage({
             />
             {resetError ? <ErrorNotice message={resetError} /> : null}
             <AppButton
-              label={resetSubmitting ? "Sending Code..." : "Send Verification Code"}
+              label={resetSubmitting ? "Sending Email..." : "Send Reset Email"}
               onPress={handleRequestCode}
               disabled={resetSubmitting || !resetEmail.trim()}
               icon={<Mail size={18} color={C.green} />}
-            />
-          </GlassCard>
-        </ScrollView>
-      </SafeAreaView>
-    );
-  }
-
-  // STEP 2 UI: Verify OTP Code
-  if (step === "verify") {
-    return (
-      <SafeAreaView style={{ flex: 1, backgroundColor: C.bg0 }} edges={["top", "left", "right"]}>
-        <ScrollView contentInsetAdjustmentBehavior="automatic" style={{ flex: 1 }} contentContainerStyle={{ padding: 20, gap: 18, paddingBottom: 40, maxWidth: 620, width: "100%", alignSelf: "center" }}>
-          {backButton(() => { setResetError(""); setStep("request"); })}
-          <HeaderMini title="Enter Verification Code" subtitle={`Sent to ${resetEmail}`} />
-          <GlassCard style={{ padding: 18, gap: 15 }} accent={C.cyan}>
-            <Field
-              label="6-Digit Code"
-              value={code}
-              onChangeText={(value) => { setResetError(""); setCode(value.replace(/\D/g, "").slice(0, 6)); }}
-              placeholder="123456"
-              keyboardType="numeric"
-            />
-            {resetError ? <ErrorNotice message={resetError} /> : null}
-            <AppButton
-              label={resetSubmitting ? "Verifying..." : "Verify Code"}
-              onPress={handleVerifyCode}
-              disabled={resetSubmitting || code.length !== 6}
-              icon={<ShieldCheck size={18} color={C.green} />}
-            />
-            <TouchableOpacity onPress={handleRequestCode} disabled={resetSubmitting}>
-              <Text selectable style={{ color: C.cyan, fontFamily: font.medium, fontSize: 12, textAlign: "center" }}>
-                Resend code
-              </Text>
-            </TouchableOpacity>
-          </GlassCard>
-        </ScrollView>
-      </SafeAreaView>
-    );
-  }
-
-  // STEP 3 UI: Reset Password
-  if (step === "reset") {
-    return (
-      <SafeAreaView style={{ flex: 1, backgroundColor: C.bg0 }} edges={["top", "left", "right"]}>
-        <ScrollView contentInsetAdjustmentBehavior="automatic" style={{ flex: 1 }} contentContainerStyle={{ padding: 20, gap: 18, paddingBottom: 40, maxWidth: 620, width: "100%", alignSelf: "center" }}>
-          <HeaderMini title="Set New Password" subtitle="Choose a password that is at least 6 characters." />
-          <GlassCard style={{ padding: 18, gap: 15 }} accent={C.cyan}>
-            <Field
-              label="New Password"
-              value={newPassword}
-              onChangeText={(value) => { setResetError(""); setNewPassword(value); }}
-              placeholder="Minimum 6 characters"
-              secureTextEntry
-              showPasswordToggle
-            />
-            <Field
-              label="Confirm Password"
-              value={confirmPassword}
-              onChangeText={(value) => { setResetError(""); setConfirmPassword(value); }}
-              placeholder="Re-enter password"
-              secureTextEntry
-              showPasswordToggle
-            />
-            {resetError ? <ErrorNotice message={resetError} /> : null}
-            <AppButton
-              label={resetSubmitting ? "Saving..." : "Reset Password"}
-              onPress={handleResetPassword}
-              disabled={resetSubmitting || !newPassword.trim() || !confirmPassword.trim()}
-              icon={<KeyRound size={18} color={C.green} />}
             />
           </GlassCard>
         </ScrollView>
