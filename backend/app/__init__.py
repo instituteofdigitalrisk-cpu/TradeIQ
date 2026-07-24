@@ -2,6 +2,7 @@ import logging
 import os
 import ssl
 import time
+import traceback
 import uuid
 import psutil
 from flask import Flask, g, jsonify, request
@@ -106,6 +107,16 @@ def _build_engine_options() -> dict:
 def create_app() -> Flask:
     _check_required_config()
     app = Flask(__name__)
+
+    @app.errorhandler(Exception)
+    def handle_exception(error):
+        """Log full tracebacks and keep API errors as JSON instead of HTML."""
+        print("=== UNHANDLED SERVER EXCEPTION ===", flush=True)
+        traceback.print_exc()
+        return jsonify({
+            "error": "Internal Server Error",
+            "details": str(error),
+        }), 500
 
     # Setup Structured Logging
     setup_central_logger(app)

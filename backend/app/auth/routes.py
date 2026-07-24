@@ -303,16 +303,17 @@ def register():
         )
         db.session.add(portfolio)
         db.session.commit()
+        token = create_access_token(identity=user.user_id)
+        return jsonify({
+            "message": "Registration successful",
+            "user": user.to_dict(),
+            "token": token,
+        }), 201
     except Exception as exc:
         db.session.rollback()
+        print(f"Registration Error: {exc}", flush=True)
+        logger.exception("Registration failed for %s", email)
         return jsonify({"error": f"Failed to complete registration: {str(exc)}"}), 500
-
-    token = create_access_token(identity=user.user_id)
-    return jsonify({
-        "message": "Registration successful",
-        "user": user.to_dict(),
-        "token": token,
-    }), 201
 
 
 # ─────────────────────────────────────────
