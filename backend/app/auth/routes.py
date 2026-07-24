@@ -154,12 +154,11 @@ def forgot_password():
         return jsonify({"error": "Email is required"}), 400
 
     user = User.query.filter_by(email=email).first()
-    payment_error = (
-        "This email is not registered or payment is pending. "
-        "Please complete registration first."
-    )
-    if not user or not (user.is_paid is True or user.registration_status == "completed"):
-        return jsonify({"error": payment_error}), 403
+    if not user:
+        return jsonify({
+            "error": "This email is not registered or payment is pending. "
+                     "Please complete registration first."
+        }), 403
 
     try:
         _ensure_firebase_admin_initialized()
@@ -283,6 +282,9 @@ def register():
             full_name=data["full_name"].strip(),
             email=email,
             password_hash=_hash_password(data["password"]),
+            # Testing mode: treat newly registered users as paid/completed.
+            is_paid=True,
+            registration_status="completed",
             age=data.get("age"),
             date_of_birth=data.get("date_of_birth"),
             phone_number=data.get("phone") or data.get("phone_number"),
