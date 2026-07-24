@@ -174,6 +174,13 @@ export const auth = {
     });
   },
 
+  checkRegisteredUser(email: string): Promise<{ exists: boolean; error?: string }> {
+    return apiFetch("/auth/check-registered-user", {
+      method: "POST",
+      body: JSON.stringify({ email }),
+    });
+  },
+
   verifyResetCode(email: string, code: string): Promise<{ message: string; reset_token: string }> {
     return apiFetch("/auth/verify-reset-code", {
       method: "POST",

@@ -146,6 +146,23 @@ def _send_reset_link_email(to_email: str, reset_link: str):
         raise RuntimeError("Could not send password reset email through Resend.") from exc
 
 
+@auth_bp.post("/check-registered-user")
+def check_registered_user():
+    data = request.get_json(silent=True) or {}
+    email = (data.get("email") or "").strip().lower()
+    if not email:
+        return jsonify({"exists": False, "error": "Email is required"}), 400
+
+    user = User.query.filter_by(email=email).first()
+    if not user:
+        return jsonify({
+            "exists": False,
+            "error": "This email is not registered. Please sign up first.",
+        }), 404
+
+    return jsonify({"exists": True}), 200
+
+
 @auth_bp.post("/forgot-password")
 def forgot_password():
     data = request.get_json(silent=True) or {}

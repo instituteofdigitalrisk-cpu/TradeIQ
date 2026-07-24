@@ -1,4 +1,5 @@
 import { ChevronLeft, LogIn, Mail } from "lucide-react-native";
+import { sendPasswordResetEmail } from "firebase/auth";
 import { useState } from "react";
 import { ScrollView, Text, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -7,6 +8,7 @@ import { C, font } from "../constants";
 import type { UserData } from "../types";
 import { AppButton, ErrorNotice, Field, GlassCard, HeaderMini } from "../components/ui";
 import { auth } from "../api";
+import { firebaseAuth } from "../../firebase";
 
 type Step = "signin" | "request";
 
@@ -47,7 +49,7 @@ export function SignInPage({
     setSubmitting(false);
   };
 
-  // The backend checks registration/payment status before sending the Firebase link.
+  // Check the SQL database first, then let Firebase send the reset link.
   const handleRequestCode = async () => {
     setResetError("");
     if (!resetEmail.trim()) {
@@ -56,7 +58,14 @@ export function SignInPage({
     }
     setResetSubmitting(true);
     try {
-      await auth.forgotPassword(resetEmail.trim().toLowerCase());
+      const normalizedEmail = resetEmail.trim().toLowerCase();
+      const registered = await auth.checkRegisteredUser(normalizedEmail);
+      if (!registered.exists) {
+        setResetError(registered.error || "Email not found in database.");
+        return;
+      }
+
+      await sendPasswordResetEmail(firebaseAuth, normalizedEmail);
       Toast.show({
         type: "success",
         text1: "Password reset email sent!",
