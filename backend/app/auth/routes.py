@@ -14,6 +14,9 @@ from cryptography import x509
 import jwt
 import requests
 
+from google.oauth2 import id_token as google_id_token
+from google.auth.transport import requests as google_requests
+
 from app.extensions import db
 from app.models import User, PortfolioSetup, PasswordReset
 
@@ -164,6 +167,7 @@ def _send_reset_email(to_email: str, full_name: str, code: str) -> None:
 
 @auth_bp.post("/forgot-password")
 def forgot_password():
+    print("Received forgot-password request")
     data = request.get_json(silent=True) or {}
     email = (data.get("email") or "").strip().lower()
     if not email:
@@ -180,6 +184,7 @@ def forgot_password():
         return jsonify(generic_response), 200
 
     code = _generate_otp()
+    print(f"Generated password reset code for {email}: {code} (expires in {RESET_CODE_TTL_MINUTES} minutes)")
     reset = PasswordReset(
         user_id=user.user_id,
         email=email,

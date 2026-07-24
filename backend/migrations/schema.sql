@@ -1,19 +1,6 @@
 CREATE DATABASE IF NOT EXISTS tradeiq;
 USE tradeiq;
 
-CREATE TABLE IF NOT EXISTS password_resets (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    user_id VARCHAR(20) NOT NULL,
-    email VARCHAR(150) NOT NULL,
-    code_hash VARCHAR(255) NOT NULL,
-    expires_at DATETIME NOT NULL,
-    attempts INT DEFAULT 0,
-    verified BOOLEAN DEFAULT FALSE,
-    used BOOLEAN DEFAULT FALSE,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE
-);
-
 CREATE TABLE IF NOT EXISTS users (
     user_id VARCHAR(20) PRIMARY KEY,
 
@@ -36,6 +23,20 @@ CREATE TABLE IF NOT EXISTS users (
     password_hash VARCHAR(64) NOT NULL DEFAULT '',
 
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+
+CREATE TABLE IF NOT EXISTS password_resets (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id VARCHAR(20) NOT NULL,
+    email VARCHAR(150) NOT NULL,
+    code_hash VARCHAR(255) NOT NULL,
+    expires_at DATETIME NOT NULL,
+    attempts INT DEFAULT 0,
+    verified BOOLEAN DEFAULT FALSE,
+    used BOOLEAN DEFAULT FALSE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE
 );
 
 
