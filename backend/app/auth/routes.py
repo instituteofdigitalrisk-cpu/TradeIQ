@@ -156,21 +156,27 @@ def forgot_password():
     user = User.query.filter_by(email=email).first()
     if not user:
         return jsonify({
-            "error": "This email is not registered or payment is pending. "
-                     "Please complete registration first."
-        }), 403
+            "error": "This email is not registered. Please sign up first."
+        }), 404
 
     try:
         _ensure_firebase_admin_initialized()
         reset_link = firebase_auth.generate_password_reset_link(email)
         _send_reset_link_email(email, reset_link)
     except firebase_auth.UserNotFoundError:
-        return jsonify({
-            "error": (
-                "This account exists in our database, but no Firebase login was "
-                "found for it. Please register using the standard signup flow."
+        try:
+            firebase_auth.create_user(email=email)
+            reset_link = firebase_auth.generate_password_reset_link(email)
+            _send_reset_link_email(email, reset_link)
+        except Exception as exc:
+            logger.exception(
+                "Failed to create Firebase user/send reset link for %s: %s",
+                email,
+                exc,
             )
-        }), 404
+            return jsonify({
+                "error": "Could not send the password reset email. Please try again shortly."
+            }), 502
     except Exception as exc:
         logger.exception("Failed to generate/send password reset link for %s: %s", email, exc)
         return jsonify({"error": "Could not send the password reset email. Please try again shortly."}), 502
