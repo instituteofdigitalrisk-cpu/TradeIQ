@@ -138,13 +138,29 @@ def create_app() -> Flask:
     limiter.init_app(app)
 
     # CORS configuration
-    default_origins = "http://localhost:8081,http://localhost:8082"
+    default_origins = ",".join([
+        "https://tradeiq-frontend-kl94.onrender.com",
+        "http://localhost:5000",
+        "http://localhost:8081",
+        "http://localhost:8082",
+        "http://localhost:19006",
+    ])
     allowed_origins = [
         origin.strip()
         for origin in os.getenv("ALLOWED_CORS_ORIGINS", default_origins).split(",")
         if origin.strip()
     ]
-    cors.init_app(app, resources={r"/*": {"origins": allowed_origins}})
+    cors.init_app(
+        app,
+        resources={
+            r"/*": {
+                "origins": allowed_origins,
+                "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+                "allow_headers": ["Content-Type", "Authorization"],
+                "supports_credentials": True,
+            }
+        },
+    )
 
     # ------------------------------------------------------------------
     # Request-ID & Logging Context Middleware
