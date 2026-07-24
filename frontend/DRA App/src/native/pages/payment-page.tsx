@@ -2,7 +2,7 @@ import { CheckCircle, CreditCard, Lock, ShieldCheck } from "lucide-react-native"
 import { useState } from "react";
 import { ScrollView, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { C, cashPrizeImage, font } from "../constants";
+import { C, prizePoolImage, font } from "../constants";
 import { Image } from "expo-image";
 import { AppButton, Field, GlassCard, HeaderMini, StepDots } from "../components/ui";
 import * as WebBrowser from "expo-web-browser";
@@ -182,7 +182,7 @@ export function PaymentPage({ onComplete }: { onComplete: () => void }) {
         >
 
           <Image
-            source={cashPrizeImage}
+            source={prizePoolImage}
             style={{
               width: "100%",
               height: 220,

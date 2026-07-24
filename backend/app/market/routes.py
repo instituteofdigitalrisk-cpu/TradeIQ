@@ -1,6 +1,8 @@
 from flask import Blueprint, jsonify, request
 from flask_jwt_extended import jwt_required
+import yfinance as yf
 
+from app.cache import cache_get, cache_set
 from app.extensions import limiter
 from app.services.market_service import (
     stock_info as service_stock_info,
@@ -21,6 +23,42 @@ def handle_market_error(e: MarketError):
     """Centralized handler that intercepts MarketError exceptions and returns 
     structured JSON error responses with proper HTTP status codes."""
     return jsonify({"error": e.message}), e.status_code
+
+
+@market_bp.get("/quote/<string:symbol>")
+@limiter.limit("60 per minute")
+def get_stock_quote(symbol: str):
+    """Priority 1: Market Data Proxy Route with Redis Caching (60s TTL)."""
+    symbol = symbol.upper().strip()
+    cache_key = f"market_quote:{symbol}"
+    
+    # 1. Check cache first
+    cached_data = cache_get(cache_key)
+    if cached_data:
+        return jsonify({"source": "cache", "data": cached_data}), 200
+
+    # 2. Fetch from market provider (yfinance)
+    try:
+        ticker = yf.Ticker(symbol)
+        info = ticker.info
+        
+        # Guard against invalid or empty tickers returned by yfinance
+        price = info.get("currentPrice") or info.get("regularMarketPrice") or info.get("previousClose")
+        if not info or price is None:
+            return jsonify({"error": f"Symbol '{symbol}' not found or no price data available"}), 404
+
+        quote_data = {
+            "symbol": symbol,
+            "price": price,
+            "currency": info.get("currency", "USD"),
+            "companyName": info.get("shortName") or info.get("longName") or symbol,
+        }
+        
+        # 3. Cache result for 60 seconds
+        cache_set(cache_key, quote_data, ttl_seconds=60)
+        return jsonify({"source": "live", "data": quote_data}), 200
+    except Exception as e:
+        return jsonify({"error": f"Failed to fetch market data: {str(e)}"}), 500
 
 
 @market_bp.get("/stock/<string:ticker>")

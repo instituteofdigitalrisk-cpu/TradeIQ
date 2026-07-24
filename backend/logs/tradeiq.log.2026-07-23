@@ -1,0 +1,182 @@
+[2026-07-23 13:33:42,279] INFO in __init__ [C:\Projects\SalesTrading\backend\app\__init__.py:55]: [TradeIQ] Centralized logging initialized successfully.
+[2026-07-23 13:33:42,280] INFO in __init__ [C:\Projects\SalesTrading\backend\app\__init__.py:124]: [TradeIQ] Starting up — DB host: 127.0.0.1 | DB name: tradeiq | SSL: false | Env: development
+[2026-07-23 13:34:04,429] INFO in __init__ [C:\Projects\SalesTrading\backend\app\__init__.py:55]: [TradeIQ] Centralized logging initialized successfully.
+[2026-07-23 13:34:04,430] INFO in __init__ [C:\Projects\SalesTrading\backend\app\__init__.py:124]: [TradeIQ] Starting up — DB host: 127.0.0.1 | DB name: tradeiq | SSL: false | Env: development
+[2026-07-23 13:35:37,309] INFO in __init__ [C:\Projects\SalesTrading\backend\app\__init__.py:55]: [TradeIQ] Centralized logging initialized successfully.
+[2026-07-23 13:35:37,310] INFO in __init__ [C:\Projects\SalesTrading\backend\app\__init__.py:124]: [TradeIQ] Starting up — DB host: 127.0.0.1 | DB name: tradeiq | SSL: false | Env: development
+[2026-07-23 13:35:39,391] INFO in __init__ [C:\Projects\SalesTrading\backend\app\__init__.py:55]: [TradeIQ] Centralized logging initialized successfully.
+[2026-07-23 13:35:39,392] INFO in __init__ [C:\Projects\SalesTrading\backend\app\__init__.py:124]: [TradeIQ] Starting up — DB host: 127.0.0.1 | DB name: tradeiq | SSL: false | Env: development
+[2026-07-23 13:37:20,816] INFO in __init__ [C:\Projects\SalesTrading\backend\app\__init__.py:55]: [TradeIQ] Centralized logging initialized successfully.
+[2026-07-23 13:37:20,818] INFO in __init__ [C:\Projects\SalesTrading\backend\app\__init__.py:124]: [TradeIQ] Starting up — DB host: 127.0.0.1 | DB name: tradeiq | SSL: false | Env: development
+[2026-07-23 13:37:28,411] WARNING in cache [C:\Projects\SalesTrading\backend\app\cache.py:41]: [Cache] REDIS_URL set but connection failed (Error 10061 connecting to localhost:6379. No connection could be made because the target machine actively refused it.). Falling back to memory cache.
+[2026-07-23 13:37:28,684] INFO in __init__ [C:\Projects\SalesTrading\backend\app\__init__.py:55]: [TradeIQ] Centralized logging initialized successfully.
+[2026-07-23 13:37:28,684] INFO in __init__ [C:\Projects\SalesTrading\backend\app\__init__.py:124]: [TradeIQ] Starting up — DB host: 127.0.0.1 | DB name: tradeiq | SSL: false | Env: development
+[2026-07-23 13:38:28,553] INFO in __init__ [C:\Projects\SalesTrading\backend\app\__init__.py:55]: [TradeIQ] Centralized logging initialized successfully.
+[2026-07-23 13:38:28,554] INFO in __init__ [C:\Projects\SalesTrading\backend\app\__init__.py:124]: [TradeIQ] Starting up — DB host: 127.0.0.1 | DB name: tradeiq | SSL: false | Env: development
+[2026-07-23 13:38:35,617] WARNING in cache [C:\Projects\SalesTrading\backend\app\cache.py:41]: [Cache] REDIS_URL set but connection failed (Error 10061 connecting to localhost:6379. No connection could be made because the target machine actively refused it.). Falling back to memory cache.
+[2026-07-23 13:38:35,865] INFO in __init__ [C:\Projects\SalesTrading\backend\app\__init__.py:55]: [TradeIQ] Centralized logging initialized successfully.
+[2026-07-23 13:38:35,866] INFO in __init__ [C:\Projects\SalesTrading\backend\app\__init__.py:124]: [TradeIQ] Starting up — DB host: 127.0.0.1 | DB name: tradeiq | SSL: false | Env: development
+[2026-07-23 14:19:10,625] INFO in __init__ [C:\Projects\SalesTrading\backend\app\__init__.py:55]: [TradeIQ] Centralized logging initialized successfully.
+[2026-07-23 14:19:10,628] INFO in __init__ [C:\Projects\SalesTrading\backend\app\__init__.py:124]: [TradeIQ] Starting up — DB host: 127.0.0.1 | DB name: tradeiq | SSL: false | Env: development
+[2026-07-23 14:19:25,011] WARNING in cache [C:\Projects\SalesTrading\backend\app\cache.py:41]: [Cache] REDIS_URL set but connection failed (Error 10061 connecting to localhost:6379. No connection could be made because the target machine actively refused it.). Falling back to memory cache.
+[2026-07-23 14:19:26,952] INFO in __init__ [C:\Projects\SalesTrading\backend\app\__init__.py:55]: [TradeIQ] Centralized logging initialized successfully.
+[2026-07-23 14:19:26,954] INFO in __init__ [C:\Projects\SalesTrading\backend\app\__init__.py:124]: [TradeIQ] Starting up — DB host: 127.0.0.1 | DB name: tradeiq | SSL: false | Env: development
+[2026-07-23 14:55:15,215] INFO in __init__ [C:\Projects\SalesTrading\backend\app\__init__.py:55]: [TradeIQ] Centralized logging initialized successfully.
+[2026-07-23 14:55:15,216] INFO in __init__ [C:\Projects\SalesTrading\backend\app\__init__.py:124]: [TradeIQ] Starting up — DB host: 127.0.0.1 | DB name: tradeiq | SSL: false | Env: development
+[2026-07-23 14:55:41,501] WARNING in cache [C:\Projects\SalesTrading\backend\app\cache.py:41]: [Cache] REDIS_URL set but connection failed (Error 10061 connecting to localhost:6379. No connection could be made because the target machine actively refused it.). Falling back to memory cache.
+[2026-07-23 14:55:41,843] INFO in __init__ [C:\Projects\SalesTrading\backend\app\__init__.py:55]: [TradeIQ] Centralized logging initialized successfully.
+[2026-07-23 14:55:41,844] INFO in __init__ [C:\Projects\SalesTrading\backend\app\__init__.py:124]: [TradeIQ] Starting up — DB host: 127.0.0.1 | DB name: tradeiq | SSL: false | Env: development
+[2026-07-23 14:56:02,949] INFO in __init__ [C:\Projects\SalesTrading\backend\app\__init__.py:55]: [TradeIQ] Centralized logging initialized successfully.
+[2026-07-23 14:56:02,950] INFO in __init__ [C:\Projects\SalesTrading\backend\app\__init__.py:124]: [TradeIQ] Starting up — DB host: 127.0.0.1 | DB name: tradeiq | SSL: false | Env: development
+[2026-07-23 14:56:08,536] WARNING in cache [C:\Projects\SalesTrading\backend\app\cache.py:41]: [Cache] REDIS_URL set but connection failed (Error 10061 connecting to localhost:6379. No connection could be made because the target machine actively refused it.). Falling back to memory cache.
+[2026-07-23 14:56:08,774] INFO in __init__ [C:\Projects\SalesTrading\backend\app\__init__.py:55]: [TradeIQ] Centralized logging initialized successfully.
+[2026-07-23 14:56:08,775] INFO in __init__ [C:\Projects\SalesTrading\backend\app\__init__.py:124]: [TradeIQ] Starting up — DB host: 127.0.0.1 | DB name: tradeiq | SSL: false | Env: development
+[2026-07-23 20:07:30,217] INFO in __init__ [C:\Projects\SalesTrading\backend\app\__init__.py:55]: [TradeIQ] Centralized logging initialized successfully.
+[2026-07-23 20:07:30,217] INFO in __init__ [C:\Projects\SalesTrading\backend\app\__init__.py:124]: [TradeIQ] Starting up — DB host: 127.0.0.1 | DB name: tradeiq | SSL: false | Env: development
+[2026-07-23 20:07:47,225] WARNING in cache [C:\Projects\SalesTrading\backend\app\cache.py:41]: [Cache] REDIS_URL set but connection failed (Error 10061 connecting to localhost:6379. No connection could be made because the target machine actively refused it.). Falling back to memory cache.
+[2026-07-23 20:07:47,633] INFO in __init__ [C:\Projects\SalesTrading\backend\app\__init__.py:55]: [TradeIQ] Centralized logging initialized successfully.
+[2026-07-23 20:07:47,634] INFO in __init__ [C:\Projects\SalesTrading\backend\app\__init__.py:124]: [TradeIQ] Starting up — DB host: 127.0.0.1 | DB name: tradeiq | SSL: false | Env: development
+[2026-07-23 20:18:49,339] INFO in __init__ [C:\Projects\SalesTrading\backend\app\__init__.py:55]: [TradeIQ] Centralized logging initialized successfully.
+[2026-07-23 20:18:49,340] INFO in __init__ [C:\Projects\SalesTrading\backend\app\__init__.py:124]: [TradeIQ] Starting up — DB host: 127.0.0.1 | DB name: tradeiq | SSL: false | Env: development
+[2026-07-23 20:18:50,746] INFO in __init__ [C:\Projects\SalesTrading\backend\app\__init__.py:55]: [TradeIQ] Centralized logging initialized successfully.
+[2026-07-23 20:18:50,747] INFO in __init__ [C:\Projects\SalesTrading\backend\app\__init__.py:124]: [TradeIQ] Starting up — DB host: 127.0.0.1 | DB name: tradeiq | SSL: false | Env: development
+[2026-07-23 20:18:51,794] INFO in __init__ [C:\Projects\SalesTrading\backend\app\__init__.py:55]: [TradeIQ] Centralized logging initialized successfully.
+[2026-07-23 20:18:51,794] INFO in __init__ [C:\Projects\SalesTrading\backend\app\__init__.py:124]: [TradeIQ] Starting up — DB host: 127.0.0.1 | DB name: tradeiq | SSL: false | Env: development
+[2026-07-23 20:19:08,321] INFO in __init__ [C:\Projects\SalesTrading\backend\app\__init__.py:55]: [TradeIQ] Centralized logging initialized successfully.
+[2026-07-23 20:19:08,321] INFO in __init__ [C:\Projects\SalesTrading\backend\app\__init__.py:124]: [TradeIQ] Starting up — DB host: 127.0.0.1 | DB name: tradeiq | SSL: false | Env: development
+[2026-07-23 20:19:09,147] INFO in __init__ [C:\Projects\SalesTrading\backend\app\__init__.py:55]: [TradeIQ] Centralized logging initialized successfully.
+[2026-07-23 20:19:09,147] INFO in __init__ [C:\Projects\SalesTrading\backend\app\__init__.py:124]: [TradeIQ] Starting up — DB host: 127.0.0.1 | DB name: tradeiq | SSL: false | Env: development
+[2026-07-23 20:19:09,949] INFO in __init__ [C:\Projects\SalesTrading\backend\app\__init__.py:55]: [TradeIQ] Centralized logging initialized successfully.
+[2026-07-23 20:19:09,949] INFO in __init__ [C:\Projects\SalesTrading\backend\app\__init__.py:124]: [TradeIQ] Starting up — DB host: 127.0.0.1 | DB name: tradeiq | SSL: false | Env: development
+[2026-07-23 20:19:59,328] INFO in __init__ [C:\Projects\SalesTrading\backend\app\__init__.py:55]: [TradeIQ] Centralized logging initialized successfully.
+[2026-07-23 20:19:59,329] INFO in __init__ [C:\Projects\SalesTrading\backend\app\__init__.py:124]: [TradeIQ] Starting up — DB host: 127.0.0.1 | DB name: tradeiq | SSL: false | Env: development
+[2026-07-23 20:20:00,284] INFO in __init__ [C:\Projects\SalesTrading\backend\app\__init__.py:55]: [TradeIQ] Centralized logging initialized successfully.
+[2026-07-23 20:20:00,284] INFO in __init__ [C:\Projects\SalesTrading\backend\app\__init__.py:124]: [TradeIQ] Starting up — DB host: 127.0.0.1 | DB name: tradeiq | SSL: false | Env: development
+[2026-07-23 20:20:01,400] INFO in __init__ [C:\Projects\SalesTrading\backend\app\__init__.py:55]: [TradeIQ] Centralized logging initialized successfully.
+[2026-07-23 20:20:01,400] INFO in __init__ [C:\Projects\SalesTrading\backend\app\__init__.py:124]: [TradeIQ] Starting up — DB host: 127.0.0.1 | DB name: tradeiq | SSL: false | Env: development
+[2026-07-23 20:20:29,425] INFO in __init__ [C:\Projects\SalesTrading\backend\app\__init__.py:55]: [TradeIQ] Centralized logging initialized successfully.
+[2026-07-23 20:20:29,427] INFO in __init__ [C:\Projects\SalesTrading\backend\app\__init__.py:124]: [TradeIQ] Starting up — DB host: 127.0.0.1 | DB name: tradeiq | SSL: false | Env: development
+[2026-07-23 20:20:30,362] INFO in __init__ [C:\Projects\SalesTrading\backend\app\__init__.py:55]: [TradeIQ] Centralized logging initialized successfully.
+[2026-07-23 20:20:30,362] INFO in __init__ [C:\Projects\SalesTrading\backend\app\__init__.py:124]: [TradeIQ] Starting up — DB host: 127.0.0.1 | DB name: tradeiq | SSL: false | Env: development
+[2026-07-23 20:20:35,325] INFO in __init__ [C:\Projects\SalesTrading\backend\app\__init__.py:55]: [TradeIQ] Centralized logging initialized successfully.
+[2026-07-23 20:20:35,325] INFO in __init__ [C:\Projects\SalesTrading\backend\app\__init__.py:124]: [TradeIQ] Starting up — DB host: 127.0.0.1 | DB name: tradeiq | SSL: false | Env: development
+[2026-07-23 20:24:44,865] INFO in __init__ [C:\Projects\SalesTrading\backend\app\__init__.py:55]: [TradeIQ] Centralized logging initialized successfully.
+[2026-07-23 20:24:44,866] INFO in __init__ [C:\Projects\SalesTrading\backend\app\__init__.py:124]: [TradeIQ] Starting up — DB host: 127.0.0.1 | DB name: tradeiq | SSL: false | Env: development
+[2026-07-23 20:24:45,781] INFO in __init__ [C:\Projects\SalesTrading\backend\app\__init__.py:55]: [TradeIQ] Centralized logging initialized successfully.
+[2026-07-23 20:24:45,782] INFO in __init__ [C:\Projects\SalesTrading\backend\app\__init__.py:124]: [TradeIQ] Starting up — DB host: 127.0.0.1 | DB name: tradeiq | SSL: false | Env: development
+[2026-07-23 20:24:47,008] INFO in __init__ [C:\Projects\SalesTrading\backend\app\__init__.py:55]: [TradeIQ] Centralized logging initialized successfully.
+[2026-07-23 20:24:47,008] INFO in __init__ [C:\Projects\SalesTrading\backend\app\__init__.py:124]: [TradeIQ] Starting up — DB host: 127.0.0.1 | DB name: tradeiq | SSL: false | Env: development
+[2026-07-23 20:25:03,821] INFO in __init__ [C:\Projects\SalesTrading\backend\app\__init__.py:55]: [TradeIQ] Centralized logging initialized successfully.
+[2026-07-23 20:25:03,822] INFO in __init__ [C:\Projects\SalesTrading\backend\app\__init__.py:124]: [TradeIQ] Starting up — DB host: 127.0.0.1 | DB name: tradeiq | SSL: false | Env: development
+[2026-07-23 20:25:04,714] INFO in __init__ [C:\Projects\SalesTrading\backend\app\__init__.py:55]: [TradeIQ] Centralized logging initialized successfully.
+[2026-07-23 20:25:04,715] INFO in __init__ [C:\Projects\SalesTrading\backend\app\__init__.py:124]: [TradeIQ] Starting up — DB host: 127.0.0.1 | DB name: tradeiq | SSL: false | Env: development
+[2026-07-23 20:25:05,486] INFO in __init__ [C:\Projects\SalesTrading\backend\app\__init__.py:55]: [TradeIQ] Centralized logging initialized successfully.
+[2026-07-23 20:25:05,486] INFO in __init__ [C:\Projects\SalesTrading\backend\app\__init__.py:124]: [TradeIQ] Starting up — DB host: 127.0.0.1 | DB name: tradeiq | SSL: false | Env: development
+[2026-07-23 20:27:22,833] INFO in __init__ [C:\Projects\SalesTrading\backend\app\__init__.py:55]: [TradeIQ] Centralized logging initialized successfully.
+[2026-07-23 20:27:22,834] INFO in __init__ [C:\Projects\SalesTrading\backend\app\__init__.py:124]: [TradeIQ] Starting up — DB host: 127.0.0.1 | DB name: tradeiq | SSL: false | Env: development
+[2026-07-23 20:27:23,658] INFO in __init__ [C:\Projects\SalesTrading\backend\app\__init__.py:55]: [TradeIQ] Centralized logging initialized successfully.
+[2026-07-23 20:27:23,658] INFO in __init__ [C:\Projects\SalesTrading\backend\app\__init__.py:124]: [TradeIQ] Starting up — DB host: 127.0.0.1 | DB name: tradeiq | SSL: false | Env: development
+[2026-07-23 20:27:24,786] INFO in __init__ [C:\Projects\SalesTrading\backend\app\__init__.py:55]: [TradeIQ] Centralized logging initialized successfully.
+[2026-07-23 20:27:24,787] INFO in __init__ [C:\Projects\SalesTrading\backend\app\__init__.py:124]: [TradeIQ] Starting up — DB host: 127.0.0.1 | DB name: tradeiq | SSL: false | Env: development
+[2026-07-23 20:27:41,407] INFO in __init__ [C:\Projects\SalesTrading\backend\app\__init__.py:55]: [TradeIQ] Centralized logging initialized successfully.
+[2026-07-23 20:27:41,407] INFO in __init__ [C:\Projects\SalesTrading\backend\app\__init__.py:124]: [TradeIQ] Starting up — DB host: 127.0.0.1 | DB name: tradeiq | SSL: false | Env: development
+[2026-07-23 20:27:42,304] INFO in __init__ [C:\Projects\SalesTrading\backend\app\__init__.py:55]: [TradeIQ] Centralized logging initialized successfully.
+[2026-07-23 20:27:42,305] INFO in __init__ [C:\Projects\SalesTrading\backend\app\__init__.py:124]: [TradeIQ] Starting up — DB host: 127.0.0.1 | DB name: tradeiq | SSL: false | Env: development
+[2026-07-23 20:27:43,104] INFO in __init__ [C:\Projects\SalesTrading\backend\app\__init__.py:55]: [TradeIQ] Centralized logging initialized successfully.
+[2026-07-23 20:27:43,105] INFO in __init__ [C:\Projects\SalesTrading\backend\app\__init__.py:124]: [TradeIQ] Starting up — DB host: 127.0.0.1 | DB name: tradeiq | SSL: false | Env: development
+[2026-07-23 20:28:22,746] INFO in __init__ [C:\Projects\SalesTrading\backend\app\__init__.py:55]: [TradeIQ] Centralized logging initialized successfully.
+[2026-07-23 20:28:22,746] INFO in __init__ [C:\Projects\SalesTrading\backend\app\__init__.py:124]: [TradeIQ] Starting up — DB host: 127.0.0.1 | DB name: tradeiq | SSL: false | Env: development
+[2026-07-23 20:28:23,548] INFO in __init__ [C:\Projects\SalesTrading\backend\app\__init__.py:55]: [TradeIQ] Centralized logging initialized successfully.
+[2026-07-23 20:28:23,549] INFO in __init__ [C:\Projects\SalesTrading\backend\app\__init__.py:124]: [TradeIQ] Starting up — DB host: 127.0.0.1 | DB name: tradeiq | SSL: false | Env: development
+[2026-07-23 20:28:24,831] INFO in __init__ [C:\Projects\SalesTrading\backend\app\__init__.py:55]: [TradeIQ] Centralized logging initialized successfully.
+[2026-07-23 20:28:24,831] INFO in __init__ [C:\Projects\SalesTrading\backend\app\__init__.py:124]: [TradeIQ] Starting up — DB host: 127.0.0.1 | DB name: tradeiq | SSL: false | Env: development
+[2026-07-23 20:28:46,166] INFO in __init__ [C:\Projects\SalesTrading\backend\app\__init__.py:55]: [TradeIQ] Centralized logging initialized successfully.
+[2026-07-23 20:28:46,166] INFO in __init__ [C:\Projects\SalesTrading\backend\app\__init__.py:124]: [TradeIQ] Starting up — DB host: 127.0.0.1 | DB name: tradeiq | SSL: false | Env: development
+[2026-07-23 20:28:47,010] INFO in __init__ [C:\Projects\SalesTrading\backend\app\__init__.py:55]: [TradeIQ] Centralized logging initialized successfully.
+[2026-07-23 20:28:47,011] INFO in __init__ [C:\Projects\SalesTrading\backend\app\__init__.py:124]: [TradeIQ] Starting up — DB host: 127.0.0.1 | DB name: tradeiq | SSL: false | Env: development
+[2026-07-23 20:28:51,916] INFO in __init__ [C:\Projects\SalesTrading\backend\app\__init__.py:55]: [TradeIQ] Centralized logging initialized successfully.
+[2026-07-23 20:28:51,917] INFO in __init__ [C:\Projects\SalesTrading\backend\app\__init__.py:124]: [TradeIQ] Starting up — DB host: 127.0.0.1 | DB name: tradeiq | SSL: false | Env: development
+[2026-07-23 20:29:42,933] INFO in __init__ [C:\Projects\SalesTrading\backend\app\__init__.py:55]: [TradeIQ] Centralized logging initialized successfully.
+[2026-07-23 20:29:42,934] INFO in __init__ [C:\Projects\SalesTrading\backend\app\__init__.py:124]: [TradeIQ] Starting up — DB host: 127.0.0.1 | DB name: tradeiq | SSL: false | Env: development
+[2026-07-23 20:29:43,859] INFO in __init__ [C:\Projects\SalesTrading\backend\app\__init__.py:55]: [TradeIQ] Centralized logging initialized successfully.
+[2026-07-23 20:29:43,859] INFO in __init__ [C:\Projects\SalesTrading\backend\app\__init__.py:124]: [TradeIQ] Starting up — DB host: 127.0.0.1 | DB name: tradeiq | SSL: false | Env: development
+[2026-07-23 20:29:46,373] INFO in __init__ [C:\Projects\SalesTrading\backend\app\__init__.py:55]: [TradeIQ] Centralized logging initialized successfully.
+[2026-07-23 20:29:46,373] INFO in __init__ [C:\Projects\SalesTrading\backend\app\__init__.py:124]: [TradeIQ] Starting up — DB host: 127.0.0.1 | DB name: tradeiq | SSL: false | Env: development
+[2026-07-23 20:30:12,484] INFO in __init__ [C:\Projects\SalesTrading\backend\app\__init__.py:55]: [TradeIQ] Centralized logging initialized successfully.
+[2026-07-23 20:30:12,484] INFO in __init__ [C:\Projects\SalesTrading\backend\app\__init__.py:124]: [TradeIQ] Starting up — DB host: 127.0.0.1 | DB name: tradeiq | SSL: false | Env: development
+[2026-07-23 20:30:13,704] INFO in __init__ [C:\Projects\SalesTrading\backend\app\__init__.py:55]: [TradeIQ] Centralized logging initialized successfully.
+[2026-07-23 20:30:13,705] INFO in __init__ [C:\Projects\SalesTrading\backend\app\__init__.py:124]: [TradeIQ] Starting up — DB host: 127.0.0.1 | DB name: tradeiq | SSL: false | Env: development
+[2026-07-23 20:30:18,648] INFO in __init__ [C:\Projects\SalesTrading\backend\app\__init__.py:55]: [TradeIQ] Centralized logging initialized successfully.
+[2026-07-23 20:30:18,649] INFO in __init__ [C:\Projects\SalesTrading\backend\app\__init__.py:124]: [TradeIQ] Starting up — DB host: 127.0.0.1 | DB name: tradeiq | SSL: false | Env: development
+[2026-07-23 20:31:46,244] INFO in __init__ [C:\Projects\SalesTrading\backend\app\__init__.py:55]: [TradeIQ] Centralized logging initialized successfully.
+[2026-07-23 20:31:46,245] INFO in __init__ [C:\Projects\SalesTrading\backend\app\__init__.py:124]: [TradeIQ] Starting up — DB host: 127.0.0.1 | DB name: tradeiq | SSL: false | Env: development
+[2026-07-23 20:31:47,098] INFO in __init__ [C:\Projects\SalesTrading\backend\app\__init__.py:55]: [TradeIQ] Centralized logging initialized successfully.
+[2026-07-23 20:31:47,099] INFO in __init__ [C:\Projects\SalesTrading\backend\app\__init__.py:124]: [TradeIQ] Starting up — DB host: 127.0.0.1 | DB name: tradeiq | SSL: false | Env: development
+[2026-07-23 20:31:48,158] INFO in __init__ [C:\Projects\SalesTrading\backend\app\__init__.py:55]: [TradeIQ] Centralized logging initialized successfully.
+[2026-07-23 20:31:48,159] INFO in __init__ [C:\Projects\SalesTrading\backend\app\__init__.py:124]: [TradeIQ] Starting up — DB host: 127.0.0.1 | DB name: tradeiq | SSL: false | Env: development
+[2026-07-23 20:32:04,780] INFO in __init__ [C:\Projects\SalesTrading\backend\app\__init__.py:55]: [TradeIQ] Centralized logging initialized successfully.
+[2026-07-23 20:32:04,781] INFO in __init__ [C:\Projects\SalesTrading\backend\app\__init__.py:124]: [TradeIQ] Starting up — DB host: 127.0.0.1 | DB name: tradeiq | SSL: false | Env: development
+[2026-07-23 20:32:05,603] INFO in __init__ [C:\Projects\SalesTrading\backend\app\__init__.py:55]: [TradeIQ] Centralized logging initialized successfully.
+[2026-07-23 20:32:05,604] INFO in __init__ [C:\Projects\SalesTrading\backend\app\__init__.py:124]: [TradeIQ] Starting up — DB host: 127.0.0.1 | DB name: tradeiq | SSL: false | Env: development
+[2026-07-23 20:32:06,532] INFO in __init__ [C:\Projects\SalesTrading\backend\app\__init__.py:55]: [TradeIQ] Centralized logging initialized successfully.
+[2026-07-23 20:32:06,533] INFO in __init__ [C:\Projects\SalesTrading\backend\app\__init__.py:124]: [TradeIQ] Starting up — DB host: 127.0.0.1 | DB name: tradeiq | SSL: false | Env: development
+[2026-07-23 20:33:03,401] INFO in __init__ [C:\Projects\SalesTrading\backend\app\__init__.py:55]: [TradeIQ] Centralized logging initialized successfully.
+[2026-07-23 20:33:03,402] INFO in __init__ [C:\Projects\SalesTrading\backend\app\__init__.py:124]: [TradeIQ] Starting up — DB host: 127.0.0.1 | DB name: tradeiq | SSL: false | Env: development
+[2026-07-23 20:33:04,327] INFO in __init__ [C:\Projects\SalesTrading\backend\app\__init__.py:55]: [TradeIQ] Centralized logging initialized successfully.
+[2026-07-23 20:33:04,327] INFO in __init__ [C:\Projects\SalesTrading\backend\app\__init__.py:124]: [TradeIQ] Starting up — DB host: 127.0.0.1 | DB name: tradeiq | SSL: false | Env: development
+[2026-07-23 20:33:05,482] INFO in __init__ [C:\Projects\SalesTrading\backend\app\__init__.py:55]: [TradeIQ] Centralized logging initialized successfully.
+[2026-07-23 20:33:05,482] INFO in __init__ [C:\Projects\SalesTrading\backend\app\__init__.py:124]: [TradeIQ] Starting up — DB host: 127.0.0.1 | DB name: tradeiq | SSL: false | Env: development
+[2026-07-23 20:33:27,767] INFO in __init__ [C:\Projects\SalesTrading\backend\app\__init__.py:55]: [TradeIQ] Centralized logging initialized successfully.
+[2026-07-23 20:33:27,767] INFO in __init__ [C:\Projects\SalesTrading\backend\app\__init__.py:124]: [TradeIQ] Starting up — DB host: 127.0.0.1 | DB name: tradeiq | SSL: false | Env: development
+[2026-07-23 20:33:29,086] INFO in __init__ [C:\Projects\SalesTrading\backend\app\__init__.py:55]: [TradeIQ] Centralized logging initialized successfully.
+[2026-07-23 20:33:29,086] INFO in __init__ [C:\Projects\SalesTrading\backend\app\__init__.py:124]: [TradeIQ] Starting up — DB host: 127.0.0.1 | DB name: tradeiq | SSL: false | Env: development
+[2026-07-23 20:33:36,350] INFO in __init__ [C:\Projects\SalesTrading\backend\app\__init__.py:55]: [TradeIQ] Centralized logging initialized successfully.
+[2026-07-23 20:33:36,351] INFO in __init__ [C:\Projects\SalesTrading\backend\app\__init__.py:124]: [TradeIQ] Starting up — DB host: 127.0.0.1 | DB name: tradeiq | SSL: false | Env: development
+[2026-07-23 20:36:36,931] INFO in __init__ [C:\Projects\SalesTrading\backend\app\__init__.py:55]: [TradeIQ] Centralized logging initialized successfully.
+[2026-07-23 20:36:36,935] INFO in __init__ [C:\Projects\SalesTrading\backend\app\__init__.py:124]: [TradeIQ] Starting up — DB host: 127.0.0.1 | DB name: tradeiq | SSL: false | Env: development
+[2026-07-23 20:36:38,363] INFO in __init__ [C:\Projects\SalesTrading\backend\app\__init__.py:55]: [TradeIQ] Centralized logging initialized successfully.
+[2026-07-23 20:36:38,364] INFO in __init__ [C:\Projects\SalesTrading\backend\app\__init__.py:124]: [TradeIQ] Starting up — DB host: 127.0.0.1 | DB name: tradeiq | SSL: false | Env: development
+[2026-07-23 20:36:40,051] INFO in __init__ [C:\Projects\SalesTrading\backend\app\__init__.py:55]: [TradeIQ] Centralized logging initialized successfully.
+[2026-07-23 20:36:40,052] INFO in __init__ [C:\Projects\SalesTrading\backend\app\__init__.py:124]: [TradeIQ] Starting up — DB host: 127.0.0.1 | DB name: tradeiq | SSL: false | Env: development
+[2026-07-23 20:36:56,391] INFO in __init__ [C:\Projects\SalesTrading\backend\app\__init__.py:55]: [TradeIQ] Centralized logging initialized successfully.
+[2026-07-23 20:36:56,393] INFO in __init__ [C:\Projects\SalesTrading\backend\app\__init__.py:124]: [TradeIQ] Starting up — DB host: 127.0.0.1 | DB name: tradeiq | SSL: false | Env: development
+[2026-07-23 20:36:57,234] INFO in __init__ [C:\Projects\SalesTrading\backend\app\__init__.py:55]: [TradeIQ] Centralized logging initialized successfully.
+[2026-07-23 20:36:57,235] INFO in __init__ [C:\Projects\SalesTrading\backend\app\__init__.py:124]: [TradeIQ] Starting up — DB host: 127.0.0.1 | DB name: tradeiq | SSL: false | Env: development
+[2026-07-23 20:36:57,990] INFO in __init__ [C:\Projects\SalesTrading\backend\app\__init__.py:55]: [TradeIQ] Centralized logging initialized successfully.
+[2026-07-23 20:36:57,990] INFO in __init__ [C:\Projects\SalesTrading\backend\app\__init__.py:124]: [TradeIQ] Starting up — DB host: 127.0.0.1 | DB name: tradeiq | SSL: false | Env: development
+[2026-07-23 20:41:56,086] INFO in __init__ [C:\Projects\SalesTrading\backend\app\__init__.py:55]: [TradeIQ] Centralized logging initialized successfully.
+[2026-07-23 20:41:56,087] INFO in __init__ [C:\Projects\SalesTrading\backend\app\__init__.py:124]: [TradeIQ] Starting up — DB host: 127.0.0.1 | DB name: tradeiq | SSL: false | Env: development
+[2026-07-23 20:41:57,079] INFO in __init__ [C:\Projects\SalesTrading\backend\app\__init__.py:55]: [TradeIQ] Centralized logging initialized successfully.
+[2026-07-23 20:41:57,079] INFO in __init__ [C:\Projects\SalesTrading\backend\app\__init__.py:124]: [TradeIQ] Starting up — DB host: 127.0.0.1 | DB name: tradeiq | SSL: false | Env: development
+[2026-07-23 20:41:58,179] INFO in __init__ [C:\Projects\SalesTrading\backend\app\__init__.py:55]: [TradeIQ] Centralized logging initialized successfully.
+[2026-07-23 20:41:58,180] INFO in __init__ [C:\Projects\SalesTrading\backend\app\__init__.py:124]: [TradeIQ] Starting up — DB host: 127.0.0.1 | DB name: tradeiq | SSL: false | Env: development
+[2026-07-23 20:42:14,543] INFO in __init__ [C:\Projects\SalesTrading\backend\app\__init__.py:55]: [TradeIQ] Centralized logging initialized successfully.
+[2026-07-23 20:42:14,544] INFO in __init__ [C:\Projects\SalesTrading\backend\app\__init__.py:124]: [TradeIQ] Starting up — DB host: 127.0.0.1 | DB name: tradeiq | SSL: false | Env: development
+[2026-07-23 20:42:15,425] INFO in __init__ [C:\Projects\SalesTrading\backend\app\__init__.py:55]: [TradeIQ] Centralized logging initialized successfully.
+[2026-07-23 20:42:15,426] INFO in __init__ [C:\Projects\SalesTrading\backend\app\__init__.py:124]: [TradeIQ] Starting up — DB host: 127.0.0.1 | DB name: tradeiq | SSL: false | Env: development
+[2026-07-23 20:42:16,181] INFO in __init__ [C:\Projects\SalesTrading\backend\app\__init__.py:55]: [TradeIQ] Centralized logging initialized successfully.
+[2026-07-23 20:42:16,182] INFO in __init__ [C:\Projects\SalesTrading\backend\app\__init__.py:124]: [TradeIQ] Starting up — DB host: 127.0.0.1 | DB name: tradeiq | SSL: false | Env: development
+[2026-07-23 20:43:45,981] INFO in __init__ [C:\Projects\SalesTrading\backend\app\__init__.py:55]: [TradeIQ] Centralized logging initialized successfully.
+[2026-07-23 20:43:45,982] INFO in __init__ [C:\Projects\SalesTrading\backend\app\__init__.py:124]: [TradeIQ] Starting up — DB host: 127.0.0.1 | DB name: tradeiq | SSL: false | Env: development
+[2026-07-23 20:43:46,819] INFO in __init__ [C:\Projects\SalesTrading\backend\app\__init__.py:55]: [TradeIQ] Centralized logging initialized successfully.
+[2026-07-23 20:43:46,819] INFO in __init__ [C:\Projects\SalesTrading\backend\app\__init__.py:124]: [TradeIQ] Starting up — DB host: 127.0.0.1 | DB name: tradeiq | SSL: false | Env: development
+[2026-07-23 20:43:47,897] INFO in __init__ [C:\Projects\SalesTrading\backend\app\__init__.py:55]: [TradeIQ] Centralized logging initialized successfully.
+[2026-07-23 20:43:47,897] INFO in __init__ [C:\Projects\SalesTrading\backend\app\__init__.py:124]: [TradeIQ] Starting up — DB host: 127.0.0.1 | DB name: tradeiq | SSL: false | Env: development
+[2026-07-23 20:44:04,207] INFO in __init__ [C:\Projects\SalesTrading\backend\app\__init__.py:55]: [TradeIQ] Centralized logging initialized successfully.
+[2026-07-23 20:44:04,208] INFO in __init__ [C:\Projects\SalesTrading\backend\app\__init__.py:124]: [TradeIQ] Starting up — DB host: 127.0.0.1 | DB name: tradeiq | SSL: false | Env: development
+[2026-07-23 20:44:05,061] INFO in __init__ [C:\Projects\SalesTrading\backend\app\__init__.py:55]: [TradeIQ] Centralized logging initialized successfully.
+[2026-07-23 20:44:05,061] INFO in __init__ [C:\Projects\SalesTrading\backend\app\__init__.py:124]: [TradeIQ] Starting up — DB host: 127.0.0.1 | DB name: tradeiq | SSL: false | Env: development
+[2026-07-23 20:44:05,844] INFO in __init__ [C:\Projects\SalesTrading\backend\app\__init__.py:55]: [TradeIQ] Centralized logging initialized successfully.
+[2026-07-23 20:44:05,845] INFO in __init__ [C:\Projects\SalesTrading\backend\app\__init__.py:124]: [TradeIQ] Starting up — DB host: 127.0.0.1 | DB name: tradeiq | SSL: false | Env: development
+[2026-07-23 21:16:25,554] INFO in __init__ [C:\Projects\SalesTrading\backend\app\__init__.py:55]: [TradeIQ] Centralized logging initialized successfully.
+[2026-07-23 21:16:25,556] INFO in __init__ [C:\Projects\SalesTrading\backend\app\__init__.py:124]: [TradeIQ] Starting up — DB host: 127.0.0.1 | DB name: tradeiq | SSL: false | Env: development
+[2026-07-23 21:16:26,966] INFO in __init__ [C:\Projects\SalesTrading\backend\app\__init__.py:55]: [TradeIQ] Centralized logging initialized successfully.
+[2026-07-23 21:16:26,966] INFO in __init__ [C:\Projects\SalesTrading\backend\app\__init__.py:124]: [TradeIQ] Starting up — DB host: 127.0.0.1 | DB name: tradeiq | SSL: false | Env: development
+[2026-07-23 21:16:28,188] INFO in __init__ [C:\Projects\SalesTrading\backend\app\__init__.py:55]: [TradeIQ] Centralized logging initialized successfully.
+[2026-07-23 21:16:28,188] INFO in __init__ [C:\Projects\SalesTrading\backend\app\__init__.py:124]: [TradeIQ] Starting up — DB host: 127.0.0.1 | DB name: tradeiq | SSL: false | Env: development
+[2026-07-23 21:16:44,650] INFO in __init__ [C:\Projects\SalesTrading\backend\app\__init__.py:55]: [TradeIQ] Centralized logging initialized successfully.
+[2026-07-23 21:16:44,651] INFO in __init__ [C:\Projects\SalesTrading\backend\app\__init__.py:124]: [TradeIQ] Starting up — DB host: 127.0.0.1 | DB name: tradeiq | SSL: false | Env: development
+[2026-07-23 21:16:45,649] INFO in __init__ [C:\Projects\SalesTrading\backend\app\__init__.py:55]: [TradeIQ] Centralized logging initialized successfully.
+[2026-07-23 21:16:45,650] INFO in __init__ [C:\Projects\SalesTrading\backend\app\__init__.py:124]: [TradeIQ] Starting up — DB host: 127.0.0.1 | DB name: tradeiq | SSL: false | Env: development
+[2026-07-23 21:16:46,290] INFO in __init__ [C:\Projects\SalesTrading\backend\app\__init__.py:55]: [TradeIQ] Centralized logging initialized successfully.
+[2026-07-23 21:16:46,290] INFO in __init__ [C:\Projects\SalesTrading\backend\app\__init__.py:124]: [TradeIQ] Starting up — DB host: 127.0.0.1 | DB name: tradeiq | SSL: false | Env: development

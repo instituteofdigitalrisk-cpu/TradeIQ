@@ -17,6 +17,20 @@ CREATE TABLE IF NOT EXISTS users (
 );
 
 
+CREATE TABLE IF NOT EXISTS password_resets (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id VARCHAR(20) NOT NULL,
+    email VARCHAR(150) NOT NULL,
+    code_hash VARCHAR(255) NOT NULL,
+    expires_at DATETIME NOT NULL,
+    attempts INT DEFAULT 0,
+    verified BOOLEAN DEFAULT FALSE,
+    used BOOLEAN DEFAULT FALSE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE
+);
+
+
 CREATE TABLE IF NOT EXISTS portfolio_setup (
     portfolio_id INT AUTO_INCREMENT PRIMARY KEY,
     user_id VARCHAR(20) NOT NULL,
@@ -74,6 +88,29 @@ CREATE TABLE IF NOT EXISTS holdings (
         FOREIGN KEY (user_id)
         REFERENCES users(user_id)
         ON DELETE CASCADE
+);
+
+
+CREATE TABLE IF NOT EXISTS watchlist (
+    watchlist_id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id VARCHAR(20) NOT NULL,
+    stock_ticker VARCHAR(20) NOT NULL,
+    stock_name VARCHAR(100),
+    sector VARCHAR(100),
+    allocation_percent DECIMAL(5,2),
+    amount_invested DECIMAL(15,2),
+    quantity INT,
+    buy_price DECIMAL(15,2),
+    current_sell_price DECIMAL(15,2),
+    trade_type ENUM('BUY','SELL') DEFAULT 'BUY',
+    tag1 VARCHAR(100),
+    tag2 VARCHAR(100),
+    tag3 VARCHAR(100),
+    thesis TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    CONSTRAINT fk_watchlist_user FOREIGN KEY (user_id)
+        REFERENCES users(user_id) ON DELETE CASCADE
 );
 
 

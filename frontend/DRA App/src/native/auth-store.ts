@@ -1,6 +1,8 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { GoogleAuthProvider, signInWithPopup } from "firebase/auth";
 import { auth, setToken, clearToken } from "./api";
 import type { BackendUser } from "./api";
+import { firebaseAuth } from "../firebase";
 import type { UserData } from "./types";
 
 const USERS_KEY = "dra.studentProfiles";
@@ -105,6 +107,27 @@ export async function signInUser(email: string, password: string): Promise<UserD
   await writeUsers([...deduped, cachedUser]);
   await setActiveStudentId(cachedUser.studentId);
   return cachedUser;
+}
+
+export async function signInWithGoogle(): Promise<{ user: UserData; isNewUser: boolean }> {
+  if (typeof window === "undefined") {
+    throw new Error("Google sign-in is available in the web app.");
+  }
+
+  const provider = new GoogleAuthProvider();
+  provider.setCustomParameters({ prompt: "select_account" });
+  const result = await signInWithPopup(firebaseAuth, provider);
+  const idToken = await result.user.getIdToken();
+  const { user: backendUser, token, is_new_user } = await auth.google(idToken);
+
+  setToken(token);
+  const cachedUser = backendUserToUserData(backendUser);
+  const existing = await readUsers();
+  const deduped = existing.filter((u) => u.studentId !== cachedUser.studentId && u.email !== cachedUser.email);
+  await writeUsers([...deduped, cachedUser]);
+  await setActiveStudentId(cachedUser.studentId);
+
+  return { user: cachedUser, isNewUser: is_new_user };
 }
 
 export async function setActiveStudentId(studentId: string) {

@@ -1,8 +1,8 @@
-// this is frontend/DRA App/src/native/types.ts
 import type React from "react";
 
 export type Flow = "landing" | "signin" | "register" | "onboarding" | "payment" | "app";
 export type MainTab = "dashboard" | "portfolio" | "scores" | "leaderboard" | "courses";
+export type GoogleAuthResult = { user: UserData; isNewUser: boolean };
 
 export type UserData = {
   studentId: string;

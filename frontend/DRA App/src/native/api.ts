@@ -1,7 +1,12 @@
-// frontend/DRA App/src/native/api.ts
-
-const LOCAL_API_BASE = process.env.EXPO_PUBLIC_API_URL || "https://trade-iq-deploy.onrender.com";
-const API_BASES = [LOCAL_API_BASE];
+// this is frontend/DRA App/src/native/api.ts
+const DEFAULT_API_BASE = "https://trade-iq-deploy.onrender.com";
+const configuredApiBase = process.env.EXPO_PUBLIC_API_URL;
+const ENV_API_BASE = (configuredApiBase || DEFAULT_API_BASE).replace(/\/+$/, "");
+const isLocalWeb =
+  typeof window !== "undefined" &&
+  ["localhost", "127.0.0.1"].includes(window.location.hostname);
+const API_BASES = isLocalWeb && !configuredApiBase ? ["http://localhost:5000"] : [ENV_API_BASE];
+console.log("API BASES =", API_BASES);
 
 // ── Token storage ──────────────────────────────────────────────────────────────
 const TOKEN_KEY = "dra.jwtToken";
@@ -15,48 +20,40 @@ export function setUnauthorizedHandler(handler: (() => void) | null): void {
 }
 
 export function getToken(): string | null {
-  if (typeof window !== "undefined" && window.sessionStorage) {
-    return window.sessionStorage.getItem(TOKEN_KEY);
+  if (typeof window !== "undefined" && window.localStorage) {
+    return window.localStorage.getItem(TOKEN_KEY);
   }
   return _memToken;
 }
 
 export function setToken(token: string): void {
   _memToken = token;
-  if (typeof window !== "undefined" && window.sessionStorage) {
-    window.sessionStorage.setItem(TOKEN_KEY, token);
+  if (typeof window !== "undefined" && window.localStorage) {
+    window.localStorage.setItem(TOKEN_KEY, token);
   }
 }
 
 export function clearToken(): void {
   _memToken = null;
-  if (typeof window !== "undefined" && window.sessionStorage) {
-    window.sessionStorage.removeItem(TOKEN_KEY);
+  if (typeof window !== "undefined" && window.localStorage) {
+    window.localStorage.removeItem(TOKEN_KEY);
   }
 }
 
 function isInvalidTokenResponse(status: number, body: string): boolean {
   if (status !== 401 && status !== 422) return false;
-
-  // Safely check JSON body or string contents
   try {
-    const parsed = JSON.parse(body) as { msg?: string; detail?: string; message?: string };
-    const msg = parsed.msg || parsed.detail || parsed.message || "";
+    const parsed = JSON.parse(body) as { msg?: string };
     return [
       "Token has expired",
       "Signature verification failed",
       "Not enough segments",
-      "Invalid token",
-      "Could not validate credentials",
-      "unauthorized"
-    ].some((term) => msg.toLowerCase().includes(term.toLowerCase()));
+    ].includes(parsed.msg ?? "");
   } catch {
-    const lowerBody = body.toLowerCase();
     return (
-      lowerBody.includes("token has expired") ||
-      lowerBody.includes("signature verification failed") ||
-      lowerBody.includes("not enough segments") ||
-      lowerBody.includes("invalid token")
+      body.includes("Token has expired") ||
+      body.includes("Signature verification failed") ||
+      body.includes("Not enough segments")
     );
   }
 }
@@ -82,13 +79,19 @@ async function apiFetch<T>(
   for (const base of API_BASES) {
     const url = `${base}${path}`;
 
+    console.log("API URL =", url);
+
     try {
       const res = await fetch(url, {
         ...options,
         headers,
       });
 
+      console.log("STATUS =", res.status);
+
       const text = await res.text();
+
+      console.log("BODY =", text);
 
       if (!res.ok) {
         if (isInvalidTokenResponse(res.status, text)) {
@@ -96,50 +99,26 @@ async function apiFetch<T>(
           unauthorizedHandler?.();
           throw new Error("Your session has expired. Please sign in again.");
         }
-
-        // Try extracting formatted error message from backend JSON
-        let errorMessage = text;
-        try {
-          const parsedErr = JSON.parse(text);
-          errorMessage = parsedErr.error || parsedErr.message || parsedErr.msg || parsedErr.detail || text;
-        } catch {
-          /* Raw text fallback if backend returned HTML or 502/504 gateway error */
-        }
-
-        throw new Error(errorMessage || `Request failed with status ${res.status}`);
+        throw new Error(text);
       }
 
-      // Handle 204 / empty responses safely
-      if (!text || text.trim() === "") {
-        return {} as T;
-      }
-
-      // Safe JSON parsing
-      try {
-        return JSON.parse(text);
-      } catch {
-        throw new Error("Received invalid JSON response from server.");
-      }
+      return JSON.parse(text);
 
     } catch (err) {
-      // Check for generic network/fetch failures across platforms (iOS, Android, Web)
-      lastNetworkError = err;
+      console.log("FETCH ERROR =", err);
 
-      // Rethrow auth failure immediately
-      if (err instanceof Error && err.message.includes("session has expired")) {
-        throw err;
+      if (err instanceof TypeError && err.message === "Failed to fetch") {
+        lastNetworkError = err;
+        continue;
       }
 
-      // Retry next URL in API_BASES loop for network connection issues
-      continue;
+      throw err;
     }
   }
 
-  throw lastNetworkError instanceof Error
-    ? lastNetworkError
-    : new Error(
-        `Could not connect to the TradeIQ backend. Tried: ${API_BASES.join(", ")}.`
-      );
+  throw new Error(
+    `Could not connect to the TradeIQ backend. Tried: ${API_BASES.join(", ")}.`
+  );
 }
 
 // ── Auth ───────────────────────────────────────────────────────────────────────
@@ -148,11 +127,15 @@ export type BackendUser = {
   full_name: string;
   email: string;
   university: string | null;
+  course: string | null;
   year_of_study: number | null;
+  participation_type: string | null;
+  team_name: string | null;
   role: string;
 };
 
 type AuthResponse = { message: string; user: BackendUser; token: string };
+type GoogleAuthResponse = AuthResponse & { is_new_user: boolean };
 
 export const auth = {
   register(payload: {
@@ -163,7 +146,10 @@ export const auth = {
     date_of_birth?: string;
     phone_number?: string;
     university?: string;
+    course?: string;
     year_of_study?: number;
+    participation_type?: string;
+    team_name?: string;
   }): Promise<AuthResponse> {
     return apiFetch<AuthResponse>("/auth/register", {
       method: "POST",
@@ -177,7 +163,40 @@ export const auth = {
       body: JSON.stringify({ email, password }),
     });
   },
+
+  google(idToken: string): Promise<GoogleAuthResponse> {
+    return apiFetch<GoogleAuthResponse>("/auth/google", {
+      method: "POST",
+      body: JSON.stringify({ id_token: idToken }),
+    });
+  },
+
+  forgotPassword(email: string): Promise<{ message: string; status?: string }> {
+    return apiFetch("/auth/forgot-password", {
+      method: "POST",
+      body: JSON.stringify({ email }),
+    });
+  },
+
+  verifyResetCode(email: string, code: string): Promise<{ message: string; reset_token: string }> {
+    return apiFetch("/auth/verify-reset-code", {
+      method: "POST",
+      body: JSON.stringify({ email, code }),
+    });
+  },
+
+  resetPassword(resetToken: string, newPassword: string): Promise<{ message: string; status?: string }> {
+    return apiFetch("/auth/reset-password", {
+      method: "POST",
+      body: JSON.stringify({ reset_token: resetToken, new_password: newPassword }),
+    });
+  },
 };
+
+// Standalone Helper Export Aliases
+export const requestForgotPassword = auth.forgotPassword;
+export const verifyResetCode = auth.verifyResetCode;
+export const resetPassword = auth.resetPassword;
 
 // ── Portfolio ──────────────────────────────────────────────────────────────────
 export type PortfolioSummary = {
@@ -189,7 +208,6 @@ export type PortfolioSummary = {
   total_pnl: number;
   total_return_pct: number;
   holdings_count: number;
-  prices_stale?: boolean; // True when any price was served from fallback
 };
 
 export type BackendTrade = {
@@ -224,7 +242,7 @@ export const portfolio = {
     return apiFetch(`/portfolio/holdings/${userId}`);
   },
 
-  deleteHolding(ticker: string): Promise<{ message: string; stock_ticker: string; cash_balance: number; cash_credit?: number }> {
+  deleteHolding(ticker: string): Promise<{ message: string; stock_ticker: string; cash_balance: number }> {
     return apiFetch(`/portfolio/holding/${encodeURIComponent(ticker)}`, { method: "DELETE" });
   },
 
@@ -241,7 +259,7 @@ export const portfolio = {
     tag3?: string;
     thesis?: string;
     amount_invested?: number;
-  }): Promise<{ message: string; trade_id?: string; trade: BackendTrade; cash_balance: number }> {
+  }): Promise<{ message: string; trade: BackendTrade; cash_balance: number }> {
     return apiFetch("/portfolio/trade", {
       method: "POST",
       body: JSON.stringify(payload),
@@ -249,8 +267,83 @@ export const portfolio = {
   },
 };
 
+// ── Watchlist ──────────────────────────────────────────────────────────────────
+export type BackendWatchlistItem = {
+  watchlist_id: number;
+  user_id: string;
+  stock_ticker: string;
+  stock_name: string;
+  sector: string | null;
+  allocation_percent: number;
+  amount_invested: number;
+  quantity: number;
+  buy_price: number;
+  current_sell_price: number;
+  trade_type: "BUY" | "SELL";
+  tag1: string | null;
+  tag2: string | null;
+  tag3: string | null;
+  thesis: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+export const watchlist = {
+  list(userId: string): Promise<{ user_id: string; watchlist: BackendWatchlistItem[]; count: number }> {
+    return apiFetch(`/portfolio/watchlist/${userId}`);
+  },
+
+  add(payload: {
+    stock_ticker: string;
+    stock_name?: string;
+    sector?: string;
+    allocation_percent?: number;
+    amount_invested?: number;
+    quantity?: number;
+    buy_price?: number;
+    current_sell_price?: number;
+    trade_type?: "BUY" | "SELL";
+    tag1?: string;
+    tag2?: string;
+    tag3?: string;
+    thesis?: string;
+  }): Promise<{ message: string; item: BackendWatchlistItem }> {
+    return apiFetch("/portfolio/watchlist", {
+      method: "POST",
+      body: JSON.stringify(payload),
+    });
+  },
+
+  update(
+    watchlistId: number,
+    payload: Partial<{
+      stock_name: string;
+      sector: string;
+      allocation_percent: number;
+      amount_invested: number;
+      quantity: number;
+      buy_price: number;
+      current_sell_price: number;
+      trade_type: "BUY" | "SELL";
+      tag1: string;
+      tag2: string;
+      tag3: string;
+      thesis: string;
+    }>
+  ): Promise<{ message: string; item: BackendWatchlistItem }> {
+    return apiFetch(`/portfolio/watchlist/${watchlistId}`, {
+      method: "PUT",
+      body: JSON.stringify(payload),
+    });
+  },
+
+  remove(watchlistId: number): Promise<{ message: string; watchlist_id: number }> {
+    return apiFetch(`/portfolio/watchlist/${watchlistId}`, { method: "DELETE" });
+  },
+};
+
 // ── Market ─────────────────────────────────────────────────────────────────────
-export type MarketPrice = { ticker: string; price: number; is_stale?: boolean; source?: string };
+export type MarketPrice = { ticker: string; price: number };
 
 export type StockSearchResult = {
   ticker: string;
@@ -270,12 +363,7 @@ export type MarketIndex = {
 
 export const market = {
   getPrice(ticker: string): Promise<MarketPrice> {
-    return apiFetch<MarketPrice>(`/market/price/${encodeURIComponent(ticker)}`);
-  },
-
-  getBatchPrices(tickers: string[]): Promise<{ prices: Record<string, MarketPrice> }> {
-    const qs = tickers.map((ticker) => encodeURIComponent(ticker)).join(",");
-    return apiFetch<{ prices: Record<string, MarketPrice> }>(`/market/prices?tickers=${qs}`);
+    return apiFetch<MarketPrice>(`/market/price/${ticker}`);
   },
 
   search(query: string): Promise<{ results: StockSearchResult[] }> {
@@ -286,8 +374,8 @@ export const market = {
     return apiFetch<{ indices: MarketIndex[] }>("/market/indices");
   },
 
-  getBenchmark(start: string, end: string): Promise<{ benchmark: { Date: string; Close: number; Daily_Return?: number }[] }> {
-    return apiFetch<{ benchmark: { Date: string; Close: number; Daily_Return?: number }[] }>(
+  getBenchmark(start: string, end: string): Promise<{ benchmark: { Date: string; Close: number }[] }> {
+    return apiFetch<{ benchmark: { Date: string; Close: number }[] }>(
       `/market/benchmark?start=${start}&end=${end}`
     );
   },
@@ -298,6 +386,7 @@ export type BackendLeaderboardEntry = {
   user_id: string;
   full_name: string | null;
   university: string | null;
+  team_name?: string | null;
   week_number: number | null;
   portfolio_score: number;
   risk_score: number;
@@ -378,16 +467,10 @@ export type BackendHolding = {
   amount_invested?: number;
   thesis?: string | null;
   latest_trade_id?: string | null;
-  price_stale?: boolean; // True if this holding's price is stale
 };
 
 export const analytics = {
-  getLeaderboard(week?: number): Promise<{
-    week: number | null;
-    count: number;
-    entries: BackendLeaderboardEntry[];
-    last_refreshed?: number | null;
-  }> {
+  getLeaderboard(week?: number): Promise<{ week: number | null; count: number; entries: BackendLeaderboardEntry[] }> {
     const qs = week != null ? `?week=${week}` : "";
     return apiFetch(`/analytics/leaderboard${qs}`);
   },
@@ -403,7 +486,7 @@ export const analytics = {
     return apiFetch(`/analytics/scores/${userId}`);
   },
 
-  computeScores(userId: string): Promise<{ message: string; user_id: string; week_number: number; metrics: BackendScoreMetrics; weekly_score: BackendWeeklyScore | null }> {
+  computeScores(userId: string): Promise<{ user_id: string; week_number: number; metrics: BackendScoreMetrics; weekly_score: BackendWeeklyScore | null }> {
     return apiFetch(`/analytics/compute/${userId}`, { method: "POST" });
   },
 };

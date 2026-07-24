@@ -2,125 +2,225 @@ import { ChevronRight } from "lucide-react-native";
 import { useEffect, useState } from "react";
 import { ScrollView, Text, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import Toast from "react-native-toast-message";
 import { C, font } from "../constants";
 import { generateStudentId } from "../auth-store";
-import type { UserData } from "../types";
-import { formatDobInput, getAge, parseDob } from "../utils";
-import { AppButton, ErrorNotice, Field, GlassCard, HeaderMini, StepDots } from "../components/ui";
+import type { GoogleAuthResult, UserData } from "../types";
+import {
+  AppButton,
+  AuthDivider,
+  CheckboxRow,
+  ErrorNotice,
+  Field,
+  GlassCard,
+  GoogleAuthButton,
+  HeaderMini,
+  StepDots,
+} from "../components/ui";
 
-export function RegistrationPage({ onSubmit, onSignIn }: { onSubmit: (data: UserData) => void | Promise<void>; onSignIn: () => void }) {
-  const [form, setForm] = useState<UserData>({
+export function RegistrationPage({
+  onSubmit,
+  onGoogleRegister,
+  onSignIn,
+}: {
+  onSubmit: (data: UserData) => void | Promise<void>;
+  onGoogleRegister: () => Promise<GoogleAuthResult | string | null>;
+  onSignIn: () => void;
+}) {
+  const [formData, setFormData] = useState<UserData>({
     studentId: "",
-    fullName: "",
-    age: "",
-    dateOfBirth: "",
+    name: "",
     email: "",
-    phoneNumber: "",
-    university: "",
-    yearOfStudy: "",
+    phone: "",
+    college: "",
+    degree: "",
+    passoutYear: "2026",
     password: "",
+    acceptedTerms: false,
   });
+
   const [errors, setErrors] = useState<Record<string, string>>({});
-  const [submitError, setSubmitError] = useState("");
-  const [submitting, setSubmitting] = useState(false);
+  const [generalError, setGeneralError] = useState<string>("");
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    let active = true;
-    generateStudentId().then((studentId) => {
-      if (active) setForm((prev) => ({ ...prev, studentId }));
-    });
-    return () => {
-      active = false;
-    };
+    setFormData((prev) => ({
+      ...prev,
+      studentId: generateStudentId(),
+    }));
   }, []);
 
-  const dob = parseDob(form.dateOfBirth);
-  const requiredComplete =
-    form.fullName.trim() &&
-    form.dateOfBirth.trim() &&
-    form.email.trim() &&
-    form.phoneNumber.trim() &&
-    form.university.trim() &&
-    form.password.trim() &&
-    form.studentId.trim();
-
-  const canContinue = Boolean(requiredComplete && !submitting);
-
-  const set = (key: keyof UserData) => (value: string) => {
-    setSubmitError("");
-    setErrors((prev) => ({ ...prev, [key]: "" }));
-    setForm((prev) => ({ ...prev, [key]: value }));
+  const handleChange = (key: keyof UserData, value: string | boolean) => {
+    setFormData((prev) => ({ ...prev, [key]: value }));
+    if (errors[key]) {
+      setErrors((prev) => {
+        const copy = { ...prev };
+        delete copy[key];
+        return copy;
+      });
+    }
   };
 
-  const emailValid = (value: string) => /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(value.trim());
-  const phoneValid = (value: string) => value.replace(/\D/g, "").length === 10;
+  const validateForm = (): boolean => {
+    const errs: Record<string, string> = {};
 
-  const validate = () => {
-    const nextErrors: Record<string, string> = {};
-    const parsedDob = parseDob(form.dateOfBirth);
-    if (!parsedDob) nextErrors.dateOfBirth = "Enter date of birth in DD/MM/YYYY format.";
-    else if (getAge(parsedDob) < 18) nextErrors.dateOfBirth = "You must be at least 18 years old to create an account.";
-    if (!emailValid(form.email)) nextErrors.email = "Enter a valid email address, for example name@university.edu.";
-    if (!phoneValid(form.phoneNumber)) nextErrors.phoneNumber = "Enter a valid 10 digit phone number.";
-    if (form.password.length < 6) nextErrors.password = "Password must be at least 6 characters.";
-    setErrors(nextErrors);
-    return Object.keys(nextErrors).length === 0;
+    if (!formData.name.trim()) errs.name = "Full name is required";
+    if (!formData.email.trim() || !formData.email.includes("@")) {
+      errs.email = "Valid email address is required";
+    }
+    if (!formData.phone.trim() || formData.phone.length < 10) {
+      errs.phone = "Valid phone number is required";
+    }
+    if (!formData.college.trim()) errs.college = "College/University name is required";
+    if (!formData.degree.trim()) errs.degree = "Degree program is required";
+    if (!formData.password || formData.password.length < 6) {
+      errs.password = "Password must be at least 6 characters";
+    }
+    if (!formData.acceptedTerms) {
+      errs.terms = "You must accept the terms and conditions to proceed";
+    }
+
+    setErrors(errs);
+    return Object.keys(errs).length === 0;
   };
 
-  const handleContinue = async () => {
-    setSubmitError("");
-    if (!validate()) return;
-    const parsedDob = parseDob(form.dateOfBirth);
-    if (!parsedDob) return;
+  const handleSubmit = async () => {
+    setGeneralError("");
+    if (!validateForm()) return;
+
+    setLoading(true);
     try {
-      setSubmitting(true);
-      await onSubmit({ ...form, phoneNumber: form.phoneNumber.replace(/\D/g, ""), age: String(getAge(parsedDob)) });
-    } catch (err) {
-      const message = err instanceof Error ? err.message : "Registration failed. Please try again.";
-      setSubmitError(message.toLowerCase().includes("email") ? "An account with this email already exists. Login or use another email." : message);
+      await onSubmit(formData);
+    } catch (err: any) {
+      const msg = err?.message || "Registration failed. Please try again.";
+      setGeneralError(msg);
+      Toast.show({
+        type: "error",
+        text1: "Registration Error",
+        text2: msg,
+      });
     } finally {
-      setSubmitting(false);
+      setLoading(false);
+    }
+  };
+
+  const handleGoogleSubmit = async () => {
+    setGeneralError("");
+    setLoading(true);
+    try {
+      const res = await onGoogleRegister();
+      if (typeof res === "string") {
+        setGeneralError(res);
+      }
+    } catch (err: any) {
+      setGeneralError(err?.message || "Google registration failed.");
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: C.bg0 }} edges={["top", "left", "right"]}>
-      <ScrollView contentInsetAdjustmentBehavior="automatic" style={{ flex: 1 }} contentContainerStyle={{ padding: 20, gap: 18, paddingBottom: 40 }}>
-        <HeaderMini title="Create your Account" subtitle="" />
+    <SafeAreaView style={{ flex: 1, backgroundColor: C.bg0 }}>
+      <ScrollView
+        contentContainerStyle={{ padding: 20, gap: 20, paddingBottom: 40 }}
+        showsVerticalScrollViewScrollIndicator={false}
+      >
+        <HeaderMini title="TradeIQ" subtitle="Create your student trader account" />
         <StepDots current={0} />
-        <GlassCard style={{ padding: 18, gap: 15 }} accent={C.purple}>
-         
-          <Field label="Full Name" value={form.fullName} onChangeText={set("fullName")} placeholder="John Smith" />
-          <Field
-            label="Date of Birth"
-            value={form.dateOfBirth}
-            onChangeText={(value) => {
-              setErrors((prev) => ({ ...prev, dateOfBirth: "" }));
-              setSubmitError("");
-              const next = formatDobInput(value);
-              const parsed = parseDob(next);
-              setForm((prev) => ({ ...prev, dateOfBirth: next, age: parsed ? String(getAge(parsed)) : prev.age }));
-            }}
-            placeholder="DD/MM/YYYY"
-            keyboardType="numeric"
-            error={errors.dateOfBirth}
+
+        <GlassCard style={{ padding: 20, gap: 16 }}>
+          <GoogleAuthButton
+            label="Sign up with Google"
+            onPress={handleGoogleSubmit}
+            disabled={loading}
           />
-          <Field label="Email" value={form.email} onChangeText={set("email")} placeholder="john@university.edu" keyboardType="email-address" error={errors.email} />
-          <Field label="Phone Number" value={form.phoneNumber} onChangeText={(value) => set("phoneNumber")(value.replace(/\D/g, "").slice(0, 10))} placeholder="9876543210" keyboardType="phone-pad" error={errors.phoneNumber} />
-          <Field label="Organization" value={form.university} onChangeText={set("university")} placeholder="NYU" />
-          <Field label="Password" value={form.password} onChangeText={set("password")} placeholder="Minimum 6 characters" secureTextEntry showPasswordToggle error={errors.password} />
-          {submitError ? <ErrorNotice message={submitError} /> : null}
-          <AppButton label={submitting ? "Creating Account..." : "Continue to Onboarding"} onPress={handleContinue} disabled={!canContinue} icon={<ChevronRight size={18} color={C.green} />} />
-          <View style={{ flexDirection: "row", justifyContent: "center", gap: 4, flexWrap: "wrap" }}>
-            <Text selectable style={{ color: C.text2, fontFamily: font.regular, fontSize: 12 }}>
-              Already have an account?
+
+          <AuthDivider />
+
+          {generalError ? <ErrorNotice message={generalError} /> : null}
+
+          <Field
+            label="Student ID (Auto)"
+            value={formData.studentId}
+            onChangeText={() => {}}
+            placeholder="Generated Student ID"
+          />
+
+          <Field
+            label="Full Name"
+            value={formData.name}
+            onChangeText={(v) => handleChange("name", v)}
+            placeholder="John Doe"
+            error={errors.name}
+          />
+
+          <Field
+            label="Email Address"
+            value={formData.email}
+            onChangeText={(v) => handleChange("email", v)}
+            placeholder="john@example.com"
+            keyboardType="email-address"
+            error={errors.email}
+          />
+
+          <Field
+            label="Phone Number"
+            value={formData.phone}
+            onChangeText={(v) => handleChange("phone", v)}
+            placeholder="+1 234 567 8900"
+            keyboardType="phone-pad"
+            error={errors.phone}
+          />
+
+          <Field
+            label="College / Institution"
+            value={formData.college}
+            onChangeText={(v) => handleChange("college", v)}
+            placeholder="Harvard University"
+            error={errors.college}
+          />
+
+          <Field
+            label="Degree Program"
+            value={formData.degree}
+            onChangeText={(v) => handleChange("degree", v)}
+            placeholder="B.S. Finance / Computer Science"
+            error={errors.degree}
+          />
+
+          <Field
+            label="Password"
+            value={formData.password}
+            onChangeText={(v) => handleChange("password", v)}
+            placeholder="••••••••"
+            secureTextEntry
+            showPasswordToggle
+            error={errors.password}
+          />
+
+          <CheckboxRow
+            checked={formData.acceptedTerms}
+            onToggle={() => handleChange("acceptedTerms", !formData.acceptedTerms)}
+            label="I agree to the Terms of Service and Competition Rules."
+            error={errors.terms}
+          />
+
+          <AppButton
+            label={loading ? "Registering..." : "Continue Registration"}
+            onPress={handleSubmit}
+            disabled={loading}
+            icon={<ChevronRight size={18} color={C.green} />}
+          />
+
+          <TouchableOpacity
+            onPress={onSignIn}
+            style={{ marginTop: 8, alignItems: "center" }}
+          >
+            <Text style={{ color: C.text1, fontFamily: font.regular, fontSize: 13 }}>
+              Already have an account?{" "}
+              <Text style={{ color: C.cyan, fontFamily: font.medium }}>Sign In</Text>
             </Text>
-            <TouchableOpacity onPress={onSignIn}>
-              <Text selectable style={{ color: C.cyan, fontFamily: font.medium, fontSize: 12 }}>
-                Log In
-              </Text>
-            </TouchableOpacity>
-          </View>
+          </TouchableOpacity>
         </GlassCard>
       </ScrollView>
     </SafeAreaView>

@@ -19,7 +19,8 @@ def create_portfolio_setup(**fields) -> PortfolioSetup:
     return portfolio
 def is_admin(user_id: str) -> bool:
     """Checks if a user exists and has the admin role."""
-    user = User.query.get(user_id)
+    from app.extensions import db  # or your db instance path
+    user = db.session.get(User, user_id)
     return bool(user and user.role == "admin")
 
 def save() -> None:

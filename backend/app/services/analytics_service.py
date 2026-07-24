@@ -10,6 +10,8 @@ import urllib.error
 import urllib.request
 from datetime import date, datetime
 from flask import current_app
+from groq import Groq
+from app.scoring.thesis_engine import thesis_score  # Fallback helper
 
 from app.cache import cache_get, cache_set
 from app.jobs import enqueue_job
@@ -28,10 +30,24 @@ from app.services.market_service import (
 # ─────────────────────────────────────────
 
 OPENAI_SCORE_MODEL = os.getenv("OPENAI_SCORE_MODEL", "gpt-4.1-mini")
+GROQ_SCORE_MODEL = os.getenv("GROQ_SCORE_MODEL", "llama-3.3-70b-versatile")
 REFRESH_INTERVAL_SECONDS = 300  # 5 minutes
 REFRESH_LOCK_SECONDS = 30     # 30-second claim window to avoid duplicate triggers
 
 pipeline = YahooFinancePipeline()
+
+_groq_client = None
+
+
+def _get_groq_client():
+    """Lazily construct the Groq client so import doesn't fail without a key."""
+    global _groq_client
+    if _groq_client is None:
+        api_key = os.getenv("GROQ_API_KEY")
+        if not api_key:
+            return None
+        _groq_client = Groq(api_key=api_key)
+    return _groq_client
 
 
 # ─────────────────────────────────────────
@@ -66,7 +82,7 @@ def analyze_stock(ticker: str, start: str, end: str) -> dict:
     # Convert DataFrames to dict lists safely
     history = dataset["stock_history"].copy()
     history["Date"] = history["Date"].astype(str)
-    
+
     benchmark = dataset["benchmark_history"].copy()
     benchmark["Date"] = benchmark["Date"].astype(str)
 
@@ -135,7 +151,7 @@ def analyze_portfolio(holdings: list[dict]) -> dict:
             has_stale_data = True
 
         cost_basis = shares * buy_price
-        
+
         if current_price is not None:
             current_value = shares * current_price
             pnl = current_value - cost_basis
@@ -289,7 +305,7 @@ def _refresh_active_holdings(holdings):
         current_price = float(price_info.get("price") or holding.current_price or holding.avg_buy_price or 0)
         quantity = float(holding.quantity or 0)
         avg_buy = float(holding.avg_buy_price or 0)
-        
+
         holding.current_price = round(current_price, 4)
         holding.market_value = round(quantity * current_price, 4)
         holding.profit_loss = round((current_price - avg_buy) * quantity, 4)
@@ -322,7 +338,7 @@ def _active_trades(active_holdings, trades):
 
 
 # ─────────────────────────────────────────
-# OpenAI Scoring (Fallback)
+# AI Scoring: OpenAI (primary) → Groq (fallback) → Local rubric (last resort)
 # ─────────────────────────────────────────
 
 def _openai_scorecard(data, metrics, trades):
@@ -440,6 +456,88 @@ def _openai_scorecard(data, metrics, trades):
         return None
 
 
+def _groq_scorecard(data, metrics, trades):
+    """Call Groq API for full scorecard (returns None if API unavailable). Same shape/rubric as _openai_scorecard."""
+    client = _get_groq_client()
+    if not client:
+        return None
+
+    trade_payload = [
+        {
+            "ticker": t.stock_ticker,
+            "stock_name": t.stock_name,
+            "sector": t.sector,
+            "allocation_percent": float(t.allocation_percent or 0),
+            "amount_invested": float(t.amount_invested or 0),
+            "trade_type": t.trade_type,
+            "tag1": t.tag1,
+            "tag2": t.tag2,
+            "tag3": t.tag3,
+            "thesis": t.thesis,
+        }
+        for t in trades
+    ]
+
+    prompt = {
+        "rubric": {
+            "portfolio_score": "0-40: portfolio performance, benchmark-relative return, net profit, and capital deployment.",
+            "risk_score": "0-20: risk governance, drawdown control, beta discipline, diversification limits, and cash prudence.",
+            "thesis_score": "0-20: thesis quality, financial reasoning, market awareness, clarity, and explicit risk awareness.",
+            "execution_score": "0-10: complete stock selection, sensible tags, thesis coverage, and trade documentation.",
+            "strategy_score": "0-10: sector spread, allocation discipline, consistency, and stock-picking logic.",
+        },
+        "constraints": (
+            "Return only valid JSON with numeric scores and keys: portfolio_score, risk_score, "
+            "thesis_score, execution_score, strategy_score, final_score, feedback. "
+            "Scores must sum to final_score out of 100."
+        ),
+        "portfolio_inputs": data,
+        "portfolio_metrics": metrics,
+        "trades": trade_payload,
+    }
+
+    try:
+        response = client.chat.completions.create(
+            model=GROQ_SCORE_MODEL,
+            messages=[
+                {
+                    "role": "system",
+                    "content": (
+                        "You are the TradeIQ scoring evaluator for an educational investment banking sales "
+                        "and trading risk challenge. Score only from the supplied portfolio data and theses. "
+                        "Do not invent trades or users. Be strict, consistent, and return JSON only."
+                    ),
+                },
+                {
+                    "role": "user",
+                    "content": json.dumps(prompt),
+                },
+            ],
+            response_format={"type": "json_object"},
+            temperature=0.2,
+            timeout=30,
+        )
+        result = json.loads(response.choices[0].message.content)
+        result["portfolio_score"] = round(max(0, min(40, float(result["portfolio_score"]))), 2)
+        result["risk_score"] = round(max(0, min(20, float(result["risk_score"]))), 2)
+        result["thesis_score"] = round(max(0, min(20, float(result["thesis_score"]))), 2)
+        result["execution_score"] = round(max(0, min(10, float(result["execution_score"]))), 2)
+        result["strategy_score"] = round(max(0, min(10, float(result["strategy_score"]))), 2)
+        result["final_score"] = round(
+            result["portfolio_score"]
+            + result["risk_score"]
+            + result["thesis_score"]
+            + result["execution_score"]
+            + result["strategy_score"],
+            2,
+        )
+        result["source"] = f"groq:{GROQ_SCORE_MODEL}"
+        return result
+    except Exception as e:
+        print(f"[Analytics] Groq scorecard error: {e}")
+        return None
+
+
 def _openai_thesis_points(trades):
     """Call OpenAI API for thesis score only (returns None if API unavailable)."""
     api_key = os.getenv("OPENAI_API_KEY")
@@ -502,6 +600,45 @@ def _openai_thesis_points(trades):
         return None
 
 
+def _groq_thesis_points(trades):
+    """Call Groq API for thesis score only (returns None if API unavailable)."""
+    client = _get_groq_client()
+    thesis_texts = [t.thesis.strip() for t in trades if t.thesis and t.thesis.strip()]
+    if not client or not thesis_texts:
+        return None
+
+    try:
+        response = client.chat.completions.create(
+            model=GROQ_SCORE_MODEL,
+            messages=[
+                {
+                    "role": "system",
+                    "content": (
+                        "You grade investment thesis quality for TradeIQ. Score clarity, financial logic, "
+                        "and risk awareness from the provided thesis text only. Return JSON only with keys "
+                        "'thesis_score' (number 0-20) and 'feedback' (string)."
+                    ),
+                },
+                {
+                    "role": "user",
+                    "content": json.dumps({
+                        "score_range": "0 to 20",
+                        "baseline_rule": "Only use this dynamic score because thesis text has been submitted.",
+                        "theses": thesis_texts,
+                    }),
+                },
+            ],
+            response_format={"type": "json_object"},
+            temperature=0.2,
+            timeout=30,
+        )
+        result = json.loads(response.choices[0].message.content)
+        return round(max(0, min(20, float(result["thesis_score"]))), 2)
+    except Exception as e:
+        print(f"[Analytics] Groq thesis scoring error: {e}")
+        return None
+
+
 def _local_thesis_points(thesis_texts):
     """Local rubric: score thesis texts without AI."""
     if not thesis_texts:
@@ -535,7 +672,7 @@ def _challenge_scorecard(portfolio_setup, active_holdings, trades, total_portfol
 
     Portfolio Score (40): Return on capital
     Risk Score (20): Sector diversification
-    Thesis Score (20): AI or local rubric evaluation
+    Thesis Score (20): AI (OpenAI, then Groq) or local rubric evaluation
     Execution Score (10): Tags + thesis coverage
     Strategy Score (10): Position count expansion
     """
@@ -580,6 +717,7 @@ def _challenge_scorecard(portfolio_setup, active_holdings, trades, total_portfol
         risk_score = 0
 
     # ── Thesis Score (20) ──
+    # Fallback chain: OpenAI -> Groq -> local rubric
     thesis_texts = [
         t.thesis.strip()
         for t in active_trade_rows
@@ -590,6 +728,8 @@ def _challenge_scorecard(portfolio_setup, active_holdings, trades, total_portfol
         thesis_score = 0
     else:
         ai_score = _openai_thesis_points(active_trade_rows)
+        if ai_score is None:
+            ai_score = _groq_thesis_points(active_trade_rows)
         if ai_score is not None:
             thesis_score = ai_score
         else:
@@ -648,7 +788,7 @@ def _challenge_scorecard(portfolio_setup, active_holdings, trades, total_portfol
         "feedback": (
             "Portfolio score based on Return on Capital. "
             "Risk score based on sector diversification. "
-            "Thesis score based on AI evaluation or local thesis rubric. "
+            "Thesis score based on AI evaluation (OpenAI, then Groq) or local thesis rubric. "
             "Execution score based on trade tags and thesis coverage. "
             "Strategy score rewards portfolio expansion."
         ),
@@ -952,7 +1092,7 @@ def get_leaderboard_service(week: int):
     lock_key = f"leaderboard:refresh_lock:{week}"
 
     now = time.time()
-    last_refresh = cache_get(last_last_refresh_key := last_refresh_key)
+    last_refresh = cache_get(last_refresh_key)
     cached_payload = cache_get(cache_key)
 
     is_stale = last_refresh is None or (now - float(last_refresh)) > REFRESH_INTERVAL_SECONDS
@@ -972,7 +1112,7 @@ def get_leaderboard_service(week: int):
                 try:
                     _refresh_leaderboard_week(week)
                     entries = repo.find_leaderboard_entries_by_week(week)
-                    
+
                     payload = {
                         "week": week,
                         "count": len(entries),

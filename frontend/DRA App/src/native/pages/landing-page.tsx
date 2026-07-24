@@ -1,8 +1,9 @@
 import { Image } from "expo-image";
+import { LinearGradient } from "expo-linear-gradient";
 import { useVideoPlayer, VideoView } from "expo-video";
 import { ChevronRight } from "lucide-react-native";
 import { useEffect } from "react";
-import { ScrollView, Text, View } from "react-native";
+import { ScrollView, Text, useWindowDimensions, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import {
   brandLogo,
@@ -17,7 +18,7 @@ import { AppButton } from "../components/ui";
 export function LandingPage({
   onExplore,
 }: {
-  onExplore: () => void;
+  onExplore: () => void | Promise<void>;
 }) {
   const player = useVideoPlayer(heroVideo, (instance) => {
     instance.loop = true;
@@ -28,12 +29,14 @@ export function LandingPage({
     player.play();
   }, [player]);
 
+  const { width } = useWindowDimensions();
+  const isDesktop = width >= 900;
+  const contentMaxWidth = isDesktop ? 640 : 520;
+  const sidePadding = isDesktop ? 48 : 22;
+
   return (
     <SafeAreaView
-      style={{
-        flex: 1,
-        backgroundColor: C.bg0,
-      }}
+      style={{ flex: 1, backgroundColor: C.bg0 }}
       edges={["top", "left", "right"]}
     >
       {/* Video Background */}
@@ -48,193 +51,218 @@ export function LandingPage({
           left: 0,
           right: 0,
           bottom: 0,
-          opacity: 0.75,
+          opacity: 0.7,
         }}
       />
 
-      {/* Overlay */}
-      <View
+      {/* Cinematic gradient — keeps text legible without flattening the video */}
+      <LinearGradient
+        colors={[
+          "rgba(5,8,18,0.55)",
+          "rgba(5,8,18,0.35)",
+          "rgba(5,8,18,0.55)",
+          "rgba(5,8,18,0.92)",
+        ]}
+        locations={[0, 0.35, 0.7, 1]}
         style={{
           position: "absolute",
           top: 0,
           left: 0,
           right: 0,
           bottom: 0,
-          backgroundColor: "rgba(5,8,18,0.35)",
         }}
       />
-
 
       <ScrollView
         contentInsetAdjustmentBehavior="automatic"
         contentContainerStyle={{
           flexGrow: 1,
-          padding: 22,
-          paddingBottom: 24,
+          paddingHorizontal: sidePadding,
+          paddingTop: 24,
+          paddingBottom: 32,
+          alignItems: "center",
         }}
       >
-        {/* Header */}
-        <View
-          style={{
-            alignItems: "center",
-            paddingTop: 24,
-            gap: 10,
-          }}
-        >
-          <Image
-            source={brandLogo}
-            style={{
-              width: 58,
-              height: 58,
-              borderRadius: 14,
-              borderWidth: 1,
-              borderColor: C.border2,
-            }}
-          />
-
-          <View
-            style={{
-              alignItems: "center",
-              gap: 2,
-            }}
-          >
-            <Text
-              selectable
+        <View style={{ width: "100%", maxWidth: contentMaxWidth, flex: 1 }}>
+          {/* Header */}
+          <View style={{ alignItems: "center", gap: 12 }}>
+            <Image
+              source={brandLogo}
               style={{
-                color: C.text1,
-                fontFamily: font.medium,
-                fontSize: 16,
+                width: isDesktop ? 64 : 56,
+                height: isDesktop ? 64 : 56,
+                borderRadius: 16,
+                borderWidth: 1,
+                borderColor: C.border2,
               }}
-            >
-              Digital Risk Academy
-            </Text>
+            />
 
-            <Text
-              selectable
+            <View style={{ alignItems: "center", gap: 3 }}>
+              <Text
+                selectable
+                style={{
+                  color: C.text1,
+                  fontFamily: font.medium,
+                  fontSize: 16,
+                }}
+              >
+                Digital Risk Academy
+              </Text>
+
+              <Text
+                selectable
+                style={{
+                  color: C.text2,
+                  fontFamily: font.regular,
+                  fontSize: 11,
+                  letterSpacing: 2,
+                  textTransform: "uppercase",
+                }}
+              >
+                presents
+              </Text>
+            </View>
+
+            {/* Thin accent divider for a bit of polish under the header */}
+            <View
               style={{
-                color: C.text2,
-                fontFamily: font.regular,
-                fontSize: 12,
+                width: 36,
+                height: 2,
+                borderRadius: 999,
+                backgroundColor: C.green,
+                opacity: 0.5,
+                marginTop: 2,
               }}
-            >
-              presents
-            </Text>
-          </View>
-        </View>
-
-        {/* Hero Content */}
-        <View
-          style={{
-            flex: 1,
-            justifyContent: "center",
-            alignItems: "center",
-            gap: 10,
-            paddingTop: 24,
-            paddingBottom: 20,
-          }}
-        >
-          <Image
-            source={tradeIqLogo}
-            contentFit="contain"
-            style={{
-              width: "100%",
-              maxWidth: 520,
-              aspectRatio: 3.6,
-            }}
-          />
-
-          <View
-            style={{
-              alignSelf: "center",
-              borderRadius: 999,
-              paddingHorizontal: 13,
-              paddingVertical: 8,
-              backgroundColor: "rgba(30,230,163,0.11)",
-              borderColor: "rgba(30,230,163,0.42)",
-              borderWidth: 1,
-            }}
-          >
-            <Text
-              selectable
-              style={{
-                color: C.green,
-                fontFamily: font.medium,
-                fontSize: 11,
-              }}
-            >
-              Paper capital $10,000 | Educational simulation
-            </Text>
-          </View>
-
-          <Text
-            selectable
-            style={{
-              color: C.silver,
-              fontFamily: font.headingHeavy,
-              fontSize: 22,
-              lineHeight: 28,
-              textAlign: "center",
-              maxWidth: 760,
-              textTransform: "uppercase",
-              textShadowColor: "rgba(255,255,255,0.52)",
-              textShadowRadius: 14,
-              textShadowOffset: { width: 0, height: 1 },
-            }}
-          >
-            Investment Banking Sales & Trading Risk Challenge
-          </Text>
-
-          <Text
-            selectable
-            style={{
-              color: C.text1,
-              fontFamily: font.regular,
-              fontSize: 15,
-              lineHeight: 23,
-              textAlign: "center",
-              maxWidth: 640,
-            }}
-          >
-            Build a portfolio, defend your strategy, and compete in a premium
-            fintech simulation designed for students.
-          </Text>
-
-          {/* Prize Pool Image */}
-           <View style={{ width: "100%", maxWidth: 820, borderRadius: 16, overflow: "hidden", borderColor: "rgba(49,230,255,0.48)", borderWidth: 1, backgroundColor: "rgba(5,8,18,0.62)", boxShadow: "0 18px 50px rgba(49,230,255,0.16), inset 0 1px 0 rgba(255,255,255,0.14)" }}>
-            <Image source={prizePoolImage} contentFit="contain" style={{ width: "100%", aspectRatio: 1.82 }} />
-          </View>
-
-          {/* CTA */}
-          <View
-            style={{
-              marginTop: 4,
-              gap: 10,
-            }}
-          >
-            <AppButton
-              label="Get Started"
-              onPress={onExplore}
-              icon={<ChevronRight size={18} color={C.green} />}
             />
           </View>
 
-          {/* Disclaimer */}
-          <Text
-            selectable
+          {/* Hero Content */}
+          <View
             style={{
-              color: C.text2,
-              fontFamily: font.regular,
-              fontSize: 11,
-              lineHeight: 17,
-              textAlign: "center",
-              alignSelf: "center",
-              maxWidth: 320,
-              marginTop: 6,
+              flex: 1,
+              justifyContent: "center",
+              alignItems: "center",
+              gap: 16,
+              paddingTop: isDesktop ? 36 : 26,
+              paddingBottom: 20,
             }}
           >
-            No real money. No real securities. Built for structured investing
-            education.
-          </Text>
+            <Image
+              source={tradeIqLogo}
+              contentFit="contain"
+              style={{
+                width: "100%",
+                maxWidth: isDesktop ? 600 : 460,
+                aspectRatio: 3.6,
+              }}
+            />
+
+            {/* Stat chips row */}
+            <View
+              style={{
+                flexDirection: "row",
+                flexWrap: "wrap",
+                justifyContent: "center",
+                gap: 10,
+              }}
+            >
+              <View
+                style={{
+                  flexDirection: "row",
+                  alignItems: "center",
+                  gap: 6,
+                  borderRadius: 999,
+                  paddingHorizontal: 14,
+                  paddingVertical: 8,
+                  backgroundColor: "rgba(30,230,163,0.11)",
+                  borderColor: "rgba(30,230,163,0.42)",
+                  borderWidth: 1,
+                }}
+              >
+                <Text
+                  selectable
+                  style={{
+                    color: C.green,
+                    fontFamily: font.medium,
+                    fontSize: 11,
+                  }}
+                >
+                  Paper capital $10,000
+                </Text>
+              </View>
+
+              
+            </View>
+
+            <Text
+              selectable
+              style={{
+                color: C.silver,
+                fontFamily: font.headingHeavy,
+                fontSize: isDesktop ? 34 : 23,
+                lineHeight: isDesktop ? 42 : 29,
+                letterSpacing: 0.4,
+                textAlign: "center",
+                maxWidth: 760,
+                textTransform: "uppercase",
+                textShadowColor: "rgba(255,255,255,0.45)",
+                textShadowRadius: 12,
+                textShadowOffset: { width: 0, height: 1 },
+              }}
+            >
+              Investment Banking Sales & Trading Risk Challenge
+            </Text>
+
+            
+            {/* CTA */}
+            <View
+              style={{
+                marginTop: 10,
+                width: "100%",
+                maxWidth: 320,
+                alignSelf: "center",
+                borderRadius: 16,
+                shadowColor: C.green,
+                shadowOpacity: 0.35,
+                shadowRadius: 22,
+                shadowOffset: { width: 0, height: 10 },
+              }}
+            >
+              <AppButton
+                label="Get Started"
+                onPress={onExplore}
+                icon={<ChevronRight size={18} color={C.green} />}
+              />
+            </View>
+
+            {/* Disclaimer */}
+            <View
+              style={{
+                marginTop: 14,
+                paddingTop: 14,
+                borderTopWidth: 1,
+                borderTopColor: "rgba(255,255,255,0.08)",
+                width: "100%",
+                maxWidth: 340,
+                alignItems: "center",
+              }}
+            >
+              <Text
+                selectable
+                style={{
+                  color: C.text2,
+                  fontFamily: font.regular,
+                  fontSize: 11,
+                  lineHeight: 17,
+                  textAlign: "center",
+                  opacity: 0.85,
+                }}
+              >
+                No real money. No real securities. Build a portfolio, defend your strategy, and compete in a premium fintech simulation built for structured
+                investing education.
+              </Text>
+            </View>
+          </View>
         </View>
       </ScrollView>
     </SafeAreaView>

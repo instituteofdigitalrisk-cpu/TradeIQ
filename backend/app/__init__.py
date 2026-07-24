@@ -3,19 +3,20 @@ import os
 import ssl
 import time
 import uuid
-import psutil  # <--- Added for P3 Telemetry
+import psutil
 from flask import Flask, g, jsonify, request
 from dotenv import load_dotenv
-from logging.handlers import RotatingFileHandler
 
-# Ensure environment variables are loaded from .env before config checks run
+# Load environment variables before running config checks
 load_dotenv(override=True)
 
 import sentry_sdk
 from sentry_sdk.integrations.flask import FlaskIntegration
+from flask_jwt_extended import decode_token
+
 from app.extensions import db, jwt, cors, limiter
 from app.cache import cache_backend
-from sqlalchemy.engine import URL
+from app.logger import setup_central_logger
 
 logger = logging.getLogger(__name__)
 
@@ -28,31 +29,26 @@ if sentry_dsn:
     )
 
 
-def setup_logging(app: Flask):
-    """Configures centralized structured logging."""
-    log_formatter = logging.Formatter(
-        '[%(asctime)s] %(levelname)s in %(module)s [%(pathname)s:%(lineno)d]: %(message)s'
-    )
+class ContextFilter(logging.Filter):
+    """
+    Ensures that custom log format variables (user_id, request_id, session_id, etc.)
+    are ALWAYS present in log records, preventing KeyError crashes during startup
+    or outside request contexts.
+    """
+    def filter(self, record):
+        # Default fallbacks if attributes are not present on the LogRecord
+        defaults = {
+            "user_id": getattr(g, "user_id", "SYSTEM") if g else "SYSTEM",
+            "request_id": getattr(g, "request_id", "N/A") if g else "N/A",
+            "session_id": getattr(g, "session_id", "N/A") if g else "N/A",
+            "ip_address": getattr(g, "ip_address", "127.0.0.1") if g else "127.0.0.1",
+        }
 
-    # 1. Console Handler (Render / Docker / stdout)
-    console_handler = logging.StreamHandler()
-    console_handler.setFormatter(log_formatter)
-    console_handler.setLevel(logging.INFO)
+        for attr, default_value in defaults.items():
+            if not hasattr(record, attr):
+                setattr(record, attr, default_value)
 
-    app.logger.handlers.clear()
-    app.logger.addHandler(console_handler)
-
-    # 2. Rotating File Handler (Local / Persistent storage)
-    if not os.path.exists("logs"):
-        os.makedirs("logs")
-
-    file_handler = RotatingFileHandler("logs/tradeiq.log", maxBytes=10_000_000, backupCount=5)
-    file_handler.setFormatter(log_formatter)
-    file_handler.setLevel(logging.INFO)
-    app.logger.addHandler(file_handler)
-
-    app.logger.setLevel(logging.INFO)
-    app.logger.info("[TradeIQ] Centralized logging initialized successfully.")
+        return True
 
 
 def _build_database_uri() -> str:
@@ -62,7 +58,6 @@ def _build_database_uri() -> str:
     username = os.getenv("DB_USER", "root")
     password = os.getenv("DB_PASSWORD", "yamuna")
 
-    # Construct clean connection string directly to ensure exact password string handling
     return f"mysql+pymysql://{username}:{password}@{host}:{port}/{database}"
 
 
@@ -112,8 +107,18 @@ def create_app() -> Flask:
     _check_required_config()
     app = Flask(__name__)
 
-    # 🚀 Setup Structured Logging right after initializing Flask app instance
-    setup_logging(app)
+    # Setup Structured Logging
+    setup_central_logger(app)
+
+    # Attach ContextFilter to app logger AND root logger handlers
+    context_filter = ContextFilter()
+    app.logger.addFilter(context_filter)
+    logging.getLogger().addFilter(context_filter)
+    
+    for handler in app.logger.handlers:
+        handler.addFilter(context_filter)
+    for handler in logging.getLogger().handlers:
+        handler.addFilter(context_filter)
 
     app.config["SECRET_KEY"] = os.getenv("SECRET_KEY", "dev-secret")
     app.config["JWT_SECRET_KEY"] = os.getenv("JWT_SECRET_KEY", "dev-jwt-secret")
@@ -142,12 +147,26 @@ def create_app() -> Flask:
     cors.init_app(app, resources={r"/*": {"origins": allowed_origins}})
 
     # ------------------------------------------------------------------
-    # Request-ID Tracing Middleware
+    # Request-ID & Logging Context Middleware
     # ------------------------------------------------------------------
     @app.before_request
-    def set_request_id():
+    def set_request_context():
         request_id = request.headers.get("X-Request-ID") or uuid.uuid4().hex[:8]
         g.request_id = request_id
+        g.session_id = request.headers.get("X-Session-ID", "N/A")
+        g.ip_address = request.remote_addr or "127.0.0.1"
+
+        # Extract JWT Identity into Logging Context
+        g.user_id = "ANONYMOUS"
+        auth_header = request.headers.get("Authorization")
+        if auth_header and auth_header.startswith("Bearer "):
+            try:
+                raw_token = auth_header.split(" ")[1]
+                decoded = decode_token(raw_token)
+                g.user_id = decoded.get("sub", "ANONYMOUS")
+            except Exception:
+                # Token is missing, expired, or malformed — keep as ANONYMOUS
+                pass
 
     @app.after_request
     def add_request_id_header(response):
@@ -169,16 +188,14 @@ def create_app() -> Flask:
     app.register_blueprint(analytics_bp)
 
     # ------------------------------------------------------------------
-    # Health Check Endpoints (With DB Latency & Telemetry)
+    # Health Check Endpoints
     # ------------------------------------------------------------------
     @app.get("/health/live")
     def health_live():
-        """Liveness probe."""
         return jsonify({"status": "ok"}), 200
 
     @app.get("/health/ready")
     def health_ready():
-        """Readiness check validating DB latency, System Telemetry, Cache, and Limiter."""
         checks = {}
         overall_ok = True
 
@@ -205,8 +222,12 @@ def create_app() -> Flask:
             checks["system"] = "telemetry_unavailable"
 
         # 3. Cache & Limiter Checks
-        checks["cache_backend"] = cache_backend()
         redis_url = os.getenv("REDIS_URL", "").strip()
+        if callable(cache_backend):
+            checks["cache_backend"] = cache_backend()
+        else:
+            checks["cache_backend"] = "redis" if redis_url else "memory"
+
         checks["rate_limiter_backend"] = "redis" if redis_url else "memory"
 
         status_code = 200 if overall_ok else 503
