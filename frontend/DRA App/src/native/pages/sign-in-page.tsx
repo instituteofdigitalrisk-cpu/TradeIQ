@@ -12,6 +12,11 @@ import { firebaseAuth } from "../../firebase";
 
 type Step = "signin" | "request";
 
+const passwordResetActionCodeSettings = {
+  url: "https://tradeiq-frontend-kl94.onrender.com/reset-password",
+  handleCodeInApp: true,
+};
+
 export function SignInPage({
   onSubmit,
   onBack,
@@ -65,7 +70,11 @@ export function SignInPage({
         return;
       }
 
-      await sendPasswordResetEmail(firebaseAuth, normalizedEmail);
+      await sendPasswordResetEmail(
+        firebaseAuth,
+        normalizedEmail,
+        passwordResetActionCodeSettings,
+      );
       Toast.show({
         type: "success",
         text1: "Password reset email sent!",
