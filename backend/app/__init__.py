@@ -14,6 +14,7 @@ load_dotenv(override=True)
 import sentry_sdk
 from sentry_sdk.integrations.flask import FlaskIntegration
 from flask_jwt_extended import decode_token
+from sqlalchemy import inspect
 
 from app.extensions import db, jwt, cors, limiter
 from app.cache import cache_backend
@@ -216,10 +217,30 @@ def create_app() -> Flask:
     app.register_blueprint(analytics_bp)
 
     # Create missing tables (including watchlist) on startup. Existing tables
-    # and data are preserved; schema migrations are still required for changes
-    # such as new indexes or constraints.
+    # and data are preserved. Add the small set of columns required by the
+    # current registration/payment flow when upgrading an older database.
     with app.app_context():
         db.create_all()
+        try:
+            user_columns = {
+                column["name"] for column in inspect(db.engine).get_columns("users")
+            }
+            missing_user_columns = {
+                "is_paid": "BOOLEAN NOT NULL DEFAULT FALSE",
+                "registration_status": "VARCHAR(30) NOT NULL DEFAULT 'pending'",
+            }
+            for column_name, column_definition in missing_user_columns.items():
+                if column_name not in user_columns:
+                    db.session.execute(
+                        db.text(
+                            f"ALTER TABLE users ADD COLUMN {column_name} "
+                            f"{column_definition}"
+                        )
+                    )
+            db.session.commit()
+        except Exception as exc:
+            db.session.rollback()
+            logger.exception("Automatic users table migration failed: %s", exc)
 
     # ------------------------------------------------------------------
     # Health Check Endpoints
