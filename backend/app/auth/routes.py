@@ -14,8 +14,6 @@ from cryptography import x509
 import jwt
 import requests
 
-from google.oauth2 import id_token as google_id_token
-from google.auth.transport import requests as google_requests
 import firebase_admin
 from firebase_admin import auth as firebase_auth
 from firebase_admin import credentials
@@ -24,8 +22,6 @@ from app.extensions import db
 from app.models import User, PortfolioSetup, PasswordReset
 
 auth_bp = Blueprint("auth", __name__, url_prefix="/auth")
-
-_google_request = google_requests.Request()
 
 
 def _hash_password(password: str) -> str:
@@ -41,67 +37,35 @@ def _get_firebase_project_id() -> str:
     return os.getenv("FIREBASE_PROJECT_ID", "tradeiq-26")
 
 
-def _get_google_web_client_id() -> str:
-    return os.getenv(
-        "GOOGLE_WEB_CLIENT_ID",
-        "1013397127798-nb34o20mn4qd26opc8etp7mth7aqqe7i.apps.googleusercontent.com",
-    )
+def _verify_google_sign_in_token(id_token_str: str) -> dict:
+    """Verify the Firebase ID token issued by the frontend.
 
-
-def _verify_firebase_id_token(id_token: str) -> dict:
-    """Verify a Firebase Auth ID token with Firebase Admin SDK.
-
-    The frontend sends result.user.getIdToken(), which is a Firebase token.
-    It must not be verified with google-auth's generic OAuth verifier.
+    The frontend sends result.user.getIdToken(). Firebase Admin validates the
+    signature, issuer, audience, expiry, and token revocation state. We must
+    not accept an unsigned or merely decoded JWT payload here.
     """
     project_id = _get_firebase_project_id()
 
     try:
-        firebase_admin.get_app()
-    except ValueError:
-        service_account_json = os.getenv("FIREBASE_SERVICE_ACCOUNT_JSON")
-        credentials_path = os.getenv("GOOGLE_APPLICATION_CREDENTIALS")
+        if not firebase_admin._apps:
+            service_account_json = os.getenv("FIREBASE_SERVICE_ACCOUNT_JSON")
+            credentials_path = os.getenv("GOOGLE_APPLICATION_CREDENTIALS")
 
-        if service_account_json:
-            credential = credentials.Certificate(json.loads(service_account_json))
-            firebase_admin.initialize_app(credential, {"projectId": project_id})
-        elif credentials_path:
-            credential = credentials.Certificate(credentials_path)
-            firebase_admin.initialize_app(credential, {"projectId": project_id})
-        else:
-            # Uses Application Default Credentials in deployed environments.
-            firebase_admin.initialize_app(options={"projectId": project_id})
+            if service_account_json:
+                cred = credentials.Certificate(json.loads(service_account_json))
+                firebase_admin.initialize_app(cred, {"projectId": project_id})
+            elif credentials_path and os.path.exists(credentials_path):
+                cred = credentials.Certificate(credentials_path)
+                firebase_admin.initialize_app(cred, {"projectId": project_id})
+            else:
+                firebase_admin.initialize_app(options={"projectId": project_id})
 
-    payload = firebase_auth.verify_id_token(id_token, check_revoked=True)
-    if payload.get("aud") != project_id:
-        raise ValueError("Firebase token belongs to a different project.")
-    return payload
-
-
-def _verify_google_oauth_id_token(id_token: str) -> dict:
-    client_id = _get_google_web_client_id()
-    payload = google_id_token.verify_oauth2_token(id_token, _google_request, client_id)
-    if payload.get("iss") not in ("accounts.google.com", "https://accounts.google.com"):
-        raise ValueError("Wrong issuer for Google ID token.")
-    return payload
-
-
-def _verify_google_sign_in_token(id_token: str) -> dict:
-    errors = []
-    try:
-        return _verify_firebase_id_token(id_token)
+        payload = firebase_auth.verify_id_token(id_token_str, check_revoked=True)
+        if payload.get("aud") != project_id:
+            raise ValueError("Firebase token belongs to a different project.")
+        return payload
     except Exception as exc:
-        errors.append(f"firebase: {exc}")
-
-    try:
-        return _verify_google_oauth_id_token(id_token)
-    except Exception as exc:
-        errors.append(f"google-oauth2: {exc}")
-
-    raise ValueError(
-        "The token could not be verified as a Firebase or Google OAuth ID token: "
-        + " / ".join(errors)
-    )
+        raise ValueError(f"Invalid Firebase authentication token: {exc}") from exc
 
 
 def _ensure_default_portfolio(user_id: str) -> None:
