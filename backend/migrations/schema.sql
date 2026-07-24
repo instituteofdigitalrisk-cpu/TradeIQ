@@ -110,7 +110,8 @@ CREATE TABLE IF NOT EXISTS watchlist (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     CONSTRAINT fk_watchlist_user FOREIGN KEY (user_id)
-        REFERENCES users(user_id) ON DELETE CASCADE
+        REFERENCES users(user_id) ON DELETE CASCADE,
+    CONSTRAINT uq_watchlist_user_ticker UNIQUE (user_id, stock_ticker)
 );
 
 

@@ -197,11 +197,18 @@ def create_app() -> Flask:
     from app.market.routes import market_bp
     from app.portfolio.routes import portfolio_bp
     from app.analytics.routes import analytics_bp
+    from app import models  # noqa: F401 - register all SQLAlchemy models
 
     app.register_blueprint(auth_bp)
     app.register_blueprint(market_bp)
     app.register_blueprint(portfolio_bp)
     app.register_blueprint(analytics_bp)
+
+    # Create missing tables (including watchlist) on startup. Existing tables
+    # and data are preserved; schema migrations are still required for changes
+    # such as new indexes or constraints.
+    with app.app_context():
+        db.create_all()
 
     # ------------------------------------------------------------------
     # Health Check Endpoints

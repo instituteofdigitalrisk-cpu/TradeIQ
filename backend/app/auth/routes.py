@@ -1,16 +1,16 @@
 import json
 import uuid
 import hashlib
+import logging
 import os
 import random
-import smtplib
-from email.mime.text import MIMEText
 from datetime import date, datetime, timezone, timedelta
 from functools import lru_cache
 
 from flask import Blueprint, jsonify, request
 from flask_jwt_extended import create_access_token, decode_token
 import jwt
+import resend
 
 import firebase_admin
 from firebase_admin import auth as firebase_auth
@@ -20,6 +20,8 @@ from app.extensions import db
 from app.models import User, PortfolioSetup, PasswordReset
 
 auth_bp = Blueprint("auth", __name__, url_prefix="/auth")
+logger = logging.getLogger(__name__)
+resend.api_key = os.environ.get("RESEND_API_KEY")
 
 
 def _hash_password(password: str) -> str:
@@ -93,33 +95,25 @@ def _hash_code(code: str) -> str:
     return hashlib.sha256(code.encode()).hexdigest()
 
 
-def _send_reset_email(to_email: str, full_name: str, code: str) -> None:
-    host = os.getenv("SMTP_HOST", "smtp.hostinger.com")
-    port = int(os.getenv("SMTP_PORT", "587"))
-    username = os.getenv("SMTP_USERNAME", "info@digitalriskacademy.com")
-    password = os.getenv("SMTP_PASSWORD")
-    from_addr = os.getenv("SMTP_FROM", "Digital Risk Academy <info@digitalriskacademy.com>")
+def _send_reset_email(to_email: str, code: str):
+    """Send a password-reset OTP through Resend."""
+    if not resend.api_key:
+        raise RuntimeError("RESEND_API_KEY is not configured on the server.")
 
-    if not password:
-        raise RuntimeError("SMTP_PASSWORD is not configured on the server.")
+    params = {
+        "from": "TradeIQ <onboarding@resend.dev>",
+        "to": [to_email],
+        "subject": "TradeIQ - Password Reset Code",
+        "html": f"<p>Your TradeIQ password reset code is: <strong>{code}</strong></p>",
+    }
 
-    subject = "Your TradeIQ password reset code"
-    body = (
-        f"Hi {full_name or 'there'},\n\n"
-        f"Your password reset verification code is: {code}\n\n"
-        f"This code expires in {RESET_CODE_TTL_MINUTES} minutes. "
-        "If you didn't request this, you can safely ignore this email.\n\n"
-        "— Digital Risk Academy"
-    )
-    msg = MIMEText(body)
-    msg["Subject"] = subject
-    msg["From"] = from_addr
-    msg["To"] = to_email
-
-    with smtplib.SMTP(host, port, timeout=10) as server:
-        server.starttls()
-        server.login(username, password)
-        server.sendmail(username, [to_email], msg.as_string())
+    try:
+        result = resend.Emails.send(params)
+        logger.info("Password reset email sent through Resend to %s", to_email)
+        return result
+    except Exception as exc:
+        logger.exception("Resend password reset email failed for %s: %s", to_email, exc)
+        raise RuntimeError("Could not send password reset email through Resend.") from exc
 
 
 @auth_bp.post("/forgot-password")
@@ -150,7 +144,7 @@ def forgot_password():
     db.session.commit()
 
     try:
-        _send_reset_email(email, user.full_name, code)
+        _send_reset_email(email, code)
     except Exception as exc:
         print(f"Failed to send password reset email: {exc}")
         return jsonify({"error": "Could not send the verification email. Please try again shortly."}), 502

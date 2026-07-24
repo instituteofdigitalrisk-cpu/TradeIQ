@@ -174,6 +174,9 @@ class Holding(db.Model):
 
 class Watchlist(db.Model):
     __tablename__ = "watchlist"
+    __table_args__ = (
+        db.UniqueConstraint("user_id", "stock_ticker", name="uq_watchlist_user_ticker"),
+    )
 
     watchlist_id        = db.Column(db.Integer, primary_key=True, autoincrement=True)
     user_id             = db.Column(db.String(20), db.ForeignKey("users.user_id", ondelete="CASCADE"), nullable=False)
@@ -316,6 +319,7 @@ class WeeklyScore(db.Model):
             "strategy_score":  float(self.strategy_score or 0),
             "final_score":     float(self.final_score or 0),
             "rank_position":   self.rank_position,
+            "created_at":      self.created_at.isoformat() if self.created_at else None,
         }
 
 

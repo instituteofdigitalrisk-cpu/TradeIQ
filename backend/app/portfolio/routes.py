@@ -4,6 +4,7 @@ from datetime import date, datetime
 
 from flask import Blueprint, jsonify, request
 from flask_jwt_extended import jwt_required, get_jwt_identity
+from sqlalchemy.exc import IntegrityError
 
 from app.extensions import db
 from app.models import User, PortfolioSetup, TradeLog, Holding, Watchlist
@@ -387,14 +388,19 @@ def get_trades(user_id):
 @portfolio_bp.get("/watchlist/<string:user_id>")
 @jwt_required()
 def get_watchlist(user_id):
-    items = Watchlist.query.filter_by(user_id=user_id)\
-                             .order_by(Watchlist.created_at.desc())\
-                             .all()
-    return jsonify({
-        "user_id":   user_id,
-        "watchlist": [w.to_dict() for w in items],
-        "count":     len(items),
-    }), 200
+    try:
+        items = Watchlist.query.filter_by(user_id=user_id)\
+                                 .order_by(Watchlist.created_at.desc())\
+                                 .all()
+        return jsonify({
+            "user_id":   user_id,
+            "watchlist": [w.to_dict() for w in items],
+            "count":     len(items),
+        }), 200
+    except Exception as exc:
+        db.session.rollback()
+        logger.exception("Failed to load watchlist for user %s", user_id)
+        return jsonify({"watchlist": [], "error": str(exc)}), 500
 
 
 # ─────────────────────────────────────────
@@ -412,32 +418,54 @@ def add_watchlist_item():
     if not data or not data.get("stock_ticker"):
         return jsonify({"error": "stock_ticker required"}), 400
 
-    item = Watchlist(
-        user_id=user_id,
-        stock_ticker=data["stock_ticker"].upper(),
-        stock_name=data.get("stock_name") or data["stock_ticker"].upper(),
-        sector=data.get("sector"),
-        allocation_percent=data.get("allocation_percent") or 0,
-        amount_invested=data.get("amount_invested") or 0,
-        quantity=data.get("quantity") or 0,
-        buy_price=data.get("buy_price") or 0,
-        current_sell_price=data.get("current_sell_price") or data.get("buy_price") or 0,
-        trade_type=(data.get("trade_type") or "BUY").upper(),
-        tag1=data.get("tag1"),
-        tag2=data.get("tag2"),
-        tag3=data.get("tag3"),
-        thesis=data.get("thesis"),
-    )
+    ticker = data["stock_ticker"].upper()
 
     try:
+        # Idempotent per user's portfolio: submitting the same ticker again
+        # updates the existing watchlist row instead of creating another one.
+        item = Watchlist.query.filter_by(
+            user_id=user_id,
+            stock_ticker=ticker,
+        ).first()
+        created = item is None
+        if item is None:
+            item = Watchlist(user_id=user_id, stock_ticker=ticker)
+            db.session.add(item)
+
+        item.stock_name = data.get("stock_name") or ticker
+        item.sector = data.get("sector")
+        item.allocation_percent = data.get("allocation_percent") or 0
+        item.amount_invested = data.get("amount_invested") or 0
+        item.quantity = data.get("quantity") or 0
+        item.buy_price = data.get("buy_price") or 0
+        item.current_sell_price = data.get("current_sell_price") or data.get("buy_price") or 0
+        item.trade_type = (data.get("trade_type") or "BUY").upper()
+        item.tag1 = data.get("tag1")
+        item.tag2 = data.get("tag2")
+        item.tag3 = data.get("tag3")
+        item.thesis = data.get("thesis")
+
         db.session.add(item)
         db.session.commit()
     except Exception as exc:
         db.session.rollback()
         logger.error(f"Failed to add item to watchlist for user {user_id}: {exc}")
+        if isinstance(exc, IntegrityError):
+            existing = Watchlist.query.filter_by(
+                user_id=user_id,
+                stock_ticker=ticker,
+            ).first()
+            if existing:
+                return jsonify({
+                    "message": "Watchlist item already existed",
+                    "item": existing.to_dict(),
+                }), 200
         return jsonify({"error": "Failed to add watchlist item"}), 500
 
-    return jsonify({"message": "Added to watchlist", "item": item.to_dict()}), 201
+    return jsonify({
+        "message": "Added to watchlist" if created else "Watchlist item already existed; updated it",
+        "item": item.to_dict(),
+    }), 201 if created else 200
 
 
 # ─────────────────────────────────────────
