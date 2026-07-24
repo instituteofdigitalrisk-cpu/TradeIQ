@@ -10,9 +10,7 @@ from functools import lru_cache
 
 from flask import Blueprint, jsonify, request
 from flask_jwt_extended import create_access_token, decode_token
-from cryptography import x509
 import jwt
-import requests
 
 import firebase_admin
 from firebase_admin import auth as firebase_auth

@@ -6,7 +6,6 @@ charset-normalizer==3.4.7
 click==8.2.1
 colorama==0.4.6
 cryptography==48.0.0
-google-auth==2.36.0
 firebase-admin==6.5.0
 curl_cffi==0.15.0
 Flask==3.0.3
@@ -60,4 +59,3 @@ groq
 sentry-sdk
 redis>=4.0.0
 flask-caching
-google-auth
