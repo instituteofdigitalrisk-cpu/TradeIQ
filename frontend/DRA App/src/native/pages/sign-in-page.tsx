@@ -1,5 +1,4 @@
 import { ChevronLeft, LogIn, Mail } from "lucide-react-native";
-import { sendPasswordResetEmail } from "firebase/auth";
 import { useState } from "react";
 import { ScrollView, Text, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -7,7 +6,7 @@ import Toast from "react-native-toast-message";
 import { C, font } from "../constants";
 import type { UserData } from "../types";
 import { AppButton, ErrorNotice, Field, GlassCard, HeaderMini } from "../components/ui";
-import { firebaseAuth } from "../../firebase";
+import { auth } from "../api";
 
 type Step = "signin" | "request";
 
@@ -48,7 +47,7 @@ export function SignInPage({
     setSubmitting(false);
   };
 
-  // Firebase sends a direct password-reset link to the user's email.
+  // The backend checks registration/payment status before sending the Firebase link.
   const handleRequestCode = async () => {
     setResetError("");
     if (!resetEmail.trim()) {
@@ -57,16 +56,25 @@ export function SignInPage({
     }
     setResetSubmitting(true);
     try {
-      await sendPasswordResetEmail(firebaseAuth, resetEmail.trim().toLowerCase());
+      await auth.forgotPassword(resetEmail.trim().toLowerCase());
       Toast.show({
         type: "success",
-        text1: "Reset email sent",
-        text2: "Check your inbox or spam folder for the password reset link.",
+        text1: "Password reset email sent!",
+        text2: "Check your inbox or spam folder.",
       });
       setStep("signin");
     } catch (err) {
-      console.error("Firebase Reset Error:", err);
-      setResetError(err instanceof Error ? err.message : "Could not send the reset email. Please try again.");
+      console.error("Password reset request failed:", err);
+      let message = "Could not send the reset email. Please try again.";
+      if (err instanceof Error) {
+        try {
+          const parsed = JSON.parse(err.message) as { error?: string };
+          message = parsed.error || err.message;
+        } catch {
+          message = err.message;
+        }
+      }
+      setResetError(message);
     } finally {
       setResetSubmitting(false);
     }

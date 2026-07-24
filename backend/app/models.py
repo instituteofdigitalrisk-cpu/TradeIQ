@@ -20,6 +20,8 @@ class User(db.Model):
     year_of_study = db.Column(db.Integer)
     role          = db.Column(db.String(20),  default="student")
     password_hash = db.Column(db.String(255), nullable=False)
+    is_paid       = db.Column(db.Boolean,      nullable=False, default=False)
+    registration_status = db.Column(db.String(30), nullable=False, default="pending")
     created_at    = db.Column(db.DateTime,    default=datetime.utcnow)
 
     # relationships

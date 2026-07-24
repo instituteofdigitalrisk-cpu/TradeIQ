@@ -6,6 +6,7 @@ import os
 import random
 from datetime import date, datetime, timezone, timedelta
 from functools import lru_cache
+from html import escape
 
 from flask import Blueprint, jsonify, request
 from flask_jwt_extended import create_access_token, decode_token
@@ -37,6 +38,24 @@ def _get_firebase_project_id() -> str:
     return os.getenv("FIREBASE_PROJECT_ID", "tradeiq-26")
 
 
+def _ensure_firebase_admin_initialized() -> None:
+    if firebase_admin._apps:
+        return
+
+    project_id = _get_firebase_project_id()
+    service_account_json = os.getenv("FIREBASE_SERVICE_ACCOUNT_JSON")
+    credentials_path = os.getenv("GOOGLE_APPLICATION_CREDENTIALS")
+
+    if service_account_json:
+        cred = credentials.Certificate(json.loads(service_account_json))
+        firebase_admin.initialize_app(cred, {"projectId": project_id})
+    elif credentials_path and os.path.exists(credentials_path):
+        cred = credentials.Certificate(credentials_path)
+        firebase_admin.initialize_app(cred, {"projectId": project_id})
+    else:
+        firebase_admin.initialize_app(options={"projectId": project_id})
+
+
 def _verify_google_sign_in_token(id_token_str: str) -> dict:
     """Verify the Firebase ID token issued by the frontend.
 
@@ -47,19 +66,7 @@ def _verify_google_sign_in_token(id_token_str: str) -> dict:
     project_id = _get_firebase_project_id()
 
     try:
-        if not firebase_admin._apps:
-            service_account_json = os.getenv("FIREBASE_SERVICE_ACCOUNT_JSON")
-            credentials_path = os.getenv("GOOGLE_APPLICATION_CREDENTIALS")
-
-            if service_account_json:
-                cred = credentials.Certificate(json.loads(service_account_json))
-                firebase_admin.initialize_app(cred, {"projectId": project_id})
-            elif credentials_path and os.path.exists(credentials_path):
-                cred = credentials.Certificate(credentials_path)
-                firebase_admin.initialize_app(cred, {"projectId": project_id})
-            else:
-                firebase_admin.initialize_app(options={"projectId": project_id})
-
+        _ensure_firebase_admin_initialized()
         payload = firebase_auth.verify_id_token(id_token_str, check_revoked=True)
         if payload.get("aud") != project_id:
             raise ValueError("Firebase token belongs to a different project.")
@@ -116,40 +123,53 @@ def _send_reset_email(to_email: str, code: str):
         raise RuntimeError("Could not send password reset email through Resend.") from exc
 
 
+def _send_reset_link_email(to_email: str, reset_link: str):
+    """Send the Firebase-generated reset link through Resend."""
+    if not resend.api_key:
+        raise RuntimeError("RESEND_API_KEY is not configured on the server.")
+
+    params = {
+            "from": "TradeIQ <onboarding@resend.dev>",
+            "to": [to_email],
+            "subject": "TradeIQ - Password Reset",
+            "html": (
+                "<p>Click the link below to reset your TradeIQ password.</p>"
+            f'<p><a href="{escape(reset_link, quote=True)}">Reset your password</a></p>'
+        ),
+    }
+    try:
+        result = resend.Emails.send(params)
+        logger.info("Password reset link sent through Resend to %s", to_email)
+        return result
+    except Exception as exc:
+        logger.exception("Resend password reset link failed for %s: %s", to_email, exc)
+        raise RuntimeError("Could not send password reset email through Resend.") from exc
+
+
 @auth_bp.post("/forgot-password")
 def forgot_password():
-    print("Received forgot-password request")
     data = request.get_json(silent=True) or {}
     email = (data.get("email") or "").strip().lower()
     if not email:
         return jsonify({"error": "Email is required"}), 400
 
-    generic_response = {
-        "message": "If an account exists for that email, a verification code has been sent."
-    }
-
     user = User.query.filter_by(email=email).first()
-    if not user:
-        return jsonify(generic_response), 200
-
-    code = _generate_otp()
-    print(f"Generated password reset code for {email}: {code} (expires in {RESET_CODE_TTL_MINUTES} minutes)")
-    reset = PasswordReset(
-        user_id=user.user_id,
-        email=email,
-        code_hash=_hash_code(code),
-        expires_at=datetime.utcnow() + timedelta(minutes=RESET_CODE_TTL_MINUTES),
+    payment_error = (
+        "This email is not registered or payment is pending. "
+        "Please complete registration first."
     )
-    db.session.add(reset)
-    db.session.commit()
+    if not user or not (user.is_paid is True or user.registration_status == "completed"):
+        return jsonify({"error": payment_error}), 403
 
     try:
-        _send_reset_email(email, code)
+        _ensure_firebase_admin_initialized()
+        reset_link = firebase_auth.generate_password_reset_link(email)
+        _send_reset_link_email(email, reset_link)
     except Exception as exc:
-        print(f"Failed to send password reset email: {exc}")
-        return jsonify({"error": "Could not send the verification email. Please try again shortly."}), 502
+        logger.exception("Failed to generate/send password reset link for %s: %s", email, exc)
+        return jsonify({"error": "Could not send the password reset email. Please try again shortly."}), 502
 
-    return jsonify(generic_response), 200
+    return jsonify({"message": "Password reset link generated."}), 200
 
 
 @auth_bp.post("/verify-reset-code")

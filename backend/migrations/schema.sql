@@ -13,6 +13,8 @@ CREATE TABLE IF NOT EXISTS users (
     year_of_study INT,
     role VARCHAR(20) DEFAULT 'student',
     password_hash VARCHAR(255) NOT NULL DEFAULT '',
+    is_paid BOOLEAN NOT NULL DEFAULT FALSE,
+    registration_status VARCHAR(30) NOT NULL DEFAULT 'pending',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
