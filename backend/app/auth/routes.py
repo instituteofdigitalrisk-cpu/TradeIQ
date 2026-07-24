@@ -164,6 +164,13 @@ def forgot_password():
         _ensure_firebase_admin_initialized()
         reset_link = firebase_auth.generate_password_reset_link(email)
         _send_reset_link_email(email, reset_link)
+    except firebase_auth.UserNotFoundError:
+        return jsonify({
+            "error": (
+                "This account exists in our database, but no Firebase login was "
+                "found for it. Please register using the standard signup flow."
+            )
+        }), 404
     except Exception as exc:
         logger.exception("Failed to generate/send password reset link for %s: %s", email, exc)
         return jsonify({"error": "Could not send the password reset email. Please try again shortly."}), 502
