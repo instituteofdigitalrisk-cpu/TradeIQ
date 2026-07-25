@@ -4,9 +4,20 @@
     "slug": "digital-risk-academy-app",
     "version": "1.0.0",
     "orientation": "portrait",
+    "scheme": "tradeiq",
+    "icon": "./src/imports/brand-icon.png",
     "userInterfaceStyle": "light",
     "android": {
-      "package": "com.tradeiq.draapp"
+      "package": "com.tradeiq.draapp",
+      "adaptiveIcon": {
+        "foregroundImage": "./src/imports/brand-icon.png",
+        "backgroundColor": "#060810"
+      }
+    },
+    "splash": {
+      "image": "./src/imports/brand-icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#060810"
     },
     "plugins": [
       "expo-router"

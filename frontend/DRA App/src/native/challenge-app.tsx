@@ -80,14 +80,19 @@ export default function ChallengeApp() {
       setUserData(null);
       setFlow("signin");
     });
-    getActiveUser().then((activeUser) => {
-      if (!active) return;
-      if (activeUser) {
-        setUserData(activeUser);
-        setFlow("app");
-      }
-      setBooting(false);
-    });
+    getActiveUser()
+      .then((activeUser) => {
+        if (!active) return;
+        if (activeUser) {
+          setUserData(activeUser);
+          setFlow("app");
+        }
+        setBooting(false);
+      })
+      .catch((error) => {
+        console.error("Failed to restore the saved session:", error);
+        if (active) setBooting(false);
+      });
     return () => {
       active = false;
       setUnauthorizedHandler(null);
