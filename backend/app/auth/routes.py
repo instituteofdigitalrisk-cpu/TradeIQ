@@ -383,8 +383,12 @@ def google_auth():
 
     try:
         firebase_user = _verify_google_sign_in_token(data["id_token"])
-    except Exception as exc:
-        return jsonify({"error": f"Invalid Google sign-in token: {exc}"}), 401
+    except ValueError as exc:
+        logger.warning("Rejected malformed Google/Firebase ID token: %s", exc)
+        return jsonify({"error": "Invalid Google sign-in token."}), 400
+    except Exception:
+        logger.exception("Unexpected Google sign-in verification failure")
+        return jsonify({"error": "Unable to verify Google sign-in token."}), 500
 
     email = (firebase_user.get("email") or "").strip().lower()
     full_name = (firebase_user.get("name") or email.split("@")[0] or "Google User").strip()

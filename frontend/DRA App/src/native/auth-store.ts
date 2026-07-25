@@ -107,6 +107,9 @@ export async function signInWithGoogle(): Promise<{ user: UserData; isNewUser: b
   provider.setCustomParameters({ prompt: "select_account" });
   const result = await signInWithPopup(firebaseAuth, provider);
   const idToken = await result.user.getIdToken();
+  if (typeof idToken !== "string" || !idToken.trim()) {
+    throw new Error("Google sign-in did not return a Firebase ID token.");
+  }
   const { user: backendUser, token, is_new_user } = await auth.google(idToken);
 
   setToken(token);
