@@ -24,7 +24,7 @@ export const font = {
   headingHeavy: "Neuton_800ExtraBold",
   regular: "Lora_400Regular",
   medium: "Lora_600SemiBold",
-  mono: process.env.EXPO_OS === "ios" ? "Menlo" : "monospace",
+  mono: (process.env?.EXPO_OS || "") === "ios" ? "Menlo" : "monospace",
 };
 
 export const heroVideo = require("../imports/Multi-Shot_Video_-_premium_learning_competition_for_students_to_understand_investing__portfolio_cons.mp4");

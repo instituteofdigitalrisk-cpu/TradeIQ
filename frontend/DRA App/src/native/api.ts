@@ -1,6 +1,6 @@
 // this is frontend/DRA App/src/native/api.ts
 const DEFAULT_API_BASE = "https://trade-iq-deploy.onrender.com";
-const configuredApiBase = process.env.EXPO_PUBLIC_API_URL;
+const configuredApiBase = process.env?.EXPO_PUBLIC_API_URL || "";
 const ENV_API_BASE = (configuredApiBase || DEFAULT_API_BASE).replace(/\/+$/, "");
 const isLocalWeb =
   typeof window !== "undefined" &&

@@ -1,5 +1,5 @@
 export function tapHaptic() {
-  if (process.env.EXPO_OS !== "ios") return;
+  if ((process.env?.EXPO_OS || "") !== "ios") return;
   import("expo-haptics")
     .then((Haptics) => Haptics.selectionAsync())
     .catch(() => undefined);

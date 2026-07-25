@@ -1,7 +1,6 @@
-// Import the functions you need from the SDKs you need
-import { initializeApp } from "firebase/app";
-import { getAnalytics, isSupported } from "firebase/analytics";
+import { getApp, getApps, initializeApp } from "firebase/app";
 import { getAuth } from "firebase/auth";
+import { Platform } from "react-native";
 // TODO: Add SDKs for Firebase products that you want to use
 // https://firebase.google.com/docs/web/setup#available-libraries
 
@@ -17,9 +16,16 @@ const firebaseConfig = {
   measurementId: "G-WQZ7BE0H9Q"
 };
 
-// Initialize Firebase
-export const app = initializeApp(firebaseConfig);
+// Initialize Firebase exactly once. The app's backend session/token is persisted
+// through auth-store.ts using AsyncStorage on native platforms.
+export const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
 export const firebaseAuth = getAuth(app);
 
 export const analyticsPromise =
-  typeof window !== "undefined" ? isSupported().then((supported) => (supported ? getAnalytics(app) : null)) : Promise.resolve(null);
+  Platform.OS === "web"
+    ? import("firebase/analytics")
+        .then(({ getAnalytics, isSupported }) =>
+          isSupported().then((supported) => (supported ? getAnalytics(app) : null)),
+        )
+        .catch(() => null)
+    : Promise.resolve(null);
