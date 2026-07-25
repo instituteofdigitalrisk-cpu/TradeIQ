@@ -2,12 +2,11 @@ import { useEffect, useState } from "react";
 import type React from "react";
 import { useFonts as useLoraFonts, Lora_400Regular, Lora_600SemiBold, Lora_700Bold } from "@expo-google-fonts/lora";
 import { useFonts as useNeutonFonts, Neuton_700Bold, Neuton_800ExtraBold } from "@expo-google-fonts/neuton";
-import { useIdTokenAuthRequest } from "expo-auth-session/providers/google";
 import { SafeAreaProvider, useSafeAreaInsets } from "react-native-safe-area-context";
 import { ActivityIndicator, Platform, Text, useWindowDimensions, View } from "react-native";
 import * as SplashScreen from "expo-splash-screen";
 import type { Flow, UserData } from "./types";
-import { clearActiveUser, getActiveUser, saveRegisteredUser, signInUser, signInWithGoogle, signInWithNativeGoogleIdToken } from "./auth-store";
+import { clearActiveUser, getActiveUser, saveRegisteredUser, signInUser, signInWithGoogle, signInWithNativeGoogle } from "./auth-store";
 import { setUnauthorizedHandler } from "./api";
 import Toast from "react-native-toast-message";
 import { LandingPage } from "./pages/landing-page";
@@ -59,22 +58,12 @@ const toastConfig = {
   warning: (props: any) => ThemedToast(props, "#ffd166"),
 };
 
-const GOOGLE_WEB_CLIENT_ID =
-  "1013397127798-nb34o20mn4qd26opc8etp7mth7aqqe7i.apps.googleusercontent.com";
-
 export default function ChallengeApp() {
   const [flow, setFlow] = useState<Flow>("landing");
   const [userData, setUserData] = useState<UserData | null>(null);
   const [booting, setBooting] = useState(true);
   const [loraLoaded] = useLoraFonts({ Lora_400Regular, Lora_600SemiBold, Lora_700Bold });
   const [neutonLoaded] = useNeutonFonts({ Neuton_700Bold, Neuton_800ExtraBold });
-  const [googleRequest, , promptGoogleAsync] = useIdTokenAuthRequest({
-    webClientId: GOOGLE_WEB_CLIENT_ID,
-    // Use a non-empty fallback so Expo Auth Session cannot throw during the
-    // initial render. Replace this with the Android OAuth client ID in EAS.
-    androidClientId: process.env?.EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID || GOOGLE_WEB_CLIENT_ID,
-    selectAccount: true,
-  }, { native: "tradeiq://" });
   const insets = useSafeAreaInsets();
   const toastTopOffset = insets.top + 12; // sits just under the notch/status bar, always
 
@@ -162,6 +151,18 @@ export default function ChallengeApp() {
     return withToast(
       <SignInPage
         onBack={() => setFlow("landing")}
+        onGoogleSignIn={async () => {
+          try {
+            const result = Platform.OS === "web"
+              ? await signInWithGoogle()
+              : await signInWithNativeGoogle();
+            setUserData(result.user);
+            setFlow(result.isNewUser ? "onboarding" : "app");
+            return null;
+          } catch (err) {
+            return err instanceof Error ? err.message : "Google sign-in failed";
+          }
+        }}
         onSubmit={async (email, password) => {
           try {
             const user = await signInUser(email, password);
@@ -189,20 +190,7 @@ export default function ChallengeApp() {
           try {
             const result = Platform.OS === "web"
               ? await signInWithGoogle()
-              : await (async () => {
-                  if (!googleRequest || !promptGoogleAsync) {
-                    throw new Error("Google authentication is still loading. Please try again.");
-                  }
-                  const response = await promptGoogleAsync();
-                  if (response.type !== "success") {
-                    throw new Error("Google sign-in was cancelled or could not be completed.");
-                  }
-                  const idToken = response.params?.id_token;
-                  if (!idToken) {
-                    throw new Error("Google did not return an ID token. Check the Android OAuth client configuration.");
-                  }
-                  return signInWithNativeGoogleIdToken(idToken);
-                })();
+              : await signInWithNativeGoogle();
             const { user, isNewUser } = result;
             setUserData(user);
             setFlow(isNewUser ? "onboarding" : "app");

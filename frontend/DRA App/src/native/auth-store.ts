@@ -1,4 +1,6 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { Platform } from "react-native";
+import { GoogleSignin } from "@react-native-google-signin/google-signin";
 import { GoogleAuthProvider, signInWithCredential, signInWithPopup } from "firebase/auth";
 import { auth, setToken, clearToken } from "./api";
 import type { BackendUser } from "./api";
@@ -7,6 +9,8 @@ import type { RegistrationFormData, UserData } from "./types";
 
 const USERS_KEY = "dra.studentProfiles";
 const SESSION_KEY = "dra.activeStudentId";
+const GOOGLE_WEB_CLIENT_ID =
+  "1013397127798-nb34o20mn4qd26opc8etp7mth7aqqe7i.apps.googleusercontent.com";
 let memoryUsers: UserData[] = [];
 let memoryActiveStudentId = "";
 
@@ -131,6 +135,25 @@ export async function signInWithNativeGoogleIdToken(idToken: string) {
   const result = await signInWithCredential(firebaseAuth, credential);
   const firebaseIdToken = await result.user.getIdToken();
   return completeGoogleSignIn(firebaseIdToken);
+}
+
+export async function signInWithNativeGoogle(): Promise<{ user: UserData; isNewUser: boolean }> {
+  if (Platform.OS === "web") {
+    throw new Error("Native Google sign-in is only available on Android and iOS.");
+  }
+
+  GoogleSignin.configure({ webClientId: GOOGLE_WEB_CLIENT_ID });
+  await GoogleSignin.hasPlayServices();
+  const response = await GoogleSignin.signIn();
+  if (response.type !== "success") {
+    throw new Error("Google sign-in was cancelled or could not be completed.");
+  }
+
+  const idToken = response.data.idToken;
+  if (!idToken) {
+    throw new Error("Google did not return an ID token. Check the OAuth client configuration.");
+  }
+  return signInWithNativeGoogleIdToken(idToken);
 }
 
 export async function setActiveStudentId(studentId: string) {

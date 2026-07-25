@@ -14,6 +14,22 @@
       },
       "oauth_client": [
         {
+          "client_id": "1013397127798-04jhb55qqrhtlfnot8ghr50h9cdkvemo.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.ishita_ghosh.tradeiq",
+            "certificate_hash": "de0d0f1e8c74e3049c46b19301ce348a3b6e9033"
+          }
+        },
+        {
+          "client_id": "1013397127798-06h01fjllfehg88gpde14gpj84tiopbv.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.ishita_ghosh.tradeiq",
+            "certificate_hash": "7201a22082caa162c3bd901d92b18103b24f8ffa"
+          }
+        },
+        {
           "client_id": "1013397127798-nb34o20mn4qd26opc8etp7mth7aqqe7i.apps.googleusercontent.com",
           "client_type": 3
         }
@@ -29,6 +45,57 @@
             {
               "client_id": "1013397127798-nb34o20mn4qd26opc8etp7mth7aqqe7i.apps.googleusercontent.com",
               "client_type": 3
+            },
+            {
+              "client_id": "1013397127798-4gh0ulbqc1uan42ed1um9g1tgtl67e4h.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "tradeiq"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1013397127798:android:affc54be5e7806b4659557",
+        "android_client_info": {
+          "package_name": "com.tradeiq.draapp"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "1013397127798-posvs0fhl31kltoupegqn388god85dia.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.tradeiq.draapp",
+            "certificate_hash": "f48288e3a0f28673cd2a3183756dcd6ee12ea737"
+          }
+        },
+        {
+          "client_id": "1013397127798-nb34o20mn4qd26opc8etp7mth7aqqe7i.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyABJIIXZljuRcqx9Y7uQN1FFEp7qKpp3BM"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "1013397127798-nb34o20mn4qd26opc8etp7mth7aqqe7i.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "1013397127798-4gh0ulbqc1uan42ed1um9g1tgtl67e4h.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "tradeiq"
+              }
             }
           ]
         }

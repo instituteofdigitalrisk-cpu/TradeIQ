@@ -10,6 +10,7 @@
     "newArchEnabled": true,
     "android": {
       "package": "com.tradeiq.draapp",
+      "googleServicesFile": "./google-services.json",
       "adaptiveIcon": {
         "foregroundImage": "./src/imports/brand-icon.png",
         "backgroundColor": "#060810"
@@ -21,7 +22,8 @@
       "backgroundColor": "#060810"
     },
     "plugins": [
-      "expo-router"
+      "expo-router",
+      "@react-native-google-signin/google-signin"
     ],
     "extra": {
       "eas": {

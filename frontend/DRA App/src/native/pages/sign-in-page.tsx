@@ -6,7 +6,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import Toast from "react-native-toast-message";
 import { C, font } from "../constants";
 import type { UserData } from "../types";
-import { AppButton, ErrorNotice, Field, GlassCard, HeaderMini } from "../components/ui";
+import { AppButton, ErrorNotice, Field, GlassCard, GoogleAuthButton, HeaderMini } from "../components/ui";
 import { auth } from "../api";
 import { firebaseAuth } from "../../firebase";
 
@@ -19,9 +19,11 @@ const passwordResetActionCodeSettings = {
 
 export function SignInPage({
   onSubmit,
+  onGoogleSignIn,
   onBack,
 }: {
   onSubmit: (email: string, password: string) => Promise<UserData | string | null>;
+  onGoogleSignIn: () => Promise<string | null>;
   onBack: () => void;
 }) {
   const [step, setStep] = useState<Step>("signin");
@@ -98,6 +100,17 @@ export function SignInPage({
     }
   };
 
+  const handleGoogleSignIn = async () => {
+    setError("");
+    setSubmitting(true);
+    const result = await onGoogleSignIn();
+    if (result) {
+      setError(result);
+      Toast.show({ type: "error", text1: "Google login unsuccessful", text2: result });
+    }
+    setSubmitting(false);
+  };
+
   const backButton = (onPress: () => void) => (
     <TouchableOpacity onPress={onPress} style={{ flexDirection: "row", gap: 6, alignItems: "center", alignSelf: "flex-start", paddingVertical: 6 }}>
       <ChevronLeft size={18} color={C.text1} />
@@ -142,6 +155,11 @@ export function SignInPage({
         {backButton(onBack)}
         <HeaderMini title="Login to your Account" subtitle="" />
         <GlassCard style={{ padding: 18, gap: 15 }} accent={C.cyan}>
+          <GoogleAuthButton
+            label="Continue with Google"
+            onPress={() => void handleGoogleSignIn()}
+            disabled={submitting}
+          />
           <Field
             label="Email"
             value={email}
