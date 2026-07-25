@@ -13,7 +13,7 @@ import { firebaseAuth } from "../../firebase";
 type Step = "signin" | "request";
 
 const passwordResetActionCodeSettings = {
-  url: "https://tradeiq-frontend-kl94.onrender.com/reset-password",
+  url: "https://tradeiq-frontend-kl94.onrender.com",
   handleCodeInApp: true,
 };
 
