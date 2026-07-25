@@ -4,6 +4,7 @@ import { useFonts as useLoraFonts, Lora_400Regular, Lora_600SemiBold, Lora_700Bo
 import { useFonts as useNeutonFonts, Neuton_700Bold, Neuton_800ExtraBold } from "@expo-google-fonts/neuton";
 import { SafeAreaProvider, useSafeAreaInsets } from "react-native-safe-area-context";
 import { ActivityIndicator, Text, useWindowDimensions, View } from "react-native";
+import * as SplashScreen from "expo-splash-screen";
 import type { Flow, UserData } from "./types";
 import { clearActiveUser, getActiveUser, saveRegisteredUser, signInUser, signInWithGoogle } from "./auth-store";
 import { setUnauthorizedHandler } from "./api";
@@ -65,6 +66,12 @@ export default function ChallengeApp() {
   const [neutonLoaded] = useNeutonFonts({ Neuton_700Bold, Neuton_800ExtraBold });
   const insets = useSafeAreaInsets();
   const toastTopOffset = insets.top + 12; // sits just under the notch/status bar, always
+
+  useEffect(() => {
+    if (loraLoaded && neutonLoaded && !booting) {
+      void SplashScreen.hideAsync().catch(() => undefined);
+    }
+  }, [booting, loraLoaded, neutonLoaded]);
 
   const withToast = (screen: React.ReactNode) => (
     <>

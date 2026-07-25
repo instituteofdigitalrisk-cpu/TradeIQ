@@ -7,6 +7,7 @@
     "scheme": "tradeiq",
     "icon": "./src/imports/brand-icon.png",
     "userInterfaceStyle": "light",
+    "newArchEnabled": true,
     "android": {
       "package": "com.tradeiq.draapp",
       "adaptiveIcon": {
