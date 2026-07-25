@@ -109,6 +109,11 @@ def create_app() -> Flask:
     _check_required_config()
     app = Flask(__name__)
 
+    @app.errorhandler(404)
+    def handle_not_found(error):
+        """Return API-friendly JSON for unmapped routes without a traceback."""
+        return jsonify({"error": "Endpoint not found"}), 404
+
     @app.errorhandler(Exception)
     def handle_exception(error):
         """Log full tracebacks and keep API errors as JSON instead of HTML."""
@@ -243,8 +248,12 @@ def create_app() -> Flask:
             logger.exception("Automatic users table migration failed: %s", exc)
 
     # ------------------------------------------------------------------
-    # Health Check Endpoints
+    # Root and health check endpoints
     # ------------------------------------------------------------------
+    @app.route("/")
+    def root():
+        return jsonify({"status": "ok", "message": "TradeIQ API is live"}), 200
+
     @app.get("/health/live")
     def health_live():
         return jsonify({"status": "ok"}), 200
@@ -294,6 +303,6 @@ def create_app() -> Flask:
 
     @app.get("/health")
     def health_legacy():
-        return health_ready()
+        return jsonify({"status": "healthy"}), 200
 
     return app
