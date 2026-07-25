@@ -1,5 +1,5 @@
 // this is frontend/DRA App/src/native/api.ts
-const DEFAULT_API_BASE = "https://trade-iq-deploy.onrender.com";
+const DEFAULT_API_BASE = "https://tradeiq-gtkc.onrender.com";
 const configuredApiBase = process.env?.EXPO_PUBLIC_API_URL || "";
 const ENV_API_BASE = (configuredApiBase || DEFAULT_API_BASE).replace(/\/+$/, "");
 const isLocalWeb =
@@ -163,7 +163,7 @@ export const auth = {
   google(idToken: string): Promise<GoogleAuthResponse> {
     return apiFetch<GoogleAuthResponse>("/auth/google", {
       method: "POST",
-      body: JSON.stringify({ id_token: idToken }),
+      body: JSON.stringify({ token: idToken }),
     });
   },
 

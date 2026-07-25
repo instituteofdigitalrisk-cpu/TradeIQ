@@ -378,11 +378,12 @@ def login():
 @auth_bp.post("/google")
 def google_auth():
     data = request.get_json(silent=True)
-    if not data or not data.get("id_token"):
+    id_token = (data or {}).get("token") or (data or {}).get("id_token")
+    if not isinstance(id_token, str) or not id_token.strip():
         return jsonify({"error": "Firebase or Google ID token required"}), 400
 
     try:
-        firebase_user = _verify_google_sign_in_token(data["id_token"])
+        firebase_user = _verify_google_sign_in_token(id_token.strip())
     except ValueError as exc:
         logger.warning("Rejected malformed Google/Firebase ID token: %s", exc)
         return jsonify({"error": "Invalid Google sign-in token."}), 400
