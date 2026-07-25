@@ -3,11 +3,13 @@ import "react-native-gesture-handler";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { Stack } from "expo-router";
 import type { ErrorBoundaryProps } from "expo-router";
+import * as WebBrowser from "expo-web-browser";
 import * as SplashScreen from "expo-splash-screen";
 import { StatusBar } from "expo-status-bar";
 import { Pressable, SafeAreaView, Text, View } from "react-native";
 
 void SplashScreen.preventAutoHideAsync().catch(() => undefined);
+WebBrowser.maybeCompleteAuthSession();
 
 export function ErrorBoundary({ error, retry }: ErrorBoundaryProps) {
   return (

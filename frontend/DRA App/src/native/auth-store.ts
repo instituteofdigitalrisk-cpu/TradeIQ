@@ -1,5 +1,5 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { GoogleAuthProvider, signInWithPopup } from "firebase/auth";
+import { GoogleAuthProvider, signInWithCredential, signInWithPopup } from "firebase/auth";
 import { auth, setToken, clearToken } from "./api";
 import type { BackendUser } from "./api";
 import { firebaseAuth } from "../firebase";
@@ -71,9 +71,9 @@ export async function saveRegisteredUser(user: RegistrationFormData): Promise<Us
     student_id: user.studentId,
     full_name: user.name,
     email: user.email,
-    phone: user.phone,
-    college: user.college,
-    degree: user.degree,
+    phone: "",
+    college: "",
+    degree: "",
     password: user.password,
   });
 
@@ -98,15 +98,7 @@ export async function signInUser(email: string, password: string): Promise<UserD
   return cachedUser;
 }
 
-export async function signInWithGoogle(): Promise<{ user: UserData; isNewUser: boolean }> {
-  if (typeof window === "undefined") {
-    throw new Error("Google sign-in is available in the web app.");
-  }
-
-  const provider = new GoogleAuthProvider();
-  provider.setCustomParameters({ prompt: "select_account" });
-  const result = await signInWithPopup(firebaseAuth, provider);
-  const idToken = await result.user.getIdToken();
+export async function completeGoogleSignIn(idToken: string): Promise<{ user: UserData; isNewUser: boolean }> {
   if (typeof idToken !== "string" || !idToken.trim()) {
     throw new Error("Google sign-in did not return a Firebase ID token.");
   }
@@ -120,6 +112,25 @@ export async function signInWithGoogle(): Promise<{ user: UserData; isNewUser: b
   await setActiveStudentId(cachedUser.studentId);
 
   return { user: cachedUser, isNewUser: is_new_user };
+}
+
+export async function signInWithGoogle(): Promise<{ user: UserData; isNewUser: boolean }> {
+  if (typeof window === "undefined") {
+    throw new Error("Use the native Google authentication flow on Android or iOS.");
+  }
+
+  const provider = new GoogleAuthProvider();
+  provider.setCustomParameters({ prompt: "select_account" });
+  const result = await signInWithPopup(firebaseAuth, provider);
+  const idToken = await result.user.getIdToken();
+  return completeGoogleSignIn(idToken);
+}
+
+export async function signInWithNativeGoogleIdToken(idToken: string) {
+  const credential = GoogleAuthProvider.credential(idToken);
+  const result = await signInWithCredential(firebaseAuth, credential);
+  const firebaseIdToken = await result.user.getIdToken();
+  return completeGoogleSignIn(firebaseIdToken);
 }
 
 export async function setActiveStudentId(studentId: string) {

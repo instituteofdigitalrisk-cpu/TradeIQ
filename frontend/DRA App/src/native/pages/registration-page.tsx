@@ -1,10 +1,9 @@
 import { ChevronRight } from "lucide-react-native";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { ScrollView, Text, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Toast from "react-native-toast-message";
 import { C, font } from "../constants";
-import { generateStudentId } from "../auth-store";
 import type { GoogleAuthResult, RegistrationFormData } from "../types";
 import {
   AppButton,
@@ -17,6 +16,8 @@ import {
   HeaderMini,
   StepDots,
 } from "../components/ui";
+
+const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 export function RegistrationPage({
   onSubmit,
@@ -31,33 +32,17 @@ export function RegistrationPage({
     studentId: "",
     name: "",
     email: "",
-    phone: "",
-    college: "",
-    degree: "",
-    passoutYear: "2026",
     password: "",
+    confirmPassword: "",
     acceptedTerms: false,
   });
 
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [generalError, setGeneralError] = useState<string>("");
   const [loading, setLoading] = useState(false);
-
-  useEffect(() => {
-    let cancelled = false;
-
-    const loadStudentId = async () => {
-      const studentId = await generateStudentId();
-      if (!cancelled) {
-        setFormData((prev) => ({ ...prev, studentId }));
-      }
-    };
-
-    void loadStudentId();
-    return () => {
-      cancelled = true;
-    };
-  }, []);
+  const emailIsValid = EMAIL_PATTERN.test(formData.email.trim());
+  const passwordIsValid = formData.password.length >= 6;
+  const passwordsMatch = formData.password === formData.confirmPassword;
 
   const handleChange = (key: keyof RegistrationFormData, value: string | boolean) => {
     setFormData((prev) => ({ ...prev, [key]: value }));
@@ -74,16 +59,14 @@ export function RegistrationPage({
     const errs: Record<string, string> = {};
 
     if (!formData.name.trim()) errs.name = "Full name is required";
-    if (!formData.email.trim() || !formData.email.includes("@")) {
+    if (!emailIsValid) {
       errs.email = "Valid email address is required";
     }
-    if (!formData.phone.trim() || formData.phone.length < 10) {
-      errs.phone = "Valid phone number is required";
-    }
-    if (!formData.college.trim()) errs.college = "College/University name is required";
-    if (!formData.degree.trim()) errs.degree = "Degree program is required";
-    if (!formData.password || formData.password.length < 6) {
+    if (!passwordIsValid) {
       errs.password = "Password must be at least 6 characters";
+    }
+    if (!passwordsMatch) {
+      errs.confirmPassword = "Passwords do not match";
     }
     if (!formData.acceptedTerms) {
       errs.terms = "You must accept the terms and conditions to proceed";
@@ -149,13 +132,6 @@ export function RegistrationPage({
           {generalError ? <ErrorNotice message={generalError} /> : null}
 
           <Field
-            label="Student ID (Auto)"
-            value={formData.studentId}
-            onChangeText={() => {}}
-            placeholder="Generated Student ID"
-          />
-
-          <Field
             label="Full Name"
             value={formData.name}
             onChangeText={(v) => handleChange("name", v)}
@@ -169,42 +145,27 @@ export function RegistrationPage({
             onChangeText={(v) => handleChange("email", v)}
             placeholder="john@example.com"
             keyboardType="email-address"
-            error={errors.email}
-          />
-
-          <Field
-            label="Phone Number"
-            value={formData.phone}
-            onChangeText={(v) => handleChange("phone", v)}
-            placeholder="+1 234 567 8900"
-            keyboardType="phone-pad"
-            error={errors.phone}
-          />
-
-          <Field
-            label="College / Institution"
-            value={formData.college}
-            onChangeText={(v) => handleChange("college", v)}
-            placeholder="Harvard University"
-            error={errors.college}
-          />
-
-          <Field
-            label="Degree Program"
-            value={formData.degree}
-            onChangeText={(v) => handleChange("degree", v)}
-            placeholder="B.S. Finance / Computer Science"
-            error={errors.degree}
+            error={errors.email || (formData.email && !emailIsValid ? "Enter a valid email address" : undefined)}
           />
 
           <Field
             label="Password"
             value={formData.password}
             onChangeText={(v) => handleChange("password", v)}
-            placeholder="••••••••"
+            placeholder="Minimum 6 characters"
             secureTextEntry
             showPasswordToggle
-            error={errors.password}
+            error={errors.password || (formData.password && !passwordIsValid ? "Password must be at least 6 characters" : undefined)}
+          />
+
+          <Field
+            label="Confirm Password"
+            value={formData.confirmPassword}
+            onChangeText={(v) => handleChange("confirmPassword", v)}
+            placeholder="Re-enter your password"
+            secureTextEntry
+            showPasswordToggle
+            error={errors.confirmPassword || (formData.confirmPassword && !passwordsMatch ? "Passwords do not match" : undefined)}
           />
 
           <CheckboxRow
@@ -215,9 +176,9 @@ export function RegistrationPage({
           />
 
           <AppButton
-            label={loading ? "Registering..." : "Continue Registration"}
+            label={loading ? "Registering..." : "Continue to Onboarding"}
             onPress={handleSubmit}
-            disabled={loading}
+            disabled={loading || !formData.name.trim() || !emailIsValid || !passwordIsValid || !passwordsMatch || !formData.acceptedTerms}
             icon={<ChevronRight size={18} color={C.green} />}
           />
 

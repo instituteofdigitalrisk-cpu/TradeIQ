@@ -8,11 +8,8 @@ export type RegistrationFormData = {
   studentId: string;
   name: string;
   email: string;
-  phone: string;
-  college: string;
-  degree: string;
-  passoutYear: string;
   password: string;
+  confirmPassword: string;
   acceptedTerms: boolean;
 };
 
