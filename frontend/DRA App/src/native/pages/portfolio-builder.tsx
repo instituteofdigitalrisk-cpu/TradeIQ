@@ -527,21 +527,7 @@ export function PortfolioBuilder({ userData, onSubmitSuccess }: { userData: User
 
         <View style={{ height: 1, backgroundColor: C.border }} />
 
-        <View style={{ gap: 6 }}>
-          <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
-            <Text selectable style={{ color: C.text2, fontSize: 11, textTransform: "uppercase" }}>This stock's allocation</Text>
-            <Text selectable style={{ color: exceedsSingleCap ? C.red : C.green, fontFamily: font.mono, fontSize: 15 }}>{allocationPercent}%</Text>
-          </View>
-          <Text selectable style={{ color: C.text2, fontSize: 11, lineHeight: 15 }}>
-            A single position cannot exceed {MAX_SINGLE_ALLOCATION}% of total capital (${capitalAmount.toLocaleString()}).
-          </Text>
-          <View style={{ height: 14, borderRadius: 14, overflow: "hidden", backgroundColor: "rgba(255,255,255,0.06)" }}>
-            <View style={{ width: `${Math.min(allocationPercent, 100)}%`, height: "100%", backgroundColor: exceedsSingleCap ? C.red : C.green }} />
-          </View>
-          <Text selectable style={{ color: exceedsSingleCap ? C.red : hasCurrentStock ? C.green : C.text2, fontFamily: font.medium, fontSize: 12 }}>
-            {statusText}
-          </Text>
-        </View>
+       
 
       </GlassCard>
 
