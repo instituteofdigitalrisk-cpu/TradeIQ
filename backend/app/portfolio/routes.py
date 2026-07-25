@@ -37,6 +37,18 @@ def _latest_thesis_trade_for_holding(user_id: str, ticker: str):
     ).order_by(TradeLog.created_at.desc()).first()
 
 
+def _active_allocation_percent(user_id: str) -> float:
+    """Sum the latest BUY allocation for each active holding."""
+    total = 0.0
+    for holding in Holding.query.filter_by(user_id=user_id).all():
+        if float(holding.quantity or 0) <= 0:
+            continue
+        latest_trade = _latest_trade_for_holding(user_id, holding.stock_ticker)
+        if latest_trade and latest_trade.trade_type == "BUY":
+            total += float(latest_trade.allocation_percent or 0)
+    return round(total, 2)
+
+
 def _holding_payload(holding: Holding):
     latest_trade = _latest_trade_for_holding(holding.user_id, holding.stock_ticker)
     thesis_trade = _latest_thesis_trade_for_holding(holding.user_id, holding.stock_ticker)
@@ -192,6 +204,10 @@ def execute_trade():
         allocation_pct = round((amount_invested / total_capital) * 100, 2)
         if allocation_pct > 30:
             return jsonify({"error": "A single BUY position cannot exceed 30% of total capital"}), 400
+        if _active_allocation_percent(user_id) + allocation_pct > 100:
+            return jsonify({
+                "error": "Your portfolio allocation exceeded 100%. You cannot add further."
+            }), 400
         if amount_invested > cash_balance:
             return jsonify({"error": "Insufficient cash balance for this BUY trade"}), 400
 
@@ -345,6 +361,7 @@ def get_summary(user_id):
         logger.error(f"Failed to flush holding updates for user {user_id} summary: {exc}")
 
     total_market_value = sum(float(h.market_value or 0) for h in holdings)
+    allocated_percent = _active_allocation_percent(user_id)
     total_pnl          = sum(float(h.profit_loss  or 0) for h in holdings)
     total_portfolio    = round(total_market_value + float(portfolio.cash_balance), 4)
     total_return_pct   = round(
@@ -356,6 +373,7 @@ def get_summary(user_id):
         "total_capital":     float(portfolio.total_capital),
         "cash_balance":      float(portfolio.cash_balance),
         "holdings_value":    round(total_market_value, 4),
+        "allocated_percent": allocated_percent,
         "total_portfolio":   total_portfolio,
         "total_pnl":         round(total_pnl, 4),
         "total_return_pct":  total_return_pct,

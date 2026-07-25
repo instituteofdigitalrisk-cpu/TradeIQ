@@ -53,6 +53,18 @@ def _holding_payload(holding) -> dict:
     return payload
 
 
+def _active_allocation_percent(user_id: str) -> float:
+    """Sum the latest BUY allocation for each active holding."""
+    total = 0.0
+    for holding in portfolio_repository.find_active_holdings(user_id):
+        if float(holding.quantity or 0) <= 0:
+            continue
+        latest_trade = portfolio_repository.find_latest_trade(user_id, holding.stock_ticker)
+        if latest_trade and latest_trade.trade_type == "BUY":
+            total += float(latest_trade.allocation_percent or 0)
+    return round(total, 2)
+
+
 def _sync_holding_after_trade(user_id: str, trade, holding=None) -> None:
     """
     Upsert holdings table after a BUY or SELL trade.
@@ -202,6 +214,11 @@ def execute_trade(user_id: str, data: dict) -> dict:
         allocation_pct = round((amount_invested / total_capital) * 100, 2)
         if allocation_pct > 30:
             raise PortfolioError("A single BUY position cannot exceed 30% of total capital", 400)
+        if _active_allocation_percent(user_id) + allocation_pct > 100:
+            raise PortfolioError(
+                "Your portfolio allocation exceeded 100%. You cannot add further.",
+                400,
+            )
         if amount_invested > cash_balance:
             raise PortfolioError("Insufficient cash balance for this BUY trade", 400)
 
@@ -339,6 +356,7 @@ def get_summary(user_id: str) -> dict:
     portfolio_repository.flush()
 
     total_market_value = sum(float(h.market_value or 0) for h in holdings)
+    allocated_percent = _active_allocation_percent(user_id)
     total_pnl = sum(float(h.profit_loss or 0) for h in holdings)
     total_portfolio = round(total_market_value + float(portfolio.cash_balance), 4)
     total_return_pct = round(
@@ -350,6 +368,7 @@ def get_summary(user_id: str) -> dict:
         "total_capital": float(portfolio.total_capital),
         "cash_balance": float(portfolio.cash_balance),
         "holdings_value": round(total_market_value, 4),
+        "allocated_percent": allocated_percent,
         "total_portfolio": total_portfolio,
         "total_pnl": round(total_pnl, 4),
         "total_return_pct": total_return_pct,

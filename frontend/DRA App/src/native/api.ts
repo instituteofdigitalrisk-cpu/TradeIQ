@@ -210,6 +210,7 @@ export type PortfolioSummary = {
   total_capital: number;
   cash_balance: number;
   holdings_value: number;
+  allocated_percent?: number;
   total_portfolio: number;
   total_pnl: number;
   total_return_pct: number;

@@ -12,6 +12,8 @@ import { AppButton, Field, GlassCard, Pill, SectionTitle } from "../components/u
 
 const tagOptions = ["Earnings Play", "Macro Tailwind", "Valuation Gap", "Momentum", "Risk Hedge", "(optional)"];
 const MAX_SINGLE_ALLOCATION = 30;
+const MAX_TOTAL_ALLOCATION = 100;
+const TOTAL_ALLOCATION_ERROR = "Your portfolio allocation exceeded 100%. You cannot add further.";
 const portfolioGuide = [
   {
     title: "Step 1: Search a stock",
@@ -271,7 +273,13 @@ export function PortfolioBuilder({ userData, onSubmitSuccess }: { userData: User
     portfolio.getSummary(id)
       .then((s) => {
         setCapitalAmount(s.total_capital);
-        setCommittedPercent(s.total_capital > 0 ? Math.round((s.holdings_value / s.total_capital) * 1000) / 10 : 0);
+        setCommittedPercent(
+          typeof s.allocated_percent === "number"
+            ? s.allocated_percent
+            : s.total_capital > 0
+              ? Math.round((s.holdings_value / s.total_capital) * 1000) / 10
+              : 0,
+        );
         setCurrentPosition((prev) => ({
           ...prev,
           amountInvested: `$${Math.round((s.total_capital * Number(prev.allocationPercent || 0)) / 100).toLocaleString()}`,
@@ -334,6 +342,9 @@ export function PortfolioBuilder({ userData, onSubmitSuccess }: { userData: User
   const hasCurrentStock = Boolean(currentPosition.stockTicker.trim());
   const allocationPercent = Number(currentPosition.allocationPercent || 0);
   const exceedsSingleCap = hasCurrentStock && allocationPercent > MAX_SINGLE_ALLOCATION;
+  const isBuy = currentPosition.tradeType === "Buy";
+  const exceedsTotalCap = isBuy && hasCurrentStock && committedPercent + allocationPercent > MAX_TOTAL_ALLOCATION;
+  const allocationLimitReached = isBuy && (committedPercent >= MAX_TOTAL_ALLOCATION || exceedsTotalCap);
 
   const notify = (type: "success" | "error" | "info" | "warning", text1: string, text2: string) => {
     Toast.show({ type, text1, text2 });
@@ -387,6 +398,11 @@ export function PortfolioBuilder({ userData, onSubmitSuccess }: { userData: User
       notify("warning", "Allocation too high", message);
       return;
     }
+    if (exceedsTotalCap) {
+      setDraftStatus(TOTAL_ALLOCATION_ERROR);
+      notify("error", "Allocation limit reached", TOTAL_ALLOCATION_ERROR);
+      return;
+    }
     try {
       const { item } = await watchlist.add(tradeFieldsFromCurrent());
       const message = `${item.stock_ticker} saved to your Watchlist. Track it there, or come back anytime to submit it.`;
@@ -414,6 +430,11 @@ export function PortfolioBuilder({ userData, onSubmitSuccess }: { userData: User
       const message = `A single position cannot exceed ${MAX_SINGLE_ALLOCATION}% of total capital. Currently set to ${allocationPercent}%.`;
       setDraftStatus(message);
       notify("warning", "Allocation too high", message);
+      return;
+    }
+    if (exceedsTotalCap) {
+      setDraftStatus(TOTAL_ALLOCATION_ERROR);
+      notify("error", "Allocation limit reached", TOTAL_ALLOCATION_ERROR);
       return;
     }
     setDraftStatus("Submitting to server...");
@@ -515,14 +536,19 @@ export function PortfolioBuilder({ userData, onSubmitSuccess }: { userData: User
         <View style={{ gap: 6 }}>
           <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
             <Text selectable style={{ color: C.text2, fontSize: 11, textTransform: "uppercase" }}>Committed across active holdings</Text>
-            <Text selectable style={{ color: C.purple, fontFamily: font.mono, fontSize: 25 }}>{committedPercent}%</Text>
+            <Text selectable style={{ color: committedPercent > MAX_TOTAL_ALLOCATION ? C.red : C.purple, fontFamily: font.mono, fontSize: 25 }}>{committedPercent}%</Text>
           </View>
           <View style={{ height: 14, borderRadius: 14, overflow: "hidden", backgroundColor: "rgba(255,255,255,0.06)" }}>
-            <View style={{ width: `${Math.min(committedPercent, 100)}%`, height: "100%", backgroundColor: C.purple }} />
+            <View style={{ width: `${Math.min(committedPercent, 100)}%`, height: "100%", backgroundColor: committedPercent > MAX_TOTAL_ALLOCATION ? C.red : C.purple }} />
           </View>   
           <Text selectable style={{ color: C.text2, fontSize: 11, lineHeight: 15 }}>
             Rises only once a stock is Submitted — Watchlist entries don't count.
           </Text>
+          {committedPercent > MAX_TOTAL_ALLOCATION ? (
+            <Text selectable style={{ color: C.red, fontFamily: font.medium, fontSize: 12, lineHeight: 17 }}>
+              {TOTAL_ALLOCATION_ERROR}
+            </Text>
+          ) : null}
         </View>
 
         <View style={{ height: 1, backgroundColor: C.border }} />
@@ -586,6 +612,11 @@ export function PortfolioBuilder({ userData, onSubmitSuccess }: { userData: User
               {allocationPercent}% exceeds the {MAX_SINGLE_ALLOCATION}% single-position limit. Lower it before saving or submitting.
             </Text>
           ) : null}
+          {exceedsTotalCap ? (
+            <Text selectable style={{ color: C.red, fontFamily: font.medium, fontSize: 11, lineHeight: 16 }}>
+              {TOTAL_ALLOCATION_ERROR}
+            </Text>
+          ) : null}
           <View style={{ flexDirection: "row", gap: 10 }}>
             <View style={{ flex: 1 }}>
               <Field label="Buy Price" value={currentPosition.buyPrice} onChangeText={(value) => updateCurrentPosition("buyPrice", value)} placeholder="$189.50" keyboardType="decimal-pad" />
@@ -641,7 +672,7 @@ export function PortfolioBuilder({ userData, onSubmitSuccess }: { userData: User
             ...(guideVisible && guideIndex === 2 ? { boxShadow: `0 0 0 4px ${portfolioGuide[2].accent}22, 0 0 22px ${portfolioGuide[2].accent}55` } : null),
           }}
         >
-          <AppButton label="Save to Watchlist" onPress={() => void saveToWatchlist()} variant="ghost" disabled={!hasCurrentStock || exceedsSingleCap} />
+          <AppButton label="Save to Watchlist" onPress={() => void saveToWatchlist()} variant="ghost" disabled={!hasCurrentStock || exceedsSingleCap || allocationLimitReached} />
         </View>
         <View
           style={{
@@ -652,7 +683,7 @@ export function PortfolioBuilder({ userData, onSubmitSuccess }: { userData: User
         >
           <AppButton label="Submit" onPress={() => {
             void submitToBackend();
-          }} disabled={!hasCurrentStock || exceedsSingleCap} />
+          }} disabled={!hasCurrentStock || exceedsSingleCap || allocationLimitReached} />
         </View>
       </View>
     </View>
