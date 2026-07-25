@@ -2,9 +2,12 @@
 const DEFAULT_API_BASE = "https://tradeiq-gtkc.onrender.com";
 const configuredApiBase = process.env?.EXPO_PUBLIC_API_URL || "";
 const ENV_API_BASE = (configuredApiBase || DEFAULT_API_BASE).replace(/\/+$/, "");
+const browserHostname =
+  typeof window !== "undefined" && typeof window.location?.hostname === "string"
+    ? window.location.hostname
+    : "";
 const isLocalWeb =
-  typeof window !== "undefined" &&
-  ["localhost", "127.0.0.1"].includes(window.location.hostname);
+  ["localhost", "127.0.0.1"].includes(browserHostname);
 const API_BASES = isLocalWeb && !configuredApiBase ? ["http://localhost:5000"] : [ENV_API_BASE];
 console.log("API BASES =", API_BASES);
 
