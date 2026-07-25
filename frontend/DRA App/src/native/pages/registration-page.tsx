@@ -210,7 +210,7 @@ export function RegistrationPage({
           <CheckboxRow
             checked={formData.acceptedTerms}
             onToggle={() => handleChange("acceptedTerms", !formData.acceptedTerms)}
-            label="I agree to the Terms of Service and Competition Rules."
+            label="I confirm that I am 18 years of age or older. By registering, I agree to TradeIQ terms of use and confirm the information I have provided is accurate."
             error={errors.terms}
           />
 

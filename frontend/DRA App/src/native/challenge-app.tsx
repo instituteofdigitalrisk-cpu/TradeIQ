@@ -14,6 +14,7 @@ import { OnboardingPage } from "./pages/onboarding-page";
 import { PaymentPage } from "./pages/payment-page";
 import { MainApp } from "./pages/main-app";
 import { SignInPage } from "./pages/sign-in-page";
+import { ResetPasswordPage } from "./pages/reset-password-page";
 
 function ThemedToast(props: any, accent: string) {
   const { text1, text2 } = props;
@@ -98,6 +99,19 @@ export default function ChallengeApp() {
       <View style={{ flex: 1, alignItems: "center", justifyContent: "center", backgroundColor: "#060810" }}>
         <ActivityIndicator color="#31E6FF" />
       </View>
+    );
+  }
+
+  const isResetPasswordRoute =
+    typeof window !== "undefined" && window.location.pathname === "/reset-password";
+  if (isResetPasswordRoute) {
+    return withToast(
+      <ResetPasswordPage
+        onComplete={() => {
+          window.history.replaceState({}, "", "/");
+          setFlow("signin");
+        }}
+      />
     );
   }
 
