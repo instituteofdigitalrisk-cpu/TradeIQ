@@ -157,6 +157,7 @@ def create_app() -> Flask:
     # CORS configuration
     default_origins = ",".join([
         "https://tradeiq-frontend-kl94.onrender.com",
+        "https://tradeiq-admin-panel.onrender.com",
         "http://localhost:5000",
         "http://localhost:5173",
         "http://localhost:5174",
