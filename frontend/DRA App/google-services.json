@@ -74,6 +74,14 @@
           }
         },
         {
+          "client_id": "1013397127798-tqliq1m7jbah6j7miko0s9vgjfk1784e.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.tradeiq.draapp",
+            "certificate_hash": "9abdaeadd36e235147b2ad486a6abb21b410d490"
+          }
+        },
+        {
           "client_id": "1013397127798-nb34o20mn4qd26opc8etp7mth7aqqe7i.apps.googleusercontent.com",
           "client_type": 3
         }

@@ -26,9 +26,11 @@
       "@react-native-google-signin/google-signin"
     ],
     "extra": {
+      "router": {},
       "eas": {
-        "projectId": "67d275a9-b60c-4965-80a6-4dbcef6ff429"
+        "projectId": "280ff0f8-2914-4170-ada6-c483dc85ab54"
       }
-    }
+    },
+    "owner": "devarora13"
   }
 }
