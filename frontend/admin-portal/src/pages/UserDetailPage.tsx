@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { Fragment, useCallback, useEffect, useState } from "react";
 import { admin } from "../api";
 import { saveLoggedInUser } from "../App";
 import type { Role, UserDetail } from "../types";
@@ -35,6 +35,7 @@ export default function UserDetailPage({ userId, onBack }: Props) {
   const [detail, setDetail] = useState<UserDetail | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [expandedTradeId, setExpandedTradeId] = useState<string | null>(null);
 
   // Edit state (profile fields only)
   const [edit, setEdit] = useState(false);
@@ -334,6 +335,7 @@ export default function UserDetailPage({ userId, onBack }: Props) {
         <table>
           <thead>
             <tr>
+              <th>Thesis</th>
               <th>Date</th>
               <th>Ticker</th>
               <th>Type</th>
@@ -346,48 +348,62 @@ export default function UserDetailPage({ userId, onBack }: Props) {
           </thead>
           <tbody>
             {detail.trades.map((t) => (
-              <tr key={t.trade_id}>
-                <td>{t.created_at ? t.created_at.slice(0, 10) : "—"}</td>
-                <td className="mono">{t.stock_ticker ?? "—"}</td>
-                <td>
-                  <span style={{ color: t.trade_type === "BUY" ? "var(--green)" : "var(--red)" }}>
-                    {t.trade_type}
-                  </span>
-                </td>
-                <td>{t.quantity ?? "—"}</td>
-                <td>{fmtMoney(t.buy_price)}</td>
-                <td>{fmtMoney(t.amount_invested)}</td>
-                <td>{t.sector ?? "—"}</td>
-                <td>{fmtNum(t.allocation_percent)}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      )}
-
-      <div className="section-label">Watchlist ({detail.watchlist.length})</div>
-      {detail.watchlist.length === 0 ? (
-        <div className="empty">Empty watchlist.</div>
-      ) : (
-        <table>
-          <thead>
-            <tr>
-              <th>Ticker</th>
-              <th>Name</th>
-              <th>Type</th>
-              <th>Qty</th>
-              <th>Price</th>
-            </tr>
-          </thead>
-          <tbody>
-            {detail.watchlist.map((w) => (
-              <tr key={w.watchlist_id}>
-                <td className="mono">{w.stock_ticker}</td>
-                <td>{w.stock_name ?? "—"}</td>
-                <td>{w.trade_type}</td>
-                <td>{w.quantity}</td>
-                <td>{fmtMoney(w.buy_price)}</td>
-              </tr>
+              <Fragment key={t.trade_id}>
+                <tr>
+                  <td>
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setExpandedTradeId((current) =>
+                          current === t.trade_id ? null : t.trade_id,
+                        )
+                      }
+                      style={{ padding: "4px 10px", minWidth: 96 }}
+                    >
+                      {expandedTradeId === t.trade_id ? "Hide" : "View"}
+                    </button>
+                  </td>
+                  <td>{t.created_at ? t.created_at.slice(0, 10) : "—"}</td>
+                  <td className="mono">{t.stock_ticker ?? "—"}</td>
+                  <td>
+                    <span style={{ color: t.trade_type === "BUY" ? "var(--green)" : "var(--red)" }}>
+                      {t.trade_type}
+                    </span>
+                  </td>
+                  <td>{t.quantity ?? "—"}</td>
+                  <td>{fmtMoney(t.buy_price)}</td>
+                  <td>{fmtMoney(t.amount_invested)}</td>
+                  <td>{t.sector ?? "—"}</td>
+                  <td>{fmtNum(t.allocation_percent)}</td>
+                </tr>
+                {expandedTradeId === t.trade_id && (
+                  <tr>
+                    <td colSpan={9} style={{ paddingTop: 0 }}>
+                      <div
+                        style={{
+                          padding: "12px 14px",
+                          borderTop: "1px solid rgba(255,255,255,0.08)",
+                          color: "var(--text)",
+                          lineHeight: 1.55,
+                        }}
+                      >
+                        <div
+                          style={{
+                            marginBottom: 6,
+                            color: "var(--muted)",
+                            fontSize: 12,
+                            textTransform: "uppercase",
+                            letterSpacing: 0.08,
+                          }}
+                        >
+                          Thesis
+                        </div>
+                        <div style={{ whiteSpace: "normal" }}>{t.thesis || "No thesis recorded."}</div>
+                      </div>
+                    </td>
+                  </tr>
+                )}
+              </Fragment>
             ))}
           </tbody>
         </table>
@@ -421,34 +437,6 @@ export default function UserDetailPage({ userId, onBack }: Props) {
                 <td>{fmtNum(s.strategy_score)}</td>
                 <td>{fmtNum(s.final_score)}</td>
                 <td>{s.rank_position ?? "—"}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      )}
-
-      <div className="section-label">Theses ({detail.theses.length})</div>
-      {detail.theses.length === 0 ? (
-        <div className="empty">No theses.</div>
-      ) : (
-        <table>
-          <thead>
-            <tr>
-              <th>Style</th>
-              <th>Risk level</th>
-              <th>Confidence</th>
-              <th>Reason</th>
-              <th>Score</th>
-            </tr>
-          </thead>
-          <tbody>
-            {detail.theses.map((t) => (
-              <tr key={t.thesis_id}>
-                <td>{t.investment_style ?? "—"}</td>
-                <td>{t.risk_level ?? "—"}</td>
-                <td>{fmtNum(t.confidence_score)}</td>
-                <td style={{ maxWidth: 360, whiteSpace: "normal" }}>{t.reason_text ?? "—"}</td>
-                <td>{t.scores ? fmtNum(t.scores.final_score) : "—"}</td>
               </tr>
             ))}
           </tbody>

@@ -69,6 +69,9 @@ class PasswordReset(db.Model):
 
 class PortfolioSetup(db.Model):
     __tablename__ = "portfolio_setup"
+    __table_args__ = (
+        db.UniqueConstraint("user_id", name="uq_portfolio_user"),
+    )
 
     portfolio_id       = db.Column(db.Integer,     primary_key=True, autoincrement=True)
     user_id            = db.Column(db.String(20),  db.ForeignKey("users.user_id", ondelete="CASCADE"), nullable=False)
@@ -169,9 +172,8 @@ class Holding(db.Model):
             "profit_loss":   float(self.profit_loss or 0),
         }
 
-
 # ─────────────────────────────────────────
-# investment_thesis
+# watchlist
 # ─────────────────────────────────────────
 
 class Watchlist(db.Model):
@@ -219,6 +221,9 @@ class Watchlist(db.Model):
             "updated_at": str(self.updated_at),
         }
 
+# ─────────────────────────────────────────
+# investment_thesis
+# ─────────────────────────────────────────
 
 class InvestmentThesis(db.Model):
     __tablename__ = "investment_thesis"

@@ -55,6 +55,7 @@ def seeded(admin_app):
             stock_name="Apple", sector="Technology", trade_type="BUY",
             amount_invested=4000, quantity=10, buy_price=400,
             current_sell_price=200, allocation_percent=40,
+            thesis="This thesis came from the trade record.",
         )
     )
     db.session.add(
@@ -162,7 +163,8 @@ def test_user_detail(client, seeded):
     assert len(data["trades"]) == 1
     assert len(data["weekly_scores"]) == 1
     assert data["risk_metrics"]["sharpe_ratio"] == 1.2
-    assert data["theses"] == []
+    assert len(data["theses"]) == 1
+    assert data["theses"][0]["reason_text"] == "This thesis came from the trade record."
 
     res = client.get("/admin/users/NOPE", headers=headers)
     assert res.status_code == 404

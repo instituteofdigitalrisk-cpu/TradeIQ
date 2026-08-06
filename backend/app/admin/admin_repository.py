@@ -208,11 +208,39 @@ def user_detail(user_id):
     watchlist = Watchlist.query.filter_by(user_id=user_id).order_by(Watchlist.created_at.desc()).all()
     weekly_scores = WeeklyScore.query.filter_by(user_id=user_id).order_by(WeeklyScore.week_number.desc()).all()
     risk = RiskMetrics.query.filter_by(user_id=user_id).first()
-    theses = (
+    thesis_rows = (
         InvestmentThesis.query.filter_by(user_id=user_id)
         .order_by(InvestmentThesis.created_at.desc())
         .all()
     )
+    trade_theses = [
+        {
+            "thesis_id": f"trade-{trade.trade_id}",
+            "trade_id": trade.trade_id,
+            "investment_style": None,
+            "risk_level": None,
+            "confidence_score": None,
+            "reason_text": trade.thesis,
+            "created_at": str(trade.created_at) if trade.created_at else None,
+            "scores": None,
+        }
+        for trade in trades
+        if (trade.thesis or "").strip()
+    ]
+    thesis_payloads = [
+        {
+            "thesis_id": t.thesis_id,
+            "trade_id": t.trade_id,
+            "investment_style": t.investment_style,
+            "risk_level": t.risk_level,
+            "confidence_score": t.confidence_score,
+            "reason_text": t.reason_text,
+            "created_at": str(t.created_at) if t.created_at else None,
+            "scores": t.scores.to_dict() if t.scores else None,
+        }
+        for t in thesis_rows
+    ]
+    thesis_payloads.extend(trade_theses)
 
     holdings_value = sum(
         float(h.market_value or 0) for h in holdings if float(h.quantity or 0) > 0
@@ -227,19 +255,7 @@ def user_detail(user_id):
         "watchlist": [w.to_dict() for w in watchlist],
         "weekly_scores": [s.to_dict() for s in weekly_scores],
         "risk_metrics": risk.to_dict() if risk else None,
-        "theses": [
-            {
-                "thesis_id": t.thesis_id,
-                "trade_id": t.trade_id,
-                "investment_style": t.investment_style,
-                "risk_level": t.risk_level,
-                "confidence_score": t.confidence_score,
-                "reason_text": t.reason_text,
-                "created_at": str(t.created_at) if t.created_at else None,
-                "scores": t.scores.to_dict() if t.scores else None,
-            }
-            for t in theses
-        ],
+        "theses": thesis_payloads,
     }
 
 
