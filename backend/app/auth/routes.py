@@ -8,6 +8,8 @@ from datetime import date, datetime, timezone, timedelta
 from functools import lru_cache
 from html import escape
 
+from pymysql import IntegrityError
+
 from flask import Blueprint, jsonify, request
 from flask_jwt_extended import create_access_token, decode_token
 import jwt
@@ -85,6 +87,10 @@ def _ensure_default_portfolio(user_id: str) -> None:
             cash_balance=10000.00,
         )
     )
+    try:
+        db.session.flush()
+    except IntegrityError:
+        db.session.rollback()  # already exists, nothing to do
 
 # ─────────────────────────────────────────
 # Forgot password — OTP via email

@@ -157,7 +157,10 @@ def create_app() -> Flask:
     # CORS configuration
     default_origins = ",".join([
         "https://tradeiq-frontend-kl94.onrender.com",
+        "https://tradeiq-admin-panel.onrender.com",
         "http://localhost:5000",
+        "http://localhost:5173",
+        "http://localhost:5174",
         "http://localhost:8081",
         "http://localhost:8082",
         "http://localhost:19006",
@@ -214,38 +217,45 @@ def create_app() -> Flask:
     from app.market.routes import market_bp
     from app.portfolio.routes import portfolio_bp
     from app.analytics.routes import analytics_bp
+    from app.admin.routes import admin_bp
     from app import models  # noqa: F401 - register all SQLAlchemy models
 
     app.register_blueprint(auth_bp)
     app.register_blueprint(market_bp)
     app.register_blueprint(portfolio_bp)
     app.register_blueprint(analytics_bp)
+    app.register_blueprint(admin_bp)
 
     # Create missing tables (including watchlist) on startup. Existing tables
     # and data are preserved. Add the small set of columns required by the
     # current registration/payment flow when upgrading an older database.
+    # Set TRADEIQ_SKIP_STARTUP_DDL=true to bypass (used by the test suite so
+    # tests never touch the real database).
     with app.app_context():
-        db.create_all()
-        try:
-            user_columns = {
-                column["name"] for column in inspect(db.engine).get_columns("users")
-            }
-            missing_user_columns = {
-                "is_paid": "BOOLEAN NOT NULL DEFAULT FALSE",
-                "registration_status": "VARCHAR(30) NOT NULL DEFAULT 'pending'",
-            }
-            for column_name, column_definition in missing_user_columns.items():
-                if column_name not in user_columns:
-                    db.session.execute(
-                        db.text(
-                            f"ALTER TABLE users ADD COLUMN {column_name} "
-                            f"{column_definition}"
+        if os.getenv("TRADEIQ_SKIP_STARTUP_DDL", "").lower() in ("1", "true", "yes"):
+            app.logger.info("Skipping startup DDL (TRADEIQ_SKIP_STARTUP_DDL=true).")
+        else:
+            db.create_all()
+            try:
+                user_columns = {
+                    column["name"] for column in inspect(db.engine).get_columns("users")
+                }
+                missing_user_columns = {
+                    "is_paid": "BOOLEAN NOT NULL DEFAULT FALSE",
+                    "registration_status": "VARCHAR(30) NOT NULL DEFAULT 'pending'",
+                }
+                for column_name, column_definition in missing_user_columns.items():
+                    if column_name not in user_columns:
+                        db.session.execute(
+                            db.text(
+                                f"ALTER TABLE users ADD COLUMN {column_name} "
+                                f"{column_definition}"
+                            )
                         )
-                    )
-            db.session.commit()
-        except Exception as exc:
-            db.session.rollback()
-            logger.exception("Automatic users table migration failed: %s", exc)
+                db.session.commit()
+            except Exception as exc:
+                db.session.rollback()
+                logger.exception("Automatic users table migration failed: %s", exc)
 
     # ------------------------------------------------------------------
     # Root and health check endpoints

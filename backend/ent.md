@@ -1,9 +1,0 @@
-FLASK_ENV=development
-SECRET_KEY=mysecretkey123
-JWT_SECRET_KEY=jwtkey456
-DB_HOST=mysql
-DB_PORT=3306
-DB_NAME=tradeiq
-DB_USER=root
-DB_PASSWORD=
-DB_SSL=false

@@ -36,12 +36,17 @@ CREATE TABLE IF NOT EXISTS password_resets (
 CREATE TABLE IF NOT EXISTS portfolio_setup (
     portfolio_id INT AUTO_INCREMENT PRIMARY KEY,
     user_id VARCHAR(20) NOT NULL,
+
+    CONSTRAINT uq_portfolio_user
+        UNIQUE(user_id),
+
     total_capital DECIMAL(15,2) DEFAULT 10000.00,
     cash_balance DECIMAL(15,2) DEFAULT 10000.00,
     risk_appetite VARCHAR(20),
     investment_horizon VARCHAR(50),
     competition_round VARCHAR(50),
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+
     CONSTRAINT fk_portfolio_user
         FOREIGN KEY (user_id)
         REFERENCES users(user_id)
@@ -182,6 +187,10 @@ CREATE TABLE IF NOT EXISTS weekly_scores (
     final_score DECIMAL(5,2),
     rank_position INT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT uq_weekly_scores_user_week
+    UNIQUE(user_id, week_number),
+
     FOREIGN KEY (user_id)
         REFERENCES users(user_id)
         ON DELETE CASCADE
@@ -200,6 +209,10 @@ CREATE TABLE IF NOT EXISTS leaderboard (
     final_score DECIMAL(5,2),
     rank_position INT,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT uq_leaderboard_user_week
+    UNIQUE(user_id, week_number),
+
     FOREIGN KEY (user_id)
         REFERENCES users(user_id)
         ON DELETE CASCADE
