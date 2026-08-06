@@ -271,6 +271,10 @@ def execute_trade():
 @portfolio_bp.get("/holdings/<string:user_id>")
 @jwt_required()
 def get_holdings(user_id):
+    current_user_id = get_jwt_identity()
+    if current_user_id != user_id:
+        return jsonify({"error": "Not authorized"}), 403
+
     holdings = [
         holding
         for holding in Holding.query.filter_by(user_id=user_id).all()
@@ -332,6 +336,10 @@ def delete_holding(ticker):
 @portfolio_bp.get("/summary/<string:user_id>")
 @jwt_required()
 def get_summary(user_id):
+    current_user_id = get_jwt_identity()
+    if current_user_id != user_id:
+        return jsonify({"error": "Not authorized"}), 403
+    
     portfolio = PortfolioSetup.query.filter_by(user_id=user_id).first()
     if not portfolio:
         return jsonify({"error": "Portfolio not found"}), 404
