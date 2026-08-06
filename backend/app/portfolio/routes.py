@@ -7,7 +7,7 @@ from flask_jwt_extended import jwt_required, get_jwt_identity
 from sqlalchemy.exc import IntegrityError
 
 from app.extensions import db
-from app.models import User, PortfolioSetup, TradeLog, Holding, Watchlist
+from app.models import User, PortfolioSetup, TradeLog, Holding, Watchlist, InvestmentThesis
 from app.market.pipeline import YahooFinancePipeline
 
 logger = logging.getLogger(__name__)
@@ -250,6 +250,14 @@ def execute_trade():
 
     try:
         db.session.add(trade)
+        # Keep the normalized investment_thesis table in sync with the
+        # denormalized thesis field used by the portfolio/scoring flows.
+        if trade.thesis and trade.thesis.strip():
+            db.session.add(InvestmentThesis(
+                trade_id=trade.trade_id,
+                user_id=user_id,
+                reason_text=trade.thesis.strip(),
+            ))
         _update_holding(user_id, trade)
         db.session.commit()
     except Exception as exc:

@@ -1206,6 +1206,27 @@ def compute_and_persist_scores_service(user_id: str, week_number: int):
     if error:
         raise AnalyticsError("Failed to compute scores", 500)
 
+    # Backfill and persist normalized thesis records for existing trades too.
+    # This makes the normalized tables reliable even for trades created before
+    # the write-through logic was added to the trade endpoint.
+    trades = repo.find_trades_by_user(user_id)
+    holdings = repo.find_holdings_by_user(user_id)
+    active_trades = _active_trades(holdings, trades)
+    for trade in active_trades:
+        if not trade.thesis or not trade.thesis.strip():
+            continue
+        components = _score_thesis_texts([trade])
+        normalized_total = round(
+            (sum(components.values()) / 5) * 20,
+            2,
+        )
+        repo.upsert_thesis_score(
+            trade,
+            components,
+            normalized_total,
+            "Persisted from the TradeIQ thesis rubric.",
+        )
+
     repo.upsert_weekly_score(user_id, week_number, payload["scores"])
     repo.save()
 
