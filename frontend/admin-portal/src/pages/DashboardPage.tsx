@@ -45,10 +45,12 @@ function PaymentDonut({ totals }: { totals: StatsOverview["totals"] }) {
   const total = totals.total_payments ?? paid + pending;
   const radius = 43; const circumference = 2 * Math.PI * radius;
   const paidLength = total ? (paid / total) * circumference : 0;
+  const pendingLength = total ? (pending / total) * circumference : 0;
   return <div className="payment-chart">
     <svg viewBox="0 0 120 120" aria-label="Payment status chart">
       <circle cx="60" cy="60" r={radius} className="donut-track" />
       <circle cx="60" cy="60" r={radius} className="donut-paid" strokeDasharray={`${paidLength} ${circumference - paidLength}`} />
+      <circle cx="60" cy="60" r={radius} className="donut-pending" strokeDasharray={`${pendingLength} ${circumference - pendingLength}`} strokeDashoffset={-paidLength} />
       <text x="60" y="58" textAnchor="middle" className="donut-number">{total}</text><text x="60" y="72" textAnchor="middle" className="donut-caption">Total</text>
     </svg>
     <div className="payment-legend">
