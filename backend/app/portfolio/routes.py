@@ -250,20 +250,23 @@ def execute_trade():
 
     try:
         db.session.add(trade)
-        # Keep the normalized investment_thesis table in sync with the
-        # denormalized thesis field used by the portfolio/scoring flows.
-        if trade.thesis and trade.thesis.strip():
-            db.session.add(InvestmentThesis(
-                trade_id=trade.trade_id,
-                user_id=user_id,
-                reason_text=trade.thesis.strip(),
-            ))
         _update_holding(user_id, trade)
         db.session.commit()
     except Exception as exc:
         db.session.rollback()
         logger.error(f"Failed to execute trade transaction for user {user_id}, ticker {ticker}: {exc}")
         return jsonify({"error": "Database error while executing trade. Please try again."}), 500
+
+    # The trade log is the source of truth for thesis submission. Mirror it to
+    # the optional normalized table after the trade is safely committed; a
+    # schema mismatch there must not roll back a valid trade submission.
+    if trade.thesis and trade.thesis.strip():
+        try:
+            db.session.add(InvestmentThesis(trade_id=trade.trade_id, user_id=user_id, reason_text=trade.thesis.strip()))
+            db.session.commit()
+        except Exception as exc:
+            db.session.rollback()
+            logger.warning("Could not mirror thesis %s to investment_thesis: %s", trade.trade_id, exc)
 
     return jsonify({
         "message":       "Trade executed",
@@ -352,29 +355,10 @@ def get_summary(user_id):
     if not portfolio:
         return jsonify({"error": "Portfolio not found"}), 404
 
+    # Summary is a read path. Use the last stored market values here instead
+    # of blocking every screen load on Yahoo Finance. Prices are refreshed
+    # during trade execution and by the market refresh jobs.
     holdings = Holding.query.filter_by(user_id=user_id).all()
-    for holding in holdings:
-        if float(holding.quantity or 0) <= 0:
-            continue
-        try:
-            live_price = pipeline.get_current_price(holding.stock_ticker)
-        except Exception as exc:
-            logger.warning(f"Error fetching live price for summary on ticker {holding.stock_ticker}: {exc}")
-            live_price = None
-
-        current_price = float(live_price or holding.current_price or holding.avg_buy_price or 0)
-        holding.current_price = round(current_price, 4)
-        holding.market_value = round(float(holding.quantity or 0) * current_price, 4)
-        holding.profit_loss = round(
-            (current_price - float(holding.avg_buy_price or 0)) * float(holding.quantity or 0),
-            4,
-        )
-
-    try:
-        db.session.flush()
-    except Exception as exc:
-        db.session.rollback()
-        logger.error(f"Failed to flush holding updates for user {user_id} summary: {exc}")
 
     total_market_value = sum(float(h.market_value or 0) for h in holdings)
     allocated_percent = _active_allocation_percent(user_id)

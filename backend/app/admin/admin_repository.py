@@ -22,7 +22,7 @@ from app.models import (
     CompetitionEnrollment,
     CRMNote,
 )
-from app.cache import cache_get, cache_set
+from app.cache import cache_get, cache_set, cache_delete
 
 
 # ─────────────────────────────────────────
@@ -414,16 +414,18 @@ def stats_overview():
         else 0.0
     )
     # Payment aggregates
-    total_payments = PaymentRecord.query.count()
+    payment_record_count = PaymentRecord.query.count()
     payments_amount = (
         PaymentRecord.query.with_entities(db.func.coalesce(db.func.sum(PaymentRecord.amount), 0)).scalar()
     )
-    payments_completed = (
-        PaymentRecord.query.filter(PaymentRecord.status.ilike("%completed%") | (PaymentRecord.status.ilike("%paid%"))).count()
-    )
-    payments_pending = (
-        PaymentRecord.query.filter(~(PaymentRecord.status.ilike("%completed%") | (PaymentRecord.status.ilike("%paid%")))).count()
-    )
+    normalized_status = db.func.lower(db.func.trim(PaymentRecord.status))
+    payments_completed = PaymentRecord.query.filter(normalized_status.in_(["paid", "completed", "complete", "success", "succeeded"])).count()
+    payment_records_pending = PaymentRecord.query.filter(normalized_status.in_(["pending", "created", "processing", "in progress"])).count()
+    pending_users = User.query.filter(User.is_paid == False).count()
+    payments_pending = max(payment_records_pending, pending_users)
+    payments_failed = PaymentRecord.query.filter(normalized_status.in_(["failed", "failure", "declined", "cancelled", "canceled"])).count()
+    payments_refunded = PaymentRecord.query.filter(normalized_status.in_(["refunded", "refund"])).count()
+    payments_pending_amount = PaymentRecord.query.filter(normalized_status.in_(["pending", "created", "processing", "in progress"])).with_entities(db.func.coalesce(db.func.sum(PaymentRecord.amount), 0)).scalar() or 0
 
     # Enrollment aggregates
     total_enrollments = CompetitionEnrollment.query.count()
@@ -449,10 +451,13 @@ def stats_overview():
             "total_trades": total_trades,
             "buy_volume": round(float(buy_volume or 0), 2),
             "sell_volume": round(float(sell_volume or 0), 2),
-            "total_payments": int(total_payments),
+            "total_payments": int(max(payment_record_count, payments_completed + payments_pending)),
             "payments_amount": round(float(payments_amount or 0), 2),
             "payments_completed": int(payments_completed),
             "payments_pending": int(payments_pending),
+            "payments_pending_amount": round(float(payments_pending_amount), 2),
+            "payments_failed": int(payments_failed),
+            "payments_refunded": int(payments_refunded),
             "total_enrollments": int(total_enrollments),
             "active_holdings": active_holdings,
             "portfolios": portfolios,
@@ -467,7 +472,7 @@ def stats_overview():
     }
     # Dashboard aggregates span several remote database queries. Keep them briefly
     # cached so every dashboard navigation does not repeat the full aggregation.
-    cache_set("admin:stats:overview", result, 30)
+    cache_set("admin:stats:overview", result, 120)
     return result
 
 

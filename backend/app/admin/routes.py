@@ -1,4 +1,5 @@
 from datetime import datetime
+import json
 
 from flask import Blueprint, jsonify, request, current_app
 import time
@@ -12,6 +13,7 @@ import uuid
 import csv
 from flask import send_file
 from app.extensions import db
+from app.cache import cache_delete
 from flask_jwt_extended import get_jwt_identity
 
 admin_bp = Blueprint("admin", __name__, url_prefix="/admin")
@@ -164,6 +166,7 @@ def update_user(user_id):
     user = repo.update_user(user_id, **fields)
     if not user:
         return jsonify({"error": "User not found"}), 404
+    cache_delete("admin:stats:overview")
 
     # Keep role changes reflected in the response immediately.
     portfolio = repo.portfolio_setups([user_id]).get(user_id)
@@ -252,6 +255,7 @@ def update_user_account(user_id):
                 processed_at=datetime.utcnow(),
             ))
         db.session.commit()
+        cache_delete("admin:stats:overview")
 
     portfolio = repo.portfolio_setups([user_id]).get(user_id)
     return jsonify(
@@ -290,6 +294,7 @@ def create_payment(user_id):
     )
     db.session.add(pr)
     db.session.commit()
+    cache_delete("admin:stats:overview")
     return jsonify(pr.to_dict()), 201
 
 
@@ -311,14 +316,13 @@ def list_payments():
     total = query.count()
     # totals
     total_amount = query.with_entities(db.func.coalesce(db.func.sum(PaymentRecord.amount), 0)).scalar() or 0
-    totals_by_status = {
-        row[0]: float(row[1] or 0)
-        for row in (
-            db.session.query(PaymentRecord.status, db.func.coalesce(db.func.sum(PaymentRecord.amount), 0))
-            .group_by(PaymentRecord.status)
-            .all()
-        )
-    }
+    status_totals = {"succeeded": {"count": 0, "amount": 0.0}, "pending": {"count": 0, "amount": 0.0}, "failed": {"count": 0, "amount": 0.0}, "refunded": {"count": 0, "amount": 0.0}}
+    for raw_status, amount_sum, count in query.with_entities(PaymentRecord.status, db.func.sum(PaymentRecord.amount), db.func.count(PaymentRecord.payment_id)).group_by(PaymentRecord.status).all():
+        normalized = str(raw_status or "").strip().lower()
+        key = "succeeded" if any(value in normalized for value in ("paid", "complete", "success")) else "pending" if any(value in normalized for value in ("pending", "process", "created")) else "failed" if any(value in normalized for value in ("fail", "declin", "cancel")) else "refunded" if "refund" in normalized else None
+        if key:
+            status_totals[key]["count"] += int(count or 0)
+            status_totals[key]["amount"] += float(amount_sum or 0)
 
     rows = query.order_by(PaymentRecord.created_at.desc()).offset((page - 1) * per_page).limit(per_page).all()
     return jsonify({
@@ -326,7 +330,7 @@ def list_payments():
         "page": page,
         "per_page": per_page,
         "total_amount": float(total_amount),
-        "totals_by_status": totals_by_status,
+        "status_totals": status_totals,
         "payments": [r.to_dict() for r in rows],
     }), 200
 
@@ -781,13 +785,20 @@ def list_activity():
     total = query.count()
     rows = query.order_by(ActivityLog.created_at.desc()).offset((page - 1) * per_page).limit(per_page).all()
 
+    target_ids = {row.user_id for row in rows}
+    target_users = {u.user_id: u for u in User.query.filter(User.user_id.in_(target_ids)).all()} if target_ids else {}
+
     def audit_row(row):
         item = row.to_dict()
         event = (row.event_type or "").replace("_", " ").strip().title()
         text = f"{row.event_type} {row.description or ''}".lower()
         module_name = "Thesis & Scores" if "thesis" in text or "score" in text else "Payments" if "payment" in text else "Competition" if "competition" in text or "enroll" in text else "Trading" if "trade" in text else "Users"
-        actor = "System" if any(word in text for word in ("thesis", "score", "enroll", "trade executed")) else "Admin"
-        target = User.query.filter_by(user_id=row.user_id).first()
+        target = target_users.get(row.user_id)
+        try:
+            metadata = json.loads(row.event_metadata or "{}")
+        except (TypeError, ValueError):
+            metadata = {}
+        actor = metadata.get("actor") or ("System" if any(word in text for word in ("thesis", "score", "enroll", "trade executed")) else "Admin")
         item.update({"actor": actor, "action": event, "module": module_name, "target_name": target.full_name if target else row.user_id, "status": "Success", "details": row.description or row.event_metadata or "Activity recorded."})
         return item
 

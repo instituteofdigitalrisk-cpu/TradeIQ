@@ -20,7 +20,7 @@ from firebase_admin import auth as firebase_auth
 from firebase_admin import credentials
 
 from app.extensions import db
-from app.models import User, PortfolioSetup, PasswordReset
+from app.models import User, PortfolioSetup, PasswordReset, ActivityLog
 
 auth_bp = Blueprint("auth", __name__, url_prefix="/auth")
 logger = logging.getLogger(__name__)
@@ -373,6 +373,13 @@ def login():
     if not user or user.password_hash != _hash_password(password):
         return jsonify({"error": "Invalid email or password"}), 401
 
+    db.session.add(ActivityLog(
+        user_id=user.user_id,
+        event_type="admin_login" if user.role == "admin" else "user_login",
+        description=f"{user.full_name} signed in with email and password",
+        event_metadata=json.dumps({"actor": user.full_name, "auth_method": "password"}),
+    ))
+    db.session.commit()
     token = create_access_token(identity=user.user_id)
     return jsonify({
         "message": "Login successful",
@@ -421,6 +428,12 @@ def google_auth():
         user.full_name = full_name
 
     _ensure_default_portfolio(user.user_id)
+    db.session.add(ActivityLog(
+        user_id=user.user_id,
+        event_type="admin_login" if user.role == "admin" else "user_login",
+        description=f"{user.full_name} signed in with Google",
+        event_metadata=json.dumps({"actor": user.full_name, "auth_method": "google", "is_new_user": is_new_user}),
+    ))
     db.session.commit()
 
     token = create_access_token(identity=user.user_id)

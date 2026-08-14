@@ -99,3 +99,14 @@ def cache_set(key: str, value: Any, ttl_seconds: int):
 
     _memory_cache[key] = CacheItem(value=value, expires_at=time.time() + ttl_seconds)
     logger.debug(f"[Cache] Memory set key '{key}' with TTL {ttl_seconds}s")
+
+
+def cache_delete(key: str):
+    """Remove a cached value after a write changes its source data."""
+    client = get_redis_client()
+    if client:
+        try:
+            client.delete(key)
+        except Exception as e:
+            logger.warning(f"[Cache] Redis delete error on key '{key}': {e}")
+    _memory_cache.pop(key, None)
