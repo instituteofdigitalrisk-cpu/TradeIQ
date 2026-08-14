@@ -49,4 +49,7 @@ sys.exit(1)
 PYEOF
 
 echo "Starting backend on port ${PORT:-5000}..."
-exec gunicorn --bind 0.0.0.0:${PORT:-5000} --workers 2 --threads 4 run:app
+# Render's small instances are I/O-bound rather than CPU-bound. One process
+# with threads avoids duplicating the SQLAlchemy pool and in-memory caches
+# across workers, while still serving concurrent API requests.
+exec gunicorn --bind 0.0.0.0:${PORT:-5000} --workers 1 --worker-class gthread --threads 8 --timeout 60 run:app
