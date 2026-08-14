@@ -1049,8 +1049,10 @@ def _score_breakdown(payload):
 def _leaderboard_entry_payload(entry):
     """Format a leaderboard entry for JSON response."""
     data = entry.to_dict()
-    metrics = _portfolio_metrics(entry.user_id, refresh_prices=False) or {}
-    data["portfolio_value"] = metrics.get("portfolio_value", 10000.0)
+    # Leaderboard reads must be cheap.  Portfolio metrics are calculated by the
+    # scoring job; recomputing them once per row made this endpoint an N+1 query
+    # (and previously triggered market-price work on a read-only page).
+    data["portfolio_value"] = data.get("portfolio_value") or 10000.0
     return data
 
 
@@ -1064,7 +1066,6 @@ def _leaderboard_payload_for_week(week_number, entries):
         if entry:
             result.append(_leaderboard_entry_payload(entry))
             continue
-        metrics = _portfolio_metrics(user.user_id, refresh_prices=False) or {}
         result.append({
             "user_id": user.user_id,
             "full_name": user.full_name,
@@ -1077,7 +1078,7 @@ def _leaderboard_payload_for_week(week_number, entries):
             "strategy_score": 0.0,
             "final_score": 0.0,
             "rank_position": None,
-            "portfolio_value": metrics.get("portfolio_value", 10000.0),
+            "portfolio_value": 10000.0,
         })
     result.sort(key=lambda row: (row["final_score"], row["user_id"]), reverse=True)
     for index, row in enumerate(result, start=1):
