@@ -66,6 +66,7 @@ export type ActivityLog = {
   actor?: string;
   action?: string;
   module?: string;
+  role?: string;
   target_name?: string;
   status?: string;
   details?: string;
