@@ -63,6 +63,12 @@ export type ActivityLog = {
   description: string | null;
   metadata: string | null;
   created_at: string | null;
+  actor?: string;
+  action?: string;
+  module?: string;
+  target_name?: string;
+  status?: string;
+  details?: string;
 };
 
 // (UserDetail expanded later in the file with CRM fields)
@@ -230,6 +236,14 @@ export type StatsOverview = {
     sell_volume: number;
     active_holdings: number;
     portfolios: number;
+    paid_students?: number;
+    suspended_accounts?: number;
+    active_students?: number;
+    total_payments?: number;
+    payments_amount?: number;
+    payments_completed?: number;
+    payments_pending?: number;
+    total_enrollments?: number;
   };
   averages: {
     avg_portfolio_value: number;
@@ -250,6 +264,7 @@ export type StatsOverview = {
     execution_score: number;
     strategy_score: number;
   }[];
+  enrollment_breakdown?: { competition_round: string; count: number }[];
 };
 
 export type ApiError = { error?: string; msg?: string; details?: string };

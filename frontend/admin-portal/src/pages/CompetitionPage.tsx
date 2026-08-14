@@ -1,121 +1,17 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { admin } from "../api";
+import type { CompetitionEnrollment, CompetitionRound, StatsOverview, UserRow } from "../types";
 
-export default function CompetitionPage() {
-  const [enrollments, setEnrollments] = useState<any[]>([]);
-  const [q, setQ] = useState("");
-  const [page, setPage] = useState(1);
-  const [total, setTotal] = useState(0);
-  const [loading, setLoading] = useState(true);
-  const [tab, setTab] = useState<"enrollments" | "rounds">("enrollments");
-  const [rounds, setRounds] = useState<any[]>([]);
-  const roundsPage = 1;
-  const [roundName, setRoundName] = useState("");
-
-  const load = async () => {
-    setLoading(true);
-    try {
-      const res = await admin.listCompetitions({ page, per_page: 50, q: q.trim() || undefined });
-      setEnrollments(res.enrollments);
-      setTotal(res.total);
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const loadRounds = async () => {
-    try {
-      const res = await admin.listCompetitionRounds({ page: roundsPage, per_page: 50 });
-      setRounds(res.rounds);
-      // total is available as res.total if needed later
-    } catch (err) {
-      console.error(err);
-    }
-  };
-
-  useEffect(() => { void load(); }, [page]);
-  useEffect(() => { void loadRounds(); }, []);
-
-  const createRound = async () => {
-    if (!roundName) return;
-    try {
-      await admin.createCompetitionRound({ name: roundName });
-      setRoundName("");
-      void loadRounds();
-    } catch (err) {
-      console.error(err);
-    }
-  };
-  let bodyContent: any = null;
-  if (tab === "enrollments") {
-    bodyContent = loading ? (
-      <span className="spinner" />
-    ) : (
-      <table>
-        <thead>
-          <tr><th>Enrolled</th><th>User</th><th>Round</th><th>Status</th><th>Start</th><th>End</th></tr>
-        </thead>
-        <tbody>
-          {enrollments.map((e) => (
-            <tr key={e.enrollment_id}>
-              <td>{e.enrolled_at ? e.enrolled_at.slice(0,19) : ""}</td>
-              <td>{e.user_id}</td>
-              <td>{e.competition_round}</td>
-              <td>{e.status}</td>
-              <td>{e.start_date || ""}</td>
-              <td>{e.end_date || ""}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    );
-  } else {
-    bodyContent = (
-      <div>
-        <div className="toolbar">
-          <input placeholder="Round name" value={roundName} onChange={(e) => setRoundName(e.target.value)} />
-          <button className="primary" onClick={createRound}>Create Round</button>
-        </div>
-
-        <table>
-          <thead>
-            <tr><th>ID</th><th>Name</th><th>Start</th><th>End</th><th>Active</th></tr>
-          </thead>
-          <tbody>
-            {rounds.map((r) => (
-              <tr key={r.competition_id}>
-                <td>{r.competition_id}</td>
-                <td>{r.name}</td>
-                <td>{r.start_date || ""}</td>
-                <td>{r.end_date || ""}</td>
-                <td>{r.active ? "Yes" : "No"}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-    );
-  }
-
-  return (
-    <div>
-      <div className="page-header">
-        <h1>Competitions</h1>
-        <span className="muted">{total} enrollments</span>
-      </div>
-      <div className="toolbar">
-        <input placeholder="Search user or round…" value={q} onChange={(e) => setQ(e.target.value)} />
-        <button onClick={() => { setPage(1); void load(); }}>Search</button>
-        <button onClick={() => { setPage(1); setQ(""); void load(); }}>Clear</button>
-      </div>
-      <div className="tabs">
-        <button className={tab === "enrollments" ? "primary" : ""} onClick={() => setTab("enrollments")}>Enrollments</button>
-        <button className={tab === "rounds" ? "primary" : ""} onClick={() => setTab("rounds")}>Rounds</button>
-      </div>
-
-      {bodyContent}
-    </div>
-  );
-}
+type Tab = "active" | "all" | "enrollments"; const money = (n: number) => n.toLocaleString("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 }); const date = (s?: string | null) => s ? s.slice(0, 10) : "—"; const pretty = (s?: string | null) => s ? s.charAt(0).toUpperCase() + s.slice(1) : "—";
+function Badge({ children, tone = "green" }: { children: React.ReactNode; tone?: string }) { return <span className={`competition-badge ${tone}`}>{children}</span>; }
+export default function CompetitionPage() { const [tab, setTab] = useState<Tab>("active"); const [rounds, setRounds] = useState<CompetitionRound[]>([]); const [enrollments, setEnrollments] = useState<CompetitionEnrollment[]>([]); const [users, setUsers] = useState<UserRow[]>([]); const [stats, setStats] = useState<StatsOverview | null>(null); const [selected, setSelected] = useState<CompetitionRound | null>(null); const [showCreate, setShowCreate] = useState(false); const [q, setQ] = useState(""); const [status, setStatus] = useState(""); const [loading, setLoading] = useState(true); const [error, setError] = useState<string | null>(null); const [name, setName] = useState("TradeIQ Competition - Round 1"); const [start, setStart] = useState(""); const [end, setEnd] = useState(""); const [creating, setCreating] = useState(false);
+  const load = async () => { setLoading(true); try { const [r, e, s, u] = await Promise.all([admin.listCompetitionRounds({ page: 1, per_page: 100 }), admin.listCompetitions({ page: 1, per_page: 200 }), admin.statsOverview(), admin.listUsers({ page: 1, per_page: 100 })]); setRounds(r.rounds); setEnrollments(e.enrollments); setStats(s); setUsers(u.users); setError(null); } catch (x) { setError(x instanceof Error ? x.message : "Failed to load competitions."); } finally { setLoading(false); } };
+  useEffect(() => { void load(); }, []); const userMap = useMemo(() => new Map(users.map((u) => [u.user_id, u])), [users]); const active = rounds.filter((r) => r.active); const visibleEnrollments = enrollments.filter((e) => { const u = userMap.get(e.user_id); return (!q || `${e.user_id} ${u?.full_name || ""} ${u?.university || ""}`.toLowerCase().includes(q.toLowerCase())) && (!status || e.status.toLowerCase() === status); }); const main = active[0] || rounds[0]; const create = async () => { if (!name.trim()) return; setCreating(true); try { await admin.createCompetitionRound({ name: name.trim(), start_date: start || undefined, end_date: end || undefined, active: true }); setShowCreate(false); await load(); } catch (x) { setError(x instanceof Error ? x.message : "Failed to create competition."); } finally { setCreating(false); } };
+  return <div className="competitions-page"><div className="page-header competition-heading"><div><h1>Competitions</h1></div><button className="create-competition-button" onClick={() => setShowCreate(true)}>+ Create Competition</button></div><div className="competition-tabs">{([["active", "Active Competitions"], ["all", "All Competitions"], ["enrollments", "Enrollments"]] as [Tab, string][]).map(([key, text]) => <button className={tab === key ? "active" : ""} key={key} onClick={() => setTab(key)}>{text}</button>)}</div>{error && <div className="error-banner">{error}</div>}{loading ? <div className="users-loading"><span className="spinner" /> Loading competitions…</div> : tab === "enrollments" ? <Enrollments rows={visibleEnrollments} userMap={userMap} q={q} setQ={setQ} status={status} setStatus={setStatus} onReload={load} /> : tab === "all" ? <AllCompetitions rounds={rounds} status={status} setStatus={setStatus} onSelect={setSelected} /> : <ActiveView round={main} stats={stats} enrollments={enrollments} userMap={userMap} onSelect={setSelected} />}{selected && <CompetitionDetails round={selected} stats={stats} enrollments={enrollments} userMap={userMap} onClose={() => setSelected(null)} />}{showCreate && <CreateModal name={name} setName={setName} start={start} setStart={setStart} end={end} setEnd={setEnd} creating={creating} onClose={() => setShowCreate(false)} onCreate={() => void create()} />}</div>; }
+function ActiveView({ round, stats, enrollments, userMap, onSelect }: { round?: CompetitionRound; stats: StatsOverview | null; enrollments: CompetitionEnrollment[]; userMap: Map<string, UserRow>; onSelect: (r: CompetitionRound) => void }) { const active = enrollments.filter((e) => e.status.toLowerCase() === "enrolled" || e.status.toLowerCase() === "active").length; const withdrawn = enrollments.filter((e) => e.status.toLowerCase() === "withdrawn").length; return <div className="competition-content"><section className="competition-hero"><div><h2>{round?.name || "TradeIQ Competition - Round 1"} <Badge>{round?.active === false ? "Completed" : "Active"}</Badge></h2><div className="competition-facts"><span>Start Date <b>{date(round?.start_date)}</b></span><span>End Date <b>{date(round?.end_date)}</b></span><span>Current Week <b>2</b></span><span>Total Enrolled <b>{enrollments.length}</b></span><span>Entry Fee <b>{money(10000)}</b></span></div></div><button className="outline-button" disabled={!round} onClick={() => round && onSelect(round)}>View Details</button></section><div className="competition-two-col"><Card title="Enrollment Status"><div className="enrollment-status"><div className="enrollment-donut"><strong>{enrollments.length}</strong><small>Total</small></div><div className="status-legend"><div><i className="dot green" />Active <b>{active}</b></div><div><i className="dot orange" />Withdrawn <b>{withdrawn}</b></div><div><i className="dot red" />Disqualified <b>0</b></div><div><i className="dot grey" />Completed <b>{Math.max(0, enrollments.length - active - withdrawn)}</b></div></div></div></Card><Card title="Top Performers - Round 1"><table className="competition-table"><thead><tr><th>Rank</th><th>Student</th><th>Score</th><th>Return</th></tr></thead><tbody>{stats?.top_performers.slice(0, 5).map((p, i) => <tr key={p.user_id}><td>{i + 1}</td><td>{p.full_name}</td><td>{p.final_score.toFixed(2)}</td><td className="positive-text">+{p.final_score.toFixed(2)}%</td></tr>)}</tbody></table></Card></div><Card title="Recent Enrollments"><EnrollmentTable rows={enrollments.slice(0, 5)} userMap={userMap} /></Card></div>; }
+function Enrollments({ rows, userMap, q, setQ, status, setStatus }: { rows: CompetitionEnrollment[]; userMap: Map<string, UserRow>; q: string; setQ: (v: string) => void; status: string; setStatus: (v: string) => void; onReload: () => Promise<void> }) { return <div className="competition-content"><div className="competition-filters"><input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search student or ID…" /><select value={status} onChange={(e) => setStatus(e.target.value)}><option value="">All Enrollment Status</option><option value="enrolled">Enrolled</option><option value="active">Active</option><option value="withdrawn">Withdrawn</option><option value="completed">Completed</option></select><select><option>All Competitions</option></select><select><option>All Rounds</option></select></div><Card title="Enrollments"><EnrollmentTable rows={rows} userMap={userMap} /></Card></div>; }
+function EnrollmentTable({ rows, userMap }: { rows: CompetitionEnrollment[]; userMap: Map<string, UserRow> }) { return <div className="competition-table-wrap"><table className="competition-table"><thead><tr><th>Date</th><th>Student</th><th>ID</th><th>University</th><th>Payment</th><th>Enrollment</th><th>Competition</th><th>Round</th><th>Actions</th></tr></thead><tbody>{rows.map((e) => { const u = userMap.get(e.user_id); return <tr key={e.enrollment_id}><td>{date(e.enrolled_at)}</td><td>{u?.full_name || e.user_id}</td><td>{e.user_id}</td><td>{u?.university || "—"}</td><td><Badge>{u?.is_paid ? "Paid" : "Pending"}</Badge></td><td><Badge tone={e.status === "withdrawn" ? "orange" : "green"}>{pretty(e.status)}</Badge></td><td>TradeIQ Competition</td><td>{e.competition_round || "—"}</td><td><button className="view-competition" title="View enrollment">◉</button></td></tr>; })}</tbody></table>{!rows.length && <div className="empty">No enrollments found.</div>}</div>; }
+function AllCompetitions({ rounds, status, setStatus, onSelect }: { rounds: CompetitionRound[]; status: string; setStatus: (v: string) => void; onSelect: (r: CompetitionRound) => void }) { const classify = (r: CompetitionRound) => r.active ? "active" : r.end_date && new Date(r.end_date) < new Date() ? "completed" : "upcoming"; return <div className="competition-content"><div className="competition-filters"><select value={status} onChange={(e) => setStatus(e.target.value)}><option value="">All Statuses</option><option value="active">Active</option><option value="upcoming">Upcoming</option><option value="completed">Completed</option></select></div><div className="competition-card-list">{rounds.filter((r) => !status || classify(r) === status).map((r) => <section className="competition-list-card" key={r.competition_id}><div><h2>{r.name}</h2><Badge tone={classify(r) === "active" ? "green" : "grey"}>{pretty(classify(r))}</Badge><div className="competition-facts"><span>Start Date <b>{date(r.start_date)}</b></span><span>End Date <b>{date(r.end_date)}</b></span><span>Status <b>{r.active ? "Active" : "Inactive"}</b></span></div></div><button className="outline-button" onClick={() => onSelect(r)}>View Details</button></section>)}</div>{!rounds.length && <div className="empty">No competitions created yet.</div>}</div>; }
+function CompetitionDetails({ round, stats, enrollments, userMap, onClose }: { round: CompetitionRound; stats: StatsOverview | null; enrollments: CompetitionEnrollment[]; userMap: Map<string, UserRow>; onClose: () => void }) { const participants = enrollments.filter((e) => e.competition_round === round.name || !e.competition_round); return <div className="competition-modal-backdrop" onClick={onClose}><aside className="competition-details-modal" onClick={(e) => e.stopPropagation()}><button className="modal-close" onClick={onClose}>×</button><h2>{round.name}</h2><Badge>{round.active ? "Active" : "Completed"}</Badge><div className="competition-detail-facts"><span>Start Date <b>{date(round.start_date)}</b></span><span>End Date <b>{date(round.end_date)}</b></span><span>Current Week <b>2</b></span><span>Total Enrolled <b>{participants.length}</b></span><span>Active <b>{participants.filter((x) => x.status === "enrolled").length}</b></span><span>Withdrawn <b>{participants.filter((x) => x.status === "withdrawn").length}</b></span></div><Card title="Competition Performance"><div className="performance-grid"><span>Top Score <b>{stats?.top_performers[0]?.final_score ?? 0}</b></span><span>Average Score <b>{stats?.top_performers.length ? (stats.top_performers.reduce((s, x) => s + x.final_score, 0) / stats.top_performers.length).toFixed(2) : 0}</b></span><span>Total Trades <b>{stats?.totals.total_trades ?? 0}</b></span><span>Total Portfolio Value <b>{money(stats?.averages.avg_portfolio_value || 0)}</b></span></div></Card><Card title="Leaderboard"><table className="competition-table"><thead><tr><th>Rank</th><th>Student</th><th>Portfolio</th><th>Return</th><th>Score</th></tr></thead><tbody>{stats?.top_performers.slice(0, 10).map((x, i) => <tr key={x.user_id}><td>{i + 1}</td><td>{x.full_name}</td><td>{money(userMap.get(x.user_id)?.portfolio_value || 0)}</td><td className="positive-text">+{x.final_score.toFixed(2)}%</td><td>{x.final_score.toFixed(2)}</td></tr>)}</tbody></table></Card></aside></div>; }
+function Card({ title, children }: { title: string; children: React.ReactNode }) { return <section className="competition-card"><h2>{title}</h2>{children}</section>; }
+function CreateModal({ name, setName, start, setStart, end, setEnd, creating, onClose, onCreate }: { name: string; setName: (v: string) => void; start: string; setStart: (v: string) => void; end: string; setEnd: (v: string) => void; creating: boolean; onClose: () => void; onCreate: () => void }) { return <div className="competition-modal-backdrop" onClick={onClose}><div className="create-competition-modal" onClick={(e) => e.stopPropagation()}><h2>Create Competition</h2><label>Competition Name<input value={name} onChange={(e) => setName(e.target.value)} /></label><label>Start Date<input type="date" value={start} onChange={(e) => setStart(e.target.value)} /></label><label>End Date<input type="date" value={end} onChange={(e) => setEnd(e.target.value)} /></label><div className="modal-actions"><button onClick={onClose}>Cancel</button><button className="primary" disabled={creating} onClick={onCreate}>{creating ? "Creating…" : "Create Competition"}</button></div></div></div>; }

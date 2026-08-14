@@ -2,267 +2,76 @@ import { useCallback, useEffect, useState } from "react";
 import { admin } from "../api";
 import type { UserDetail } from "../types";
 
-type Props = {
-  userId: string;
-  onBack: () => void;
-};
+type Props = { userId: string; onBack: () => void };
+type Tab = "overview" | "account" | "competition" | "trading" | "thesis" | "activity";
+const money = (n: number) => n.toLocaleString("en-US", { style: "currency", currency: "USD", minimumFractionDigits: 2 });
+const num = (n: number | null | undefined) => n == null ? "â€”" : n.toLocaleString("en-US", { maximumFractionDigits: 2 });
+const dt = (s: string | null | undefined) => s ? s.slice(0, 10) : "â€”";
+const pretty = (s: string | null | undefined) => s ? s.charAt(0).toUpperCase() + s.slice(1) : "â€”";
 
-const fmtMoney = (n: number): string =>
-  n.toLocaleString("en-US", {
-    style: "currency",
-    currency: "USD",
-    maximumFractionDigits: 2,
-  });
+function Status({ children, tone = "green" }: { children: React.ReactNode; tone?: string }) { return <span className={`detail-status ${tone}`}>{children}</span>; }
+function Card({ title, children, className = "" }: { title: string; children: React.ReactNode; className?: string }) { return <section className={`detail-card ${className}`}><h2>{title}</h2>{children}</section>; }
+function Rows({ items }: { items: { label: string; value: React.ReactNode }[] }) { return <div className="detail-rows">{items.map((item) => <div className="detail-row" key={item.label}><span>{item.label}</span><strong>{item.value}</strong></div>)}</div>; }
 
-// helper for formatting numbers if needed
-
-function DetailGrid({ items }: { items: { k: string; v: string | number | null }[] }) {
-  return (
-    <div className="detail-grid">
-      {items.map((it) => (
-        <div className="detail-item" key={it.k}>
-          <div className="k">{it.k}</div>
-          <div className="v">{it.v ?? "—"}</div>
-        </div>
-      ))}
-    </div>
-  );
+function Overview({ d, onTab }: { d: UserDetail; onTab: (tab: Tab) => void }) {
+  const p = d.profile; const latest = d.weekly_scores[0]; const enrollment = d.competition_enrollments?.[0];
+  const recent = (d.activity_logs || []).slice(0, 3);
+  return <div className="detail-content overview-content"><div className="detail-overview-grid">
+    <Card title="Student Summary" className="summary-card"><div className="student-identity"><div className="avatar">{(p.full_name || p.email).split(" ").map((x) => x[0]).join("").slice(0, 2).toUpperCase()}</div><div><strong>{p.full_name || p.email}</strong><small>{p.user_id}</small><Status tone={p.account_status === "suspended" ? "red" : "green"}>{pretty(p.account_status || "active")}</Status></div></div><div className="summary-metrics"><Rows items={[{ label: "Portfolio Value", value: money(p.portfolio_value) }, { label: "Return", value: <span className={p.return_pct >= 0 ? "positive-text" : "negative-text"}>{p.return_pct >= 0 ? "+" : ""}{num(p.return_pct)}%</span> }, { label: "Overall Score", value: num(p.latest_final_score) }, { label: "Leaderboard Rank", value: latest?.rank_position ? `#${latest.rank_position}` : "â€”" }, { label: "Total Trades", value: p.trade_count }, { label: "Active Holdings", value: p.holdings_count }]} /></div></Card>
+    <Card title="Account Status"><Rows items={[{ label: "Account Status", value: <Status>{pretty(p.account_status || "active")}</Status> }, { label: "Registration Status", value: <Status>{pretty(p.registration_status)}</Status> }, { label: "Payment Status", value: <Status tone={p.is_paid ? "green" : "orange"}>{p.is_paid ? "Paid" : "Pending"}</Status> }, { label: "Payment Date", value: dt(d.payments?.[0]?.created_at) }, { label: "Payment Amount", value: d.payments?.[0] ? money(d.payments[0].amount) : "â€”" }, { label: "Payment Method", value: d.payments?.[0]?.payment_method || "â€”" }, { label: "Joined Date", value: dt(p.created_at) }]} /></Card>
+    <Card title="Competition Status"><Rows items={[{ label: "Competition", value: "TradeIQ Competition" }, { label: "Round", value: enrollment?.competition_round || "â€”" }, { label: "Enrollment Status", value: enrollment ? <Status>{pretty(enrollment.status)}</Status> : "â€”" }, { label: "Enrolled On", value: dt(enrollment?.enrolled_at) }, { label: "Start Date", value: dt(enrollment?.start_date) }, { label: "End Date", value: dt(enrollment?.end_date) }, { label: "Leaderboard Rank", value: latest?.rank_position ? `#${latest.rank_position}` : "â€”" }]} /></Card>
+  </div><Card title="Recent Activity" className="recent-activity-card"><button className="outline-button detail-view-button" onClick={() => onTab("activity")}>View all activity</button>{recent.length ? <div className="activity-timeline">{recent.map((a, i) => <div className="timeline-item" key={a.activity_id}><i className={`timeline-dot dot-${i % 3}`} /><div><strong>{a.description || pretty(a.event_type)}</strong><small>{dt(a.created_at)} {a.created_at?.slice(11, 16) || ""}</small></div></div>)}</div> : <div className="empty">No recent activity.</div>}</Card></div>;
 }
 
-function NoteList({ notes }: { notes: { note_id: number; content: string | null; created_at: string | null }[] }) {
-  if (!notes || notes.length === 0) return <div>No notes</div>;
-  return (
-    <ul>
-      {notes.map((n) => (
-        <li key={n.note_id}>{n.created_at ? n.created_at.slice(0, 19) : ""} — {n.content}</li>
-      ))}
-    </ul>
-  );
+function Account({ d, onReload }: { d: UserDetail; onReload: () => Promise<void> }) {
+  const p = d.profile; const payment = d.payments?.[0]; const [editing, setEditing] = useState(false); const [name, setName] = useState(p.full_name); const [phone, setPhone] = useState(p.phone_number || ""); const [saving, setSaving] = useState(false);
+  const save = async () => { setSaving(true); try { await admin.updateUser(p.user_id, { full_name: name, phone_number: phone }); setEditing(false); await onReload(); } finally { setSaving(false); } };
+  return <div className="detail-content account-content"><div className="account-grid"><Card title="Personal Information"><Rows items={[{ label: "Email", value: p.email }, { label: "Phone", value: editing ? <input value={phone} onChange={(e) => setPhone(e.target.value)} /> : p.phone_number || "â€”" }, { label: "University", value: p.university || "â€”" }, { label: "Year of Study", value: p.year_of_study ?? "â€”" }, { label: "Age", value: p.age ?? "â€”" }, { label: "Date of Birth", value: dt(p.date_of_birth) }, { label: "Joined Date", value: dt(p.created_at) }]} />{editing && <input className="detail-edit-name" value={name} onChange={(e) => setName(e.target.value)} placeholder="Full name" />}<div className="card-actions">{editing ? <><button className="primary" disabled={saving} onClick={() => void save()}>Save Profile</button><button onClick={() => setEditing(false)}>Cancel</button></> : <button onClick={() => setEditing(true)}>Edit Profile</button>}</div></Card><Card title="Payment Information"><Rows items={[{ label: "Payment Status", value: <Status tone={p.is_paid ? "green" : "orange"}>{p.is_paid ? "Paid" : "Pending"}</Status> }, { label: "Payment Amount", value: payment ? money(payment.amount) : "â€”" }, { label: "Payment Date", value: dt(payment?.created_at) }, { label: "Payment Method", value: payment?.payment_method || "â€”" }, { label: "Payment Provider", value: payment?.reference ? "Razorpay" : "â€”" }, { label: "Transaction ID", value: payment?.reference || "â€”" }]} /><button className="wide-outline" onClick={() => document.getElementById("payment-history")?.scrollIntoView({ behavior: "smooth" })}>View Payment History</button></Card></div><Card title="Payment History" className="payment-history" ><div id="payment-history">{d.payments?.length ? <table className="detail-table"><thead><tr><th>Date</th><th>Amount</th><th>Method</th><th>Provider</th><th>Status</th><th>Transaction ID</th></tr></thead><tbody>{d.payments.map((x) => <tr key={x.payment_id}><td>{dt(x.created_at)}</td><td>{money(x.amount)}</td><td>{x.payment_method || "â€”"}</td><td>Razorpay</td><td><Status tone={x.status.toLowerCase().includes("paid") || x.status.toLowerCase().includes("complete") ? "green" : "orange"}>{pretty(x.status)}</Status></td><td>{x.reference || "â€”"}</td></tr>)}</tbody></table> : <div className="empty">No payment history.</div>}</div></Card></div>;
 }
 
-function AddNoteForm({ onAdd }: { onAdd: (content: string, note_type?: string) => Promise<void> }) {
-  const [content, setContent] = useState("");
-  const [submitting, setSubmitting] = useState(false);
-  return (
-    <div style={{ marginTop: 8 }}>
-      <textarea value={content} onChange={(e) => setContent(e.target.value)} rows={3} style={{ width: "100%" }} />
-      <div style={{ marginTop: 6 }}>
-        <button
-          onClick={async () => {
-            if (!content.trim()) return;
-            setSubmitting(true);
-            try {
-              await onAdd(content.trim());
-              setContent("");
-            } finally {
-              setSubmitting(false);
-            }
-          }}
-          disabled={submitting}
-        >
-          Add Note
-        </button>
+function Competition({ d }: { d: UserDetail }) { const e = d.competition_enrollments?.[0]; return <div className="detail-content"><Card title="Competition Details"><Rows items={[{ label: "Competition", value: "TradeIQ Competition" }, { label: "Round", value: e?.competition_round || "â€”" }, { label: "Enrollment Status", value: e ? <Status>{pretty(e.status)}</Status> : "â€”" }, { label: "Enrolled On", value: dt(e?.enrolled_at) }, { label: "Start Date", value: dt(e?.start_date) }, { label: "End Date", value: dt(e?.end_date) }, { label: "Current Week", value: d.weekly_scores[0]?.week_number ?? "â€”" }, { label: "Leaderboard Rank", value: d.weekly_scores[0]?.rank_position ? `#${d.weekly_scores[0].rank_position}` : "â€”" }]} /></Card><Card title="Competition History"><table className="detail-table"><thead><tr><th>Round</th><th>Status</th><th>Enrolled On</th><th>Start</th><th>End</th></tr></thead><tbody>{d.competition_enrollments?.map((x) => <tr key={x.enrollment_id}><td>{x.competition_round || "â€”"}</td><td><Status>{pretty(x.status)}</Status></td><td>{dt(x.enrolled_at)}</td><td>{dt(x.start_date)}</td><td>{dt(x.end_date)}</td></tr>) || <tr><td colSpan={5}>No competition history.</td></tr>}</tbody></table></Card></div>; }
+
+function Trading({ d }: { d: UserDetail }) { const p = d.profile; const buy = d.trades.filter((t) => t.trade_type === "BUY").length; const sell = d.trades.filter((t) => t.trade_type === "SELL").length; return <div className="detail-content"><div className="trading-stats">{[["Total Trades", d.trades.length], ["Buy Trades", buy], ["Sell Trades", sell], ["Total Volume", money(d.trades.reduce((s, x) => s + Number(x.amount_invested || 0), 0))], ["Realized PNL", money(d.holdings.reduce((s, x) => s + Number(x.profit_loss || 0), 0))], ["Win Rate", d.trades.length ? `${Math.round((d.trades.filter((x) => Number(x.current_sell_price) > Number(x.buy_price)).length / d.trades.length) * 100)}%` : "0%"]].map(([k, v]) => <div className="trading-stat" key={String(k)}><span>{k}</span><strong>{v}</strong></div>)}</div><Card title="Trading Summary"><Rows items={[{ label: "Portfolio Value", value: money(p.portfolio_value) }, { label: "Total Capital", value: money(d.portfolio?.total_capital || 0) }, { label: "Cash Balance", value: money(d.portfolio?.cash_balance || 0) }, { label: "Return", value: <span className={p.return_pct >= 0 ? "positive-text" : "negative-text"}>{p.return_pct >= 0 ? "+" : ""}{num(p.return_pct)}%</span> }]} /></Card><Card title="Recent Trades"><div className="trade-table-wrap"><table className="detail-table"><thead><tr><th>Date / Time</th><th>Ticker</th><th>Type</th><th>Qty</th><th>Price</th><th>Amount</th><th>Sector</th><th>PNL</th></tr></thead><tbody>{d.trades.slice(0, 10).map((t) => <tr key={t.trade_id}><td>{dt(t.trade_date || t.created_at)} {t.created_at?.slice(11, 19)}</td><td>{t.stock_ticker}</td><td className={t.trade_type === "BUY" ? "positive-text" : "negative-text"}>{t.trade_type}</td><td>{t.quantity ?? "â€”"}</td><td>{money(t.buy_price)}</td><td>{money(t.amount_invested)}</td><td>{t.sector || "â€”"}</td><td>{money((t.current_sell_price - t.buy_price) * (t.quantity || 0))}</td></tr>)}</tbody></table>{!d.trades.length && <div className="empty">No trades found.</div>}</div></Card></div>; }
+
+function ThesisScores({ d }: { d: UserDetail }) {
+  const scores = d.weekly_scores;
+  const scored = d.theses.filter((x) => Boolean(x.scores));
+  const submitted = d.theses.filter((x) => !x.scores);
+  const processing = 0;
+  const failed = 0;
+  const total = d.theses.length;
+  return <div className="detail-content">
+    <Card title="Thesis Overview" className="thesis-overview">
+      <div className="thesis-lifecycle"><span>Student submits thesis</span><b>↓</b><span>System analyzes thesis</span><b>↓</b><span>Thesis score is calculated</span><b>↓</b><span>Score is stored</span><b>↓</b><span>Final competition score</span></div>
+      <div className="thesis-summary">
+        <div className="thesis-donut lifecycle-donut"><strong>{total}</strong><small>Total</small></div>
+        <div className="thesis-legend">
+          <div><i className="dot blue" />Submitted <b>{submitted.length}</b></div>
+          <div><i className="dot orange" />Processing <b>{processing}</b></div>
+          <div><i className="dot green" />Scored <b>{scored.length}</b></div>
+          <div><i className="dot red" />Failed <b>{failed}</b></div>
+        </div>
       </div>
-    </div>
-  );
+      <h3>Recent Theses</h3>
+      <table className="detail-table"><thead><tr><th>#</th><th>Thesis</th><th>Status</th><th>Date</th></tr></thead><tbody>
+        {d.theses.slice(0, 5).map((x, i) => {
+          const thesisStatus = x.scores ? "Scored" : "Submitted";
+          const tone = x.scores ? "green" : "blue";
+          return <tr key={x.thesis_id}><td>{i + 1}</td><td>{x.reason_text || x.trade_id}</td><td><Status tone={tone}>{thesisStatus}</Status></td><td>{dt(x.created_at)}</td></tr>;
+        })}
+      </tbody></table>
+      {!d.theses.length && <div className="empty">No theses submitted.</div>}
+    </Card>
+    <Card title="Weekly Scores">
+      <div className="trading-stats score-stats">{[["Avg. Score", scores.length ? scores.reduce((s, x) => s + x.final_score, 0) / scores.length : 0], ["Best Score", scores.length ? Math.max(...scores.map((x) => x.final_score)) : 0], ["Total Weeks", scores.length], ["Total Points", scores.reduce((s, x) => s + x.final_score, 0)]].map(([k, v]) => <div className="trading-stat" key={String(k)}><span>{k}</span><strong>{num(Number(v))}</strong></div>)}</div>
+      <table className="detail-table"><thead><tr><th>Week / Round</th><th>Portfolio Value</th><th>Return (%)</th><th>Risk Score</th><th>Thesis Score</th><th>Execution Score</th><th>Final Score</th><th>Rank</th></tr></thead><tbody>{scores.map((x) => <tr key={x.weekly_score_id || x.week_number}><td>Round 1 (W{x.week_number})</td><td>—</td><td>—</td><td>{num(x.risk_score)}</td><td>{num(x.thesis_score)}</td><td>{num(x.execution_score)}</td><td>{num(x.final_score)}</td><td>{x.rank_position ?? "—"}</td></tr>)}</tbody></table>
+      {!scores.length && <div className="empty">No weekly scores.</div>}
+    </Card>
+  </div>;
 }
 
+function Activity({ d, userId, onReload }: { d: UserDetail; userId: string; onReload: () => Promise<void> }) { const [note, setNote] = useState(""); const [saving, setSaving] = useState(false); const add = async () => { if (!note.trim()) return; setSaving(true); try { await admin.createActivity(userId, { content: note.trim(), note_type: "admin_note" }); setNote(""); await onReload(); } finally { setSaving(false); } }; return <div className="detail-content"><Card title="Add CRM Note"><textarea value={note} onChange={(e) => setNote(e.target.value)} rows={3} placeholder="Add a note about this userâ€¦" /><button className="primary" disabled={saving || !note.trim()} onClick={() => void add()}>Add Note</button></Card><Card title="Activity Log"><div className="activity-timeline full-activity">{(d.activity_logs || []).map((a, i) => <div className="timeline-item" key={a.activity_id}><i className={`timeline-dot dot-${i % 3}`} /><div><strong>{a.description || pretty(a.event_type)}</strong><small>{dt(a.created_at)} Â· {a.event_type}</small></div></div>)}{(d.crm_notes || []).map((n) => <div className="timeline-item" key={`note-${n.note_id}`}><i className="timeline-dot dot-1" /><div><strong>{n.content}</strong><small>{dt(n.created_at)} Â· CRM Note</small></div></div>)}</div>{!(d.activity_logs?.length || d.crm_notes?.length) && <div className="empty">No activity recorded.</div>}</Card></div>; }
 
-export default function UserDetailPage({ userId, onBack }: Props) {
-  const [detail, setDetail] = useState<UserDetail | null>(null);
-  const [tab, setTab] = useState<"overview" | "account" | "competition" | "trading" | "thesis" | "activity">("overview");
-  const [error, setError] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true);
-  // Note: profile edit, trade expansion, and delete actions removed from simplified view
-
-  const load = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const d = await admin.userDetail(userId);
-      setDetail(d);
-      // load basic detail into state (no editable profile in simplified view)
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to load user.");
-    } finally {
-      setLoading(false);
-    }
-  }, [userId]);
-
-  useEffect(() => {
-    void load();
-  }, [load]);
+export default function UserDetailPage({ userId, onBack }: Props) { const [detail, setDetail] = useState<UserDetail | null>(null); const [tab, setTab] = useState<Tab>("overview"); const [loading, setLoading] = useState(true); const [error, setError] = useState<string | null>(null); const load = useCallback(async () => { setLoading(true); try { setDetail(await admin.userDetail(userId)); setError(null); } catch (e) { setError(e instanceof Error ? e.message : "Failed to load user."); } finally { setLoading(false); } }, [userId]); useEffect(() => { void load(); }, [load]); if (loading) return <div className="user-detail-page"><button onClick={onBack}>â† Back</button><span className="spinner" /> Loadingâ€¦</div>; if (!detail) return <div className="user-detail-page"><button onClick={onBack}>â† Back</button><div className="error-banner">{error || "User not found."}</div></div>; const p = detail.profile; const tabs: [Tab, string][] = [["overview", "Overview"], ["account", "Account"], ["competition", "Competition"], ["trading", "Trading"], ["thesis", "Thesis & Scores"], ["activity", "Activity"]]; return <div className="user-detail-page"><div className="user-detail-header"><button onClick={onBack}>â† Back</button><div><h1>{p.full_name || p.email}</h1><span className="muted mono">{p.user_id}</span></div><Status tone="purple">{p.role.toUpperCase()}</Status></div><div className="detail-tabs">{tabs.map(([key, text]) => <button className={tab === key ? "active" : ""} key={key} onClick={() => setTab(key)}>{text}</button>)}</div>{error && <div className="error-banner">{error}</div>}{tab === "overview" && <Overview d={detail} onTab={setTab} />}{tab === "account" && <Account d={detail} onReload={load} />}{tab === "competition" && <Competition d={detail} />}{tab === "trading" && <Trading d={detail} />}{tab === "thesis" && <ThesisScores d={detail} />}{tab === "activity" && <Activity d={detail} userId={userId} onReload={load} />}</div>; }
 
 
-  // Removed edit/promote/delete handlers for now
-
-  if (error && !detail) {
-    return (
-      <div>
-        <div className="page-header">
-          <button onClick={onBack}>← Back</button>
-        </div>
-        <div className="error-banner">{error}</div>
-      </div>
-    );
-  }
-
-  if (loading || !detail) {
-    return (
-      <div>
-        <div className="page-header">
-          <button onClick={onBack}>← Back</button>
-          <h1>User</h1>
-        </div>
-        <span className="spinner" /> Loading…
-      </div>
-    );
-  }
-
-  const p = detail.profile;
-
-  return (
-    <div>
-      <div className="page-header">
-        <button onClick={onBack}>← Back</button>
-        <div>
-          <h1 style={{ marginBottom: 2 }}>{p.full_name || p.email}</h1>
-          <span className="muted mono">{p.user_id}</span>
-        </div>
-        <span className={`role-badge ${p.role}`}>{p.role}</span>
-      </div>
-
-      {error && <div className="error-banner" style={{ marginBottom: 14 }}>{error}</div>}
-
-      <div style={{ display: "flex", gap: 8, marginBottom: 12 }}>
-        <button onClick={() => setTab("overview")} className={tab === "overview" ? "active" : ""}>Overview</button>
-        <button onClick={() => setTab("account")} className={tab === "account" ? "active" : ""}>Account</button>
-        <button onClick={() => setTab("competition")} className={tab === "competition" ? "active" : ""}>Competition</button>
-        <button onClick={() => setTab("trading")} className={tab === "trading" ? "active" : ""}>Trading</button>
-        <button onClick={() => setTab("thesis")} className={tab === "thesis" ? "active" : ""}>Thesis & Scores</button>
-        <button onClick={() => setTab("activity")} className={tab === "activity" ? "active" : ""}>Activity</button>
-      </div>
-
-      <div className="panel">
-        {tab === "overview" ? (
-          <div>
-            <h2>Profile</h2>
-            <DetailGrid
-              items={[
-                { k: "Email", v: p.email },
-                { k: "Phone", v: p.phone_number },
-                { k: "University", v: p.university },
-                { k: "Year of study", v: p.year_of_study },
-                { k: "Paid", v: p.is_paid ? "Yes" : "No" },
-                { k: "Status", v: p.registration_status ?? "—" },
-                { k: "Account status", v: p.account_status ?? "—" },
-                { k: "Age", v: p.age },
-                { k: "Date of birth", v: p.date_of_birth },
-                { k: "Joined", v: p.created_at ? p.created_at.slice(0, 10) : "—" },
-              ]}
-            />
-            <div style={{ marginTop: 16 }} />
-
-            <div style={{ marginTop: 20 }}>
-              <h3>Payments</h3>
-              {(detail.payments || []).length === 0 ? (
-                <div className="empty">No payment history.</div>
-              ) : (
-                <table>
-                  <thead>
-                    <tr><th>Date</th><th>Amount</th><th>Status</th><th>Method</th><th>Reference</th></tr>
-                  </thead>
-                  <tbody>
-                    {(detail.payments || []).map((payment) => (
-                      <tr key={payment.payment_id}>
-                        <td>{payment.created_at ? payment.created_at.slice(0,10) : ""}</td>
-                        <td>{fmtMoney(payment.amount)}</td>
-                        <td>{payment.status}</td>
-                        <td>{payment.payment_method || ""}</td>
-                        <td>{payment.reference || ""}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              )}
-            </div>
-          </div>
-        ) : tab === "account" ? (
-          <div>
-            <h2>Account & Payments</h2>
-            <div style={{ marginBottom: 12 }}>
-              <strong>Account status:</strong> {p.account_status ?? "—"}
-            </div>
-            <div>
-              <h3>Payments</h3>
-              {detail.payments && detail.payments.length > 0 ? (
-                <table className="simple-table">
-                  <thead>
-                    <tr>
-                      <th>When</th>
-                      <th>Amount</th>
-                      <th>Status</th>
-                      <th>Method</th>
-                      <th>Notes</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {detail.payments.map((pp) => (
-                      <tr key={pp.payment_id}>
-                        <td>{pp.created_at ? pp.created_at.slice(0, 19) : "—"}</td>
-                        <td>{fmtMoney(pp.amount)}</td>
-                        <td>{pp.status}</td>
-                        <td>{pp.payment_method}</td>
-                        <td>{pp.notes}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              ) : (
-                <div>No payments found.</div>
-              )}
-            </div>
-          </div>
-        ) : tab === "competition" ? (
-          <div>
-            <h2>Competition enrollments</h2>
-            <ul>
-              {(detail.competition_enrollments || []).map((e) => (
-                <li key={e.enrollment_id}>{e.competition_round || ""} — {e.status}</li>
-              ))}
-            </ul>
-          </div>
-        ) : tab === "activity" ? (
-          <div>
-            <h2>Activity & CRM Notes</h2>
-            <NoteList notes={detail.crm_notes ?? []} />
-            <AddNoteForm
-              onAdd={async (content, note_type) => {
-                try {
-                  await admin.createActivity(userId, { content, note_type });
-                  await load();
-                } catch (err) {
-                  setError(err instanceof Error ? err.message : "Failed to add note.");
-                }
-              }}
-            />
-            <div style={{ marginTop: 16 }}>
-              <h3>Activity Log</h3>
-              {detail.activity_logs && detail.activity_logs.length > 0 ? (
-                <ul>
-                  {detail.activity_logs.map((a) => (
-                    <li key={a.activity_id}>{a.event_type}: {a.description} — {a.created_at}</li>
-                  ))}
-                </ul>
-              ) : (
-                <div>No activity</div>
-              )}
-            </div>
-          </div>
-        ) : (
-          <div />
-        )}
-      </div>
-      </div>
-    );
-  }

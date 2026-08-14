@@ -38,6 +38,13 @@ def get_redis_client():
         _redis_client = False
         return None
 
+    # Local development commonly has no Redis service. Do not spend the
+    # connection timeout trying localhost before falling back to memory cache.
+    flask_env = os.getenv("FLASK_ENV", "development").lower()
+    if flask_env != "production" and any(host in redis_url.lower() for host in ("localhost", "127.0.0.1")):
+        _redis_client = False
+        return None
+
     try:
         client = redis.from_url(redis_url, decode_responses=True, socket_timeout=2)
         client.ping()

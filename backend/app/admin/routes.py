@@ -6,7 +6,7 @@ import time
 from app.admin.decorators import admin_required
 from app.admin import admin_repository as repo
 from app.extensions import limiter
-from app.models import PaymentRecord, CompetitionEnrollment, CRMNote, Report, ActivityLog, Competition, Setting
+from app.models import PaymentRecord, CompetitionEnrollment, CRMNote, Report, ActivityLog, Competition, Setting, User, TradeLog, Leaderboard
 import os
 import uuid
 import csv
@@ -234,6 +234,25 @@ def update_user_account(user_id):
     if not user:
         return jsonify({"error": "User not found"}), 404
 
+    # Keep the user's payment flag and the payment ledger synchronized. When an
+    # admin marks a user paid, the latest payment record must also become paid.
+    if "is_paid" in mutable:
+        latest_payment = PaymentRecord.query.filter_by(user_id=user_id).order_by(PaymentRecord.created_at.desc()).first()
+        if latest_payment:
+            latest_payment.status = "paid" if mutable["is_paid"] else "pending"
+            latest_payment.processed_at = datetime.utcnow() if mutable["is_paid"] else None
+        elif mutable["is_paid"]:
+            db.session.add(PaymentRecord(
+                user_id=user_id,
+                amount=0,
+                status="paid",
+                payment_method="Manual",
+                reference=f"admin_marked_paid_{datetime.utcnow().strftime('%Y%m%d%H%M%S')}",
+                notes="Payment marked as paid by admin",
+                processed_at=datetime.utcnow(),
+            ))
+        db.session.commit()
+
     portfolio = repo.portfolio_setups([user_id]).get(user_id)
     return jsonify(
         repo.build_user_row(
@@ -421,16 +440,39 @@ def create_report():
     data = request.get_json(silent=True) or {}
     rtype = str(data.get("type") or "users_summary")
 
-    # Only users_summary implemented for now
-    if rtype != "users_summary":
+    if rtype not in {"users_summary", "trading_activity", "leaderboard"}:
         return jsonify({"error": "Unsupported report type"}), 400
 
     # Create reports dir
     reports_dir = os.path.join(os.getcwd(), "backend", "reports")
     os.makedirs(reports_dir, exist_ok=True)
 
-    filename = f"{uuid.uuid4().hex}_{rtype}.csv"
+    timestamp = datetime.utcnow().strftime("%Y%m%d_%H%M%S")
+    report_prefix = {"users_summary": "user_performance_report", "trading_activity": "trading_activity_report", "leaderboard": "leaderboard_report"}[rtype]
+    filename = f"{report_prefix}_{timestamp}_{uuid.uuid4().hex[:6]}.csv"
     fullpath = os.path.join(reports_dir, filename)
+
+    if rtype in {"trading_activity", "leaderboard"}:
+        try:
+            with open(fullpath, "w", newline="", encoding="utf-8") as fh:
+                writer = csv.writer(fh)
+                if rtype == "trading_activity":
+                    writer.writerow(["trade_id", "user_id", "student", "trade_date", "ticker", "stock_name", "type", "quantity", "buy_price", "amount_invested", "sector"])
+                    rows = TradeLog.query.order_by(TradeLog.created_at.desc()).all()
+                    for row in rows:
+                        writer.writerow([row.trade_id, row.user_id, row.user.full_name if row.user else "", row.trade_date, row.stock_ticker, row.stock_name, row.trade_type, row.quantity, row.buy_price, row.amount_invested, row.sector])
+                else:
+                    writer.writerow(["rank", "user_id", "student", "university", "week", "portfolio_score", "risk_score", "thesis_score", "execution_score", "strategy_score", "final_score"])
+                    rows = Leaderboard.query.order_by(Leaderboard.rank_position.asc(), Leaderboard.final_score.desc()).all()
+                    for row in rows:
+                        writer.writerow([row.rank_position, row.user_id, row.user.full_name if row.user else "", row.user.university if row.user else "", row.week_number, row.portfolio_score, row.risk_score, row.thesis_score, row.execution_score, row.strategy_score, row.final_score])
+        except Exception as e:
+            return jsonify({"error": f"Failed to generate report: {e}"}), 500
+        rel_path = os.path.join("reports", filename)
+        rpt = Report(user_id=None, week_number=None, report_path=rel_path)
+        db.session.add(rpt)
+        db.session.commit()
+        return jsonify({"report_id": rpt.report_id, "report_path": rel_path, "generated_at": rpt.generated_at.isoformat()}), 201
 
     # Build user summary rows (single-page, large per_page)
     total, users = repo.list_users(page=1, per_page=10000)
@@ -520,6 +562,28 @@ def download_report(report_id):
     return send_file(fullpath, as_attachment=True, download_name=os.path.basename(fullpath))
 
 
+@admin_bp.delete("/reports/<int:report_id>")
+@limiter.limit("20 per minute")
+@admin_required
+def delete_report(report_id):
+    rpt = Report.query.get(report_id)
+    if not rpt:
+        return jsonify({"error": "Report not found"}), 404
+
+    reports_root = os.path.abspath(os.path.join(os.getcwd(), "backend", "reports"))
+    report_path = rpt.report_path
+    fullpath = report_path if os.path.isabs(report_path) else os.path.join(os.getcwd(), "backend", report_path)
+    fullpath = os.path.abspath(fullpath)
+    if not (fullpath == reports_root or fullpath.startswith(reports_root + os.sep)):
+        return jsonify({"error": "Invalid report path"}), 400
+
+    if os.path.exists(fullpath):
+        os.remove(fullpath)
+    db.session.delete(rpt)
+    db.session.commit()
+    return jsonify({"message": "Report deleted", "report_id": report_id}), 200
+
+
 @admin_bp.get("/competitions")
 @limiter.limit("60 per minute")
 @admin_required
@@ -541,7 +605,10 @@ def list_competition_rounds():
 
     query = Competition.query
     total = query.count()
-    rows = query.order_by(Competition.start_date.desc().nulls_last()).offset((page - 1) * per_page).limit(per_page).all()
+    # Avoid Postgres-specific NULLS LAST which TiDB/MySQL do not support.
+    # Order by whether start_date is NULL first, then by start_date desc.
+    nulls_last_order = db.case((Competition.start_date == None, 1), else_=0)
+    rows = query.order_by(nulls_last_order, Competition.start_date.desc()).offset((page - 1) * per_page).limit(per_page).all()
     return jsonify({"total": total, "page": page, "per_page": per_page, "rounds": [r.to_dict() for r in rows]}), 200
 
 
@@ -676,6 +743,9 @@ def list_activity():
     per_page = min(200, max(1, request.args.get("per_page", default=50, type=int)))
     user_id = (request.args.get("user_id") or "").strip() or None
     event_type = (request.args.get("event_type") or "").strip() or None
+    search = (request.args.get("q") or "").strip() or None
+    module = (request.args.get("module") or "").strip() or None
+    action = (request.args.get("action") or "").strip() or None
     start = (request.args.get("start") or "").strip() or None
     end = (request.args.get("end") or "").strip() or None
 
@@ -684,6 +754,13 @@ def list_activity():
         query = query.filter(ActivityLog.user_id == user_id)
     if event_type:
         query = query.filter(ActivityLog.event_type.ilike(f"%{event_type}%"))
+    if search:
+        term = f"%{search}%"
+        query = query.filter(db.or_(ActivityLog.event_type.ilike(term), ActivityLog.description.ilike(term), ActivityLog.user_id.ilike(term), ActivityLog.event_metadata.ilike(term)))
+    if module:
+        query = query.filter(db.or_(ActivityLog.event_type.ilike(f"%{module}%"), ActivityLog.description.ilike(f"%{module}%")))
+    if action:
+        query = query.filter(db.or_(ActivityLog.event_type.ilike(f"%{action}%"), ActivityLog.description.ilike(f"%{action}%")))
     if start:
         try:
             from datetime import datetime
@@ -703,7 +780,18 @@ def list_activity():
 
     total = query.count()
     rows = query.order_by(ActivityLog.created_at.desc()).offset((page - 1) * per_page).limit(per_page).all()
-    return jsonify({"total": total, "page": page, "per_page": per_page, "activity_logs": [r.to_dict() for r in rows]}), 200
+
+    def audit_row(row):
+        item = row.to_dict()
+        event = (row.event_type or "").replace("_", " ").strip().title()
+        text = f"{row.event_type} {row.description or ''}".lower()
+        module_name = "Thesis & Scores" if "thesis" in text or "score" in text else "Payments" if "payment" in text else "Competition" if "competition" in text or "enroll" in text else "Trading" if "trade" in text else "Users"
+        actor = "System" if any(word in text for word in ("thesis", "score", "enroll", "trade executed")) else "Admin"
+        target = User.query.filter_by(user_id=row.user_id).first()
+        item.update({"actor": actor, "action": event, "module": module_name, "target_name": target.full_name if target else row.user_id, "status": "Success", "details": row.description or row.event_metadata or "Activity recorded."})
+        return item
+
+    return jsonify({"total": total, "page": page, "per_page": per_page, "activity_logs": [audit_row(r) for r in rows]}), 200
 
 
 @admin_bp.post("/users/<string:user_id>/activity")

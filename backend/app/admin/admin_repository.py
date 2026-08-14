@@ -22,6 +22,7 @@ from app.models import (
     CompetitionEnrollment,
     CRMNote,
 )
+from app.cache import cache_get, cache_set
 
 
 # ─────────────────────────────────────────
@@ -329,6 +330,9 @@ def user_detail(user_id):
 # ─────────────────────────────────────────
 
 def stats_overview():
+    cached = cache_get("admin:stats:overview")
+    if cached is not None:
+        return cached
     now = datetime.utcnow()
     week_ago = now - timedelta(days=7)
     month_ago = now - timedelta(days=30)
@@ -338,6 +342,11 @@ def stats_overview():
     users_this_month = User.query.filter(User.created_at >= month_ago).count()
     admin_count = User.query.filter_by(role="admin").count()
     student_count = User.query.filter(User.role != "admin").count()
+
+    # Additional CRM counts
+    paid_students = User.query.filter(User.is_paid == True).count()
+    suspended_accounts = User.query.filter(User.account_status == "suspended").count()
+    active_students = User.query.filter(User.account_status == "active").count()
 
     total_trades = TradeLog.query.count()
     buy_volume = (
@@ -427,13 +436,16 @@ def stats_overview():
         )
     ]
 
-    return {
+    result = {
         "totals": {
             "total_users": total_users,
             "users_this_week": users_this_week,
             "users_this_month": users_this_month,
             "admin_users": admin_count,
             "student_users": student_count,
+            "paid_students": int(paid_students),
+            "suspended_accounts": int(suspended_accounts),
+            "active_students": int(active_students),
             "total_trades": total_trades,
             "buy_volume": round(float(buy_volume or 0), 2),
             "sell_volume": round(float(sell_volume or 0), 2),
@@ -453,6 +465,10 @@ def stats_overview():
         "university_breakdown": university_breakdown,
         "top_performers": top_performers,
     }
+    # Dashboard aggregates span several remote database queries. Keep them briefly
+    # cached so every dashboard navigation does not repeat the full aggregation.
+    cache_set("admin:stats:overview", result, 30)
+    return result
 
 
 def _top_performers(limit=10):

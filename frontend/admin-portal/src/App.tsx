@@ -155,7 +155,7 @@ export default function App() {
 
       <main className="content">
         {view.name === "dashboard" && (
-          <DashboardPage onOpenUser={navToDetail} />
+          <DashboardPage onOpenUser={navToDetail} onNavigate={(name) => setView({ name } as View)} />
         )}
         {view.name === "users" && (
           <UsersPage onOpenUser={navToDetail} />
