@@ -13,6 +13,9 @@ import type {
   ReportsResponse as _RR,
 } from "./types";
 
+// Re-export competition rounds response type from types to satisfy local usage
+export type CompetitionRoundsResponse = import("./types").CompetitionRoundsResponse;
+
 const DEFAULT_API_BASE = "https://tradeiq-gtkc.onrender.com";
 const configuredApiBase = import.meta.env.VITE_API_URL as string | undefined;
 const ENV_API_BASE = (configuredApiBase || DEFAULT_API_BASE).replace(/\/+$/, "");
@@ -190,9 +193,12 @@ export const admin = {
     if (query.per_page != null) params.set("per_page", String(query.per_page));
     if (query.q) params.set("q", query.q);
     const qs = params.toString();
-    return apiFetch<{ payments: PaymentRecord[]; total: number }>(
-      `/admin/payments${qs ? `?${qs}` : ""}`,
-    );
+    return apiFetch<{
+      payments: PaymentRecord[];
+      total: number;
+      total_amount?: number;
+      totals_by_status?: Record<string, number>;
+    }>(`/admin/payments${qs ? `?${qs}` : ""}`);
   },
 
   listCompetitions(query: { page?: number; per_page?: number; q?: string } = {}) {

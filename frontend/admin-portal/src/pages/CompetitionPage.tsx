@@ -9,8 +9,7 @@ export default function CompetitionPage() {
   const [loading, setLoading] = useState(true);
   const [tab, setTab] = useState<"enrollments" | "rounds">("enrollments");
   const [rounds, setRounds] = useState<any[]>([]);
-  const [roundsPage, setRoundsPage] = useState(1);
-  const [roundsTotal, setRoundsTotal] = useState(0);
+  const roundsPage = 1;
   const [roundName, setRoundName] = useState("");
 
   const load = async () => {
@@ -30,14 +29,14 @@ export default function CompetitionPage() {
     try {
       const res = await admin.listCompetitionRounds({ page: roundsPage, per_page: 50 });
       setRounds(res.rounds);
-      setRoundsTotal(res.total);
+      // total is available as res.total if needed later
     } catch (err) {
       console.error(err);
     }
   };
 
   useEffect(() => { void load(); }, [page]);
-  useEffect(() => { void loadRounds(); }, [roundsPage]);
+  useEffect(() => { void loadRounds(); }, []);
 
   const createRound = async () => {
     if (!roundName) return;
