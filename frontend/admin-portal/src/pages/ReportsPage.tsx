@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { admin } from "../api";
-import type { Report, ReportsResponse } from "../types";
+import type { Report } from "../types";
 
 export default function ReportsPage() {
   const [reports, setReports] = useState<Report[]>([]);
