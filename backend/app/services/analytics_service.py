@@ -284,7 +284,7 @@ def _benchmark_return(trades):
 # Holdings & Trade Processing
 # ─────────────────────────────────────────
 
-def _refresh_active_holdings(holdings):
+def _refresh_active_holdings(holdings, refresh_prices=True):
     """
     Concurrently update market values and profit/loss for active holdings
     using resilient price lookups to prevent blocking overhead.
@@ -292,6 +292,9 @@ def _refresh_active_holdings(holdings):
     active_holdings = [h for h in holdings if float(h.quantity or 0) > 0]
     if not active_holdings:
         return []
+
+    if not refresh_prices:
+        return active_holdings
 
     # Enqueue concurrent tasks for price fetching
     futures = [enqueue_job(get_price_with_staleness, holding.stock_ticker) for holding in active_holdings]
@@ -814,7 +817,7 @@ def _zero_scorecard():
 # Score Payload Construction
 # ─────────────────────────────────────────
 
-def _score_payload(user_id):
+def _score_payload(user_id, refresh_prices=True):
     """
     Orchestrate all data gathering and scoring for a user.
     Returns (payload_dict, error) where error is None on success.
@@ -849,7 +852,7 @@ def _score_payload(user_id):
 
     trades = repo.find_trades_by_user(user_id)
     holdings = repo.find_holdings_by_user(user_id)
-    active_holdings = _refresh_active_holdings(holdings)
+    active_holdings = _refresh_active_holdings(holdings, refresh_prices=refresh_prices)
     repo.flush()
 
     total_capital = float(portfolio.total_capital or 10000)
@@ -907,7 +910,7 @@ def _score_payload(user_id):
     return {"inputs": data, "scores": result, "metrics": metrics}, None
 
 
-def _portfolio_metrics(user_id):
+def _portfolio_metrics(user_id, refresh_prices=True):
     """Get current portfolio metrics (value, return, holdings value, etc)."""
     portfolio = repo.find_portfolio_by_user(user_id)
     if not portfolio:
@@ -920,7 +923,7 @@ def _portfolio_metrics(user_id):
         }
 
     holdings = repo.find_holdings_by_user(user_id)
-    active_holdings = _refresh_active_holdings(holdings)
+    active_holdings = _refresh_active_holdings(holdings, refresh_prices=refresh_prices)
     repo.flush()
 
     total_capital = float(portfolio.total_capital or 10000)
@@ -1046,16 +1049,47 @@ def _score_breakdown(payload):
 def _leaderboard_entry_payload(entry):
     """Format a leaderboard entry for JSON response."""
     data = entry.to_dict()
-    metrics = _portfolio_metrics(entry.user_id) or {}
+    metrics = _portfolio_metrics(entry.user_id, refresh_prices=False) or {}
     data["portfolio_value"] = metrics.get("portfolio_value", 10000.0)
     return data
+
+
+def _leaderboard_payload_for_week(week_number, entries):
+    """Return every eligible participant, including users without a score row."""
+    existing = {entry.user_id: entry for entry in entries}
+    users = repo.find_all_non_admin_users()
+    result = []
+    for user in users:
+        entry = existing.get(user.user_id)
+        if entry:
+            result.append(_leaderboard_entry_payload(entry))
+            continue
+        metrics = _portfolio_metrics(user.user_id, refresh_prices=False) or {}
+        result.append({
+            "user_id": user.user_id,
+            "full_name": user.full_name,
+            "university": user.university,
+            "week_number": week_number,
+            "portfolio_score": 0.0,
+            "risk_score": 0.0,
+            "thesis_score": 0.0,
+            "execution_score": 0.0,
+            "strategy_score": 0.0,
+            "final_score": 0.0,
+            "rank_position": None,
+            "portfolio_value": metrics.get("portfolio_value", 10000.0),
+        })
+    result.sort(key=lambda row: (row["final_score"], row["user_id"]), reverse=True)
+    for index, row in enumerate(result, start=1):
+        row["rank_position"] = index
+    return result
 
 
 def _refresh_leaderboard_week(week_number):
     """Recalculate and rerank all users for a given week."""
     users = repo.find_all_non_admin_users()
     for user in users:
-        payload, error = _score_payload(user.user_id)
+        payload, error = _score_payload(user.user_id, refresh_prices=False)
         if error:
             continue
         repo.upsert_weekly_score(user.user_id, week_number, payload["scores"])
@@ -1094,8 +1128,9 @@ def get_leaderboard_service(week: int):
     now = time.time()
     last_refresh = cache_get(last_refresh_key)
     cached_payload = cache_get(cache_key)
+    eligible_count = len(repo.find_all_non_admin_users())
 
-    is_stale = last_refresh is None or (now - float(last_refresh)) > REFRESH_INTERVAL_SECONDS
+    is_stale = last_refresh is None or (now - float(last_refresh)) > REFRESH_INTERVAL_SECONDS or (cached_payload is not None and cached_payload.get("count", 0) < eligible_count)
 
     # 1. Immediate Return: If fresh cache exists, return instantly (< 10ms)
     if cached_payload and not is_stale:
@@ -1115,8 +1150,8 @@ def get_leaderboard_service(week: int):
 
                     payload = {
                         "week": week,
-                        "count": len(entries),
-                        "entries": [_leaderboard_entry_payload(e) for e in entries],
+                        "count": eligible_count,
+                        "entries": _leaderboard_payload_for_week(week, entries),
                         "last_refreshed": time.time(),
                     }
                     cache_set(cache_key, payload, REFRESH_INTERVAL_SECONDS * 10)
@@ -1135,8 +1170,8 @@ def get_leaderboard_service(week: int):
     entries = repo.find_leaderboard_entries_by_week(week)
     payload = {
         "week": week,
-        "count": len(entries),
-        "entries": [_leaderboard_entry_payload(e) for e in entries],
+        "count": eligible_count,
+        "entries": _leaderboard_payload_for_week(week, entries),
         "last_refreshed": last_refresh,
     }
     cache_set(cache_key, payload, REFRESH_INTERVAL_SECONDS * 10)
