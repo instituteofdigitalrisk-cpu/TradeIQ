@@ -32,6 +32,12 @@ class User(db.Model):
     risk        = db.relationship("RiskMetrics",    backref="user", uselist=False)
     scores      = db.relationship("WeeklyScore",    backref="user")
     leaderboard = db.relationship("Leaderboard",    backref="user")
+    payments    = db.relationship("PaymentRecord",  backref="user")
+    activities  = db.relationship("ActivityLog",    backref="user")
+    # CRM / account fields
+    account_status = db.Column(db.String(20), default="active")
+    competition_status = db.Column(db.String(30), default="none")
+    mt5_account_id = db.Column(db.String(100))
 
     def to_dict(self):
         return {
@@ -42,6 +48,9 @@ class User(db.Model):
             "year_of_study": self.year_of_study,
             "role":          self.role,
             "created_at":    str(self.created_at),
+            "account_status": self.account_status,
+            "competition_status": self.competition_status,
+            "mt5_account_id": self.mt5_account_id,
         }
 
 
@@ -372,6 +381,125 @@ class Leaderboard(db.Model):
 # reports
 # ─────────────────────────────────────────
 
+class PaymentRecord(db.Model):
+    __tablename__ = "payment_records"
+
+    payment_id    = db.Column(db.Integer,    primary_key=True, autoincrement=True)
+    user_id       = db.Column(db.String(20), db.ForeignKey("users.user_id", ondelete="CASCADE"), nullable=False)
+    amount        = db.Column(db.Numeric(15, 2), nullable=False)
+    currency      = db.Column(db.String(10), default="USD")
+    status        = db.Column(db.String(30), nullable=False, default="pending")
+    payment_method = db.Column(db.String(50))
+    reference     = db.Column(db.String(255))
+    notes         = db.Column(db.Text)
+    processed_at  = db.Column(db.DateTime)
+    created_at    = db.Column(db.DateTime, default=datetime.utcnow)
+
+    def to_dict(self):
+        return {
+            "payment_id": self.payment_id,
+            "user_id": self.user_id,
+            "amount": float(self.amount or 0),
+            "currency": self.currency,
+            "status": self.status,
+            "payment_method": self.payment_method,
+            "reference": self.reference,
+            "notes": self.notes,
+            "processed_at": self.processed_at.isoformat() if self.processed_at else None,
+            "created_at": self.created_at.isoformat() if self.created_at else None,
+        }
+
+
+class ActivityLog(db.Model):
+    __tablename__ = "activity_logs"
+
+    activity_id    = db.Column(db.Integer,    primary_key=True, autoincrement=True)
+    user_id        = db.Column(db.String(20), db.ForeignKey("users.user_id", ondelete="CASCADE"), nullable=False)
+    event_type     = db.Column(db.String(100), nullable=False)
+    description    = db.Column(db.Text)
+    event_metadata = db.Column("metadata", db.Text)
+    created_at     = db.Column(db.DateTime, default=datetime.utcnow)
+
+    def to_dict(self):
+        return {
+            "activity_id": self.activity_id,
+            "user_id": self.user_id,
+            "event_type": self.event_type,
+            "description": self.description,
+            "metadata": self.event_metadata,
+            "created_at": self.created_at.isoformat() if self.created_at else None,
+        }
+
+
+class CompetitionEnrollment(db.Model):
+    __tablename__ = "competition_enrollments"
+
+    enrollment_id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    user_id = db.Column(db.String(20), db.ForeignKey("users.user_id", ondelete="CASCADE"), nullable=False)
+    competition_round = db.Column(db.String(50))
+    status = db.Column(db.String(30), nullable=False, default="enrolled")
+    enrolled_at = db.Column(db.DateTime, default=datetime.utcnow)
+    start_date = db.Column(db.Date)
+    end_date = db.Column(db.Date)
+
+    def to_dict(self):
+        return {
+            "enrollment_id": self.enrollment_id,
+            "user_id": self.user_id,
+            "competition_round": self.competition_round,
+            "status": self.status,
+            "enrolled_at": self.enrolled_at.isoformat() if self.enrolled_at else None,
+            "start_date": str(self.start_date) if self.start_date else None,
+            "end_date": str(self.end_date) if self.end_date else None,
+        }
+
+
+class CRMNote(db.Model):
+    __tablename__ = "crm_notes"
+
+    note_id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    user_id = db.Column(db.String(20), db.ForeignKey("users.user_id", ondelete="CASCADE"), nullable=False)
+    created_by = db.Column(db.String(20))
+    note_type = db.Column(db.String(50))
+    content = db.Column(db.Text)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    def to_dict(self):
+        return {
+            "note_id": self.note_id,
+            "user_id": self.user_id,
+            "created_by": self.created_by,
+            "note_type": self.note_type,
+            "content": self.content,
+            "created_at": self.created_at.isoformat() if self.created_at else None,
+        }
+
+
+class Competition(db.Model):
+    __tablename__ = "competitions"
+
+    competition_id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    name = db.Column(db.String(150), nullable=False)
+    slug = db.Column(db.String(150), unique=True)
+    description = db.Column(db.Text)
+    start_date = db.Column(db.Date)
+    end_date = db.Column(db.Date)
+    active = db.Column(db.Boolean, default=True)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    def to_dict(self):
+        return {
+            "competition_id": self.competition_id,
+            "name": self.name,
+            "slug": self.slug,
+            "description": self.description,
+            "start_date": str(self.start_date) if self.start_date else None,
+            "end_date": str(self.end_date) if self.end_date else None,
+            "active": bool(self.active),
+            "created_at": self.created_at.isoformat() if self.created_at else None,
+        }
+
+
 class Report(db.Model):
     __tablename__ = "reports"
 
@@ -380,3 +508,15 @@ class Report(db.Model):
     week_number  = db.Column(db.Integer)
     report_path  = db.Column(db.String(255))
     generated_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+
+class Setting(db.Model):
+    __tablename__ = "settings"
+
+    key = db.Column(db.String(100), primary_key=True)
+    value = db.Column(db.Text)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    def to_dict(self):
+        return {"key": self.key, "value": self.value, "created_at": self.created_at.isoformat() if self.created_at else None, "updated_at": self.updated_at.isoformat() if self.updated_at else None}

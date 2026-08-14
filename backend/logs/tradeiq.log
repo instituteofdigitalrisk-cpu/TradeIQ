@@ -1,201 +1,75 @@
-[2026-08-04 17:47:32,554] [INFO] [User:SYSTEM] [Session:N/A] [app] - [TradeIQ] Starting up — DB host: gateway01.ap-southeast-1.prod.aws.tidbcloud.com | DB name: tradeiq | SSL: true | Env: development
-[2026-08-04 17:47:32,779] [INFO] [User:SYSTEM] [Session:N/A] [app] - [TradeIQ] Starting up — DB host: gateway01.ap-southeast-1.prod.aws.tidbcloud.com | DB name: tradeiq | SSL: true | Env: development
-[2026-08-04 17:47:32,807] [INFO] [User:SYSTEM] [Session:N/A] [app] - [TradeIQ] Starting up — DB host: gateway01.ap-southeast-1.prod.aws.tidbcloud.com | DB name: tradeiq | SSL: true | Env: development
-[2026-08-04 17:47:32,838] [INFO] [User:SYSTEM] [Session:N/A] [app] - [TradeIQ] Starting up — DB host: gateway01.ap-southeast-1.prod.aws.tidbcloud.com | DB name: tradeiq | SSL: true | Env: development
-[2026-08-04 17:47:32,868] [INFO] [User:SYSTEM] [Session:N/A] [app] - [TradeIQ] Starting up — DB host: gateway01.ap-southeast-1.prod.aws.tidbcloud.com | DB name: tradeiq | SSL: true | Env: development
-[2026-08-04 17:47:32,900] [INFO] [User:SYSTEM] [Session:N/A] [app] - [TradeIQ] Starting up — DB host: gateway01.ap-southeast-1.prod.aws.tidbcloud.com | DB name: tradeiq | SSL: true | Env: development
-[2026-08-04 17:47:32,941] [INFO] [User:SYSTEM] [Session:N/A] [app] - [TradeIQ] Starting up — DB host: gateway01.ap-southeast-1.prod.aws.tidbcloud.com | DB name: tradeiq | SSL: true | Env: development
-[2026-08-04 17:47:32,969] [INFO] [User:SYSTEM] [Session:N/A] [app] - [TradeIQ] Starting up — DB host: gateway01.ap-southeast-1.prod.aws.tidbcloud.com | DB name: tradeiq | SSL: true | Env: development
-[2026-08-04 17:47:32,998] [INFO] [User:SYSTEM] [Session:N/A] [app] - [TradeIQ] Starting up — DB host: gateway01.ap-southeast-1.prod.aws.tidbcloud.com | DB name: tradeiq | SSL: true | Env: development
-[2026-08-04 17:47:33,026] [INFO] [User:SYSTEM] [Session:N/A] [app] - [TradeIQ] Starting up — DB host: gateway01.ap-southeast-1.prod.aws.tidbcloud.com | DB name: tradeiq | SSL: true | Env: development
-[2026-08-04 17:47:33,053] [INFO] [User:SYSTEM] [Session:N/A] [app] - [TradeIQ] Starting up — DB host: gateway01.ap-southeast-1.prod.aws.tidbcloud.com | DB name: tradeiq | SSL: true | Env: development
-[2026-08-04 17:47:48,427] [INFO] [User:SYSTEM] [Session:N/A] [app] - [TradeIQ] Starting up — DB host: gateway01.ap-southeast-1.prod.aws.tidbcloud.com | DB name: tradeiq | SSL: true | Env: development
-[2026-08-04 17:48:02,961] [WARNING] [User:STU001] [Session:N/A] [flask-limiter] - Rate limit storage unreachable - falling back to in-memory storage
-[2026-08-04 17:48:16,192] [INFO] [User:SYSTEM] [Session:N/A] [app] - [TradeIQ] Starting up — DB host: gateway01.ap-southeast-1.prod.aws.tidbcloud.com | DB name: tradeiq | SSL: true | Env: development
-[2026-08-04 17:48:33,185] [INFO] [User:SYSTEM] [Session:N/A] [app] - [TradeIQ] Starting up — DB host: gateway01.ap-southeast-1.prod.aws.tidbcloud.com | DB name: tradeiq | SSL: true | Env: development
-[2026-08-04 17:48:53,048] [INFO] [User:SYSTEM] [Session:N/A] [app] - [TradeIQ] Starting up — DB host: gateway01.ap-southeast-1.prod.aws.tidbcloud.com | DB name: tradeiq | SSL: true | Env: development
-[2026-08-04 17:49:14,405] [INFO] [User:SYSTEM] [Session:N/A] [app] - [TradeIQ] Starting up — DB host: gateway01.ap-southeast-1.prod.aws.tidbcloud.com | DB name: tradeiq | SSL: true | Env: development
-[2026-08-04 17:49:32,462] [INFO] [User:SYSTEM] [Session:N/A] [app] - [TradeIQ] Starting up — DB host: gateway01.ap-southeast-1.prod.aws.tidbcloud.com | DB name: tradeiq | SSL: true | Env: development
-[2026-08-04 17:49:59,611] [INFO] [User:SYSTEM] [Session:N/A] [app] - [TradeIQ] Starting up — DB host: gateway01.ap-southeast-1.prod.aws.tidbcloud.com | DB name: tradeiq | SSL: true | Env: development
-[2026-08-04 17:50:19,844] [INFO] [User:SYSTEM] [Session:N/A] [app] - [TradeIQ] Starting up — DB host: gateway01.ap-southeast-1.prod.aws.tidbcloud.com | DB name: tradeiq | SSL: true | Env: development
-[2026-08-04 17:50:39,622] [INFO] [User:SYSTEM] [Session:N/A] [app] - [TradeIQ] Starting up — DB host: gateway01.ap-southeast-1.prod.aws.tidbcloud.com | DB name: tradeiq | SSL: true | Env: development
-[2026-08-04 17:51:03,312] [INFO] [User:SYSTEM] [Session:N/A] [app] - [TradeIQ] Starting up — DB host: gateway01.ap-southeast-1.prod.aws.tidbcloud.com | DB name: tradeiq | SSL: true | Env: development
-[2026-08-04 17:51:17,483] [WARNING] [User:STU001] [Session:N/A] [flask-limiter] - Rate limit storage unreachable - falling back to in-memory storage
-[2026-08-04 17:51:29,110] [INFO] [User:SYSTEM] [Session:N/A] [app] - [TradeIQ] Starting up — DB host: gateway01.ap-southeast-1.prod.aws.tidbcloud.com | DB name: tradeiq | SSL: true | Env: development
-[2026-08-04 17:51:47,100] [INFO] [User:SYSTEM] [Session:N/A] [app] - [TradeIQ] Starting up — DB host: gateway01.ap-southeast-1.prod.aws.tidbcloud.com | DB name: tradeiq | SSL: true | Env: development
-[2026-08-04 17:52:06,507] [INFO] [User:SYSTEM] [Session:N/A] [app] - [TradeIQ] Starting up — DB host: gateway01.ap-southeast-1.prod.aws.tidbcloud.com | DB name: tradeiq | SSL: true | Env: development
-[2026-08-04 17:52:30,957] [INFO] [User:SYSTEM] [Session:N/A] [app] - [TradeIQ] Starting up — DB host: gateway01.ap-southeast-1.prod.aws.tidbcloud.com | DB name: tradeiq | SSL: true | Env: development
-[2026-08-04 17:52:48,776] [INFO] [User:SYSTEM] [Session:N/A] [app] - [TradeIQ] Starting up — DB host: gateway01.ap-southeast-1.prod.aws.tidbcloud.com | DB name: tradeiq | SSL: true | Env: development
-[2026-08-04 17:53:17,039] [INFO] [User:SYSTEM] [Session:N/A] [app] - [TradeIQ] Starting up — DB host: gateway01.ap-southeast-1.prod.aws.tidbcloud.com | DB name: tradeiq | SSL: true | Env: development
-[2026-08-04 17:53:32,810] [INFO] [User:SYSTEM] [Session:N/A] [app] - [TradeIQ] Starting up — DB host: gateway01.ap-southeast-1.prod.aws.tidbcloud.com | DB name: tradeiq | SSL: true | Env: development
-[2026-08-04 17:53:51,954] [INFO] [User:SYSTEM] [Session:N/A] [app] - [TradeIQ] Starting up — DB host: gateway01.ap-southeast-1.prod.aws.tidbcloud.com | DB name: tradeiq | SSL: true | Env: development
-[2026-08-04 17:54:10,490] [INFO] [User:SYSTEM] [Session:N/A] [app] - [TradeIQ] Starting up — DB host: gateway01.ap-southeast-1.prod.aws.tidbcloud.com | DB name: tradeiq | SSL: true | Env: development
-[2026-08-04 17:54:26,055] [INFO] [User:SYSTEM] [Session:N/A] [app] - [TradeIQ] Starting up — DB host: gateway01.ap-southeast-1.prod.aws.tidbcloud.com | DB name: tradeiq | SSL: true | Env: development
-[2026-08-04 17:55:52,720] [INFO] [User:SYSTEM] [Session:N/A] [app] - [TradeIQ] Starting up — DB host: gateway01.ap-southeast-1.prod.aws.tidbcloud.com | DB name: tradeiq | SSL: true | Env: development
-[2026-08-04 17:55:54,243] [INFO] [User:SYSTEM] [Session:N/A] [app] - Skipping startup DDL (TRADEIQ_SKIP_STARTUP_DDL=true).
-[2026-08-04 17:56:04,343] [WARNING] [User:STU001] [Session:N/A] [flask-limiter] - Rate limit storage unreachable - falling back to in-memory storage
-[2026-08-04 17:56:16,541] [INFO] [User:SYSTEM] [Session:N/A] [app] - [TradeIQ] Starting up — DB host: gateway01.ap-southeast-1.prod.aws.tidbcloud.com | DB name: tradeiq | SSL: true | Env: development
-[2026-08-04 17:56:16,552] [INFO] [User:SYSTEM] [Session:N/A] [app] - Skipping startup DDL (TRADEIQ_SKIP_STARTUP_DDL=true).
-[2026-08-04 17:56:32,002] [INFO] [User:SYSTEM] [Session:N/A] [app] - [TradeIQ] Starting up — DB host: gateway01.ap-southeast-1.prod.aws.tidbcloud.com | DB name: tradeiq | SSL: true | Env: development
-[2026-08-04 17:56:32,015] [INFO] [User:SYSTEM] [Session:N/A] [app] - Skipping startup DDL (TRADEIQ_SKIP_STARTUP_DDL=true).
-[2026-08-04 17:56:51,248] [INFO] [User:SYSTEM] [Session:N/A] [app] - [TradeIQ] Starting up — DB host: gateway01.ap-southeast-1.prod.aws.tidbcloud.com | DB name: tradeiq | SSL: true | Env: development
-[2026-08-04 17:56:51,296] [INFO] [User:SYSTEM] [Session:N/A] [app] - Skipping startup DDL (TRADEIQ_SKIP_STARTUP_DDL=true).
-[2026-08-04 17:57:09,563] [INFO] [User:SYSTEM] [Session:N/A] [app] - [TradeIQ] Starting up — DB host: gateway01.ap-southeast-1.prod.aws.tidbcloud.com | DB name: tradeiq | SSL: true | Env: development
-[2026-08-04 17:57:09,580] [INFO] [User:SYSTEM] [Session:N/A] [app] - Skipping startup DDL (TRADEIQ_SKIP_STARTUP_DDL=true).
-[2026-08-04 17:57:22,746] [INFO] [User:SYSTEM] [Session:N/A] [app] - [TradeIQ] Starting up — DB host: gateway01.ap-southeast-1.prod.aws.tidbcloud.com | DB name: tradeiq | SSL: true | Env: development
-[2026-08-04 17:57:22,766] [INFO] [User:SYSTEM] [Session:N/A] [app] - Skipping startup DDL (TRADEIQ_SKIP_STARTUP_DDL=true).
-[2026-08-04 17:57:45,111] [INFO] [User:SYSTEM] [Session:N/A] [app] - [TradeIQ] Starting up — DB host: gateway01.ap-southeast-1.prod.aws.tidbcloud.com | DB name: tradeiq | SSL: true | Env: development
-[2026-08-04 17:57:45,132] [INFO] [User:SYSTEM] [Session:N/A] [app] - Skipping startup DDL (TRADEIQ_SKIP_STARTUP_DDL=true).
-[2026-08-04 17:58:02,842] [INFO] [User:SYSTEM] [Session:N/A] [app] - [TradeIQ] Starting up — DB host: gateway01.ap-southeast-1.prod.aws.tidbcloud.com | DB name: tradeiq | SSL: true | Env: development
-[2026-08-04 17:58:04,320] [INFO] [User:SYSTEM] [Session:N/A] [app] - Skipping startup DDL (TRADEIQ_SKIP_STARTUP_DDL=true).
-[2026-08-04 17:58:45,942] [INFO] [User:SYSTEM] [Session:N/A] [app] - [TradeIQ] Starting up — DB host: gateway01.ap-southeast-1.prod.aws.tidbcloud.com | DB name: tradeiq | SSL: true | Env: development
-[2026-08-04 17:58:47,049] [INFO] [User:SYSTEM] [Session:N/A] [app] - Skipping startup DDL (TRADEIQ_SKIP_STARTUP_DDL=true).
-[2026-08-04 17:58:53,236] [WARNING] [User:ADM001] [Session:N/A] [flask-limiter] - Rate limit storage unreachable - falling back to in-memory storage
-[2026-08-04 17:59:50,476] [INFO] [User:SYSTEM] [Session:N/A] [app] - [TradeIQ] Starting up — DB host: gateway01.ap-southeast-1.prod.aws.tidbcloud.com | DB name: tradeiq | SSL: true | Env: development
-[2026-08-04 17:59:51,551] [INFO] [User:SYSTEM] [Session:N/A] [app] - Skipping startup DDL (TRADEIQ_SKIP_STARTUP_DDL=true).
-[2026-08-04 18:07:58,066] [INFO] [User:SYSTEM] [Session:N/A] [app] - [TradeIQ] Starting up — DB host: gateway01.ap-southeast-1.prod.aws.tidbcloud.com | DB name: tradeiq | SSL: true | Env: development
-[2026-08-04 18:07:59,892] [INFO] [User:SYSTEM] [Session:N/A] [app] - Skipping startup DDL (TRADEIQ_SKIP_STARTUP_DDL=true).
-[2026-08-04 18:09:03,311] [INFO] [User:SYSTEM] [Session:N/A] [app] - [TradeIQ] Starting up — DB host: 127.0.0.1 | DB name: tradeiq | SSL: false | Env: test
-[2026-08-04 18:09:04,994] [INFO] [User:SYSTEM] [Session:N/A] [app] - Skipping startup DDL (TRADEIQ_SKIP_STARTUP_DDL=true).
-[2026-08-04 18:09:05,106] [INFO] [User:SYSTEM] [Session:N/A] [app] - [TradeIQ] Starting up — DB host: 127.0.0.1 | DB name: tradeiq | SSL: false | Env: test
-[2026-08-04 18:09:05,123] [INFO] [User:SYSTEM] [Session:N/A] [app] - Skipping startup DDL (TRADEIQ_SKIP_STARTUP_DDL=true).
-[2026-08-04 18:09:05,143] [INFO] [User:SYSTEM] [Session:N/A] [app] - [TradeIQ] Starting up — DB host: 127.0.0.1 | DB name: tradeiq | SSL: false | Env: test
-[2026-08-04 18:09:05,164] [INFO] [User:SYSTEM] [Session:N/A] [app] - Skipping startup DDL (TRADEIQ_SKIP_STARTUP_DDL=true).
-[2026-08-04 18:09:05,213] [INFO] [User:SYSTEM] [Session:N/A] [app] - [TradeIQ] Starting up — DB host: 127.0.0.1 | DB name: tradeiq | SSL: false | Env: test
-[2026-08-04 18:09:05,238] [INFO] [User:SYSTEM] [Session:N/A] [app] - Skipping startup DDL (TRADEIQ_SKIP_STARTUP_DDL=true).
-[2026-08-04 18:09:05,317] [INFO] [User:SYSTEM] [Session:N/A] [app] - [TradeIQ] Starting up — DB host: 127.0.0.1 | DB name: tradeiq | SSL: false | Env: test
-[2026-08-04 18:09:05,337] [INFO] [User:SYSTEM] [Session:N/A] [app] - Skipping startup DDL (TRADEIQ_SKIP_STARTUP_DDL=true).
-[2026-08-04 18:09:05,376] [INFO] [User:SYSTEM] [Session:N/A] [app] - [TradeIQ] Starting up — DB host: 127.0.0.1 | DB name: tradeiq | SSL: false | Env: test
-[2026-08-04 18:09:05,395] [INFO] [User:SYSTEM] [Session:N/A] [app] - Skipping startup DDL (TRADEIQ_SKIP_STARTUP_DDL=true).
-[2026-08-04 18:09:05,460] [INFO] [User:SYSTEM] [Session:N/A] [app] - [TradeIQ] Starting up — DB host: 127.0.0.1 | DB name: tradeiq | SSL: false | Env: test
-[2026-08-04 18:09:05,516] [INFO] [User:SYSTEM] [Session:N/A] [app] - Skipping startup DDL (TRADEIQ_SKIP_STARTUP_DDL=true).
-[2026-08-04 18:09:05,540] [INFO] [User:SYSTEM] [Session:N/A] [app] - [TradeIQ] Starting up — DB host: 127.0.0.1 | DB name: tradeiq | SSL: false | Env: test
-[2026-08-04 18:09:05,558] [INFO] [User:SYSTEM] [Session:N/A] [app] - Skipping startup DDL (TRADEIQ_SKIP_STARTUP_DDL=true).
-[2026-08-04 18:09:05,611] [INFO] [User:SYSTEM] [Session:N/A] [app] - [TradeIQ] Starting up — DB host: 127.0.0.1 | DB name: tradeiq | SSL: false | Env: test
-[2026-08-04 18:09:05,631] [INFO] [User:SYSTEM] [Session:N/A] [app] - Skipping startup DDL (TRADEIQ_SKIP_STARTUP_DDL=true).
-[2026-08-04 18:09:05,660] [INFO] [User:SYSTEM] [Session:N/A] [app] - [TradeIQ] Starting up — DB host: 127.0.0.1 | DB name: tradeiq | SSL: false | Env: test
-[2026-08-04 18:09:05,683] [INFO] [User:SYSTEM] [Session:N/A] [app] - Skipping startup DDL (TRADEIQ_SKIP_STARTUP_DDL=true).
-[2026-08-04 18:09:05,709] [INFO] [User:SYSTEM] [Session:N/A] [app] - [TradeIQ] Starting up — DB host: 127.0.0.1 | DB name: tradeiq | SSL: false | Env: test
-[2026-08-04 18:09:05,731] [INFO] [User:SYSTEM] [Session:N/A] [app] - Skipping startup DDL (TRADEIQ_SKIP_STARTUP_DDL=true).
-[2026-08-04 18:10:00,107] [INFO] [User:SYSTEM] [Session:N/A] [app] - [TradeIQ] Starting up — DB host: 127.0.0.1 | DB name: tradeiq | SSL: false | Env: test
-[2026-08-04 18:10:01,980] [INFO] [User:SYSTEM] [Session:N/A] [app] - Skipping startup DDL (TRADEIQ_SKIP_STARTUP_DDL=true).
-[2026-08-04 18:10:02,052] [INFO] [User:SYSTEM] [Session:N/A] [app] - [TradeIQ] Starting up — DB host: 127.0.0.1 | DB name: tradeiq | SSL: false | Env: test
-[2026-08-04 18:10:02,069] [INFO] [User:SYSTEM] [Session:N/A] [app] - Skipping startup DDL (TRADEIQ_SKIP_STARTUP_DDL=true).
-[2026-08-04 18:10:02,086] [INFO] [User:SYSTEM] [Session:N/A] [app] - [TradeIQ] Starting up — DB host: 127.0.0.1 | DB name: tradeiq | SSL: false | Env: test
-[2026-08-04 18:10:02,101] [INFO] [User:SYSTEM] [Session:N/A] [app] - Skipping startup DDL (TRADEIQ_SKIP_STARTUP_DDL=true).
-[2026-08-04 18:10:02,150] [INFO] [User:SYSTEM] [Session:N/A] [app] - [TradeIQ] Starting up — DB host: 127.0.0.1 | DB name: tradeiq | SSL: false | Env: test
-[2026-08-04 18:10:02,166] [INFO] [User:SYSTEM] [Session:N/A] [app] - Skipping startup DDL (TRADEIQ_SKIP_STARTUP_DDL=true).
-[2026-08-04 18:10:02,243] [INFO] [User:SYSTEM] [Session:N/A] [app] - [TradeIQ] Starting up — DB host: 127.0.0.1 | DB name: tradeiq | SSL: false | Env: test
-[2026-08-04 18:10:02,300] [INFO] [User:SYSTEM] [Session:N/A] [app] - Skipping startup DDL (TRADEIQ_SKIP_STARTUP_DDL=true).
-[2026-08-04 18:10:02,345] [INFO] [User:SYSTEM] [Session:N/A] [app] - [TradeIQ] Starting up — DB host: 127.0.0.1 | DB name: tradeiq | SSL: false | Env: test
-[2026-08-04 18:10:02,363] [INFO] [User:SYSTEM] [Session:N/A] [app] - Skipping startup DDL (TRADEIQ_SKIP_STARTUP_DDL=true).
-[2026-08-04 18:10:02,414] [INFO] [User:SYSTEM] [Session:N/A] [app] - [TradeIQ] Starting up — DB host: 127.0.0.1 | DB name: tradeiq | SSL: false | Env: test
-[2026-08-04 18:10:02,433] [INFO] [User:SYSTEM] [Session:N/A] [app] - Skipping startup DDL (TRADEIQ_SKIP_STARTUP_DDL=true).
-[2026-08-04 18:10:02,459] [INFO] [User:SYSTEM] [Session:N/A] [app] - [TradeIQ] Starting up — DB host: 127.0.0.1 | DB name: tradeiq | SSL: false | Env: test
-[2026-08-04 18:10:02,475] [INFO] [User:SYSTEM] [Session:N/A] [app] - Skipping startup DDL (TRADEIQ_SKIP_STARTUP_DDL=true).
-[2026-08-04 18:10:02,525] [INFO] [User:SYSTEM] [Session:N/A] [app] - [TradeIQ] Starting up — DB host: 127.0.0.1 | DB name: tradeiq | SSL: false | Env: test
-[2026-08-04 18:10:02,541] [INFO] [User:SYSTEM] [Session:N/A] [app] - Skipping startup DDL (TRADEIQ_SKIP_STARTUP_DDL=true).
-[2026-08-04 18:10:02,566] [INFO] [User:SYSTEM] [Session:N/A] [app] - [TradeIQ] Starting up — DB host: 127.0.0.1 | DB name: tradeiq | SSL: false | Env: test
-[2026-08-04 18:10:02,586] [INFO] [User:SYSTEM] [Session:N/A] [app] - Skipping startup DDL (TRADEIQ_SKIP_STARTUP_DDL=true).
-[2026-08-04 18:10:02,609] [INFO] [User:SYSTEM] [Session:N/A] [app] - [TradeIQ] Starting up — DB host: 127.0.0.1 | DB name: tradeiq | SSL: false | Env: test
-[2026-08-04 18:10:02,629] [INFO] [User:SYSTEM] [Session:N/A] [app] - Skipping startup DDL (TRADEIQ_SKIP_STARTUP_DDL=true).
-[2026-08-04 18:10:22,466] [INFO] [User:SYSTEM] [Session:N/A] [app] - [TradeIQ] Starting up — DB host: 127.0.0.1 | DB name: tradeiq | SSL: false | Env: test
-[2026-08-04 18:10:22,521] [INFO] [User:SYSTEM] [Session:N/A] [app] - Skipping startup DDL (TRADEIQ_SKIP_STARTUP_DDL=true).
-[2026-08-04 18:10:22,614] [INFO] [User:SYSTEM] [Session:N/A] [app] - [TradeIQ] Starting up — DB host: 127.0.0.1 | DB name: tradeiq | SSL: false | Env: test
-[2026-08-04 18:10:22,636] [INFO] [User:SYSTEM] [Session:N/A] [app] - Skipping startup DDL (TRADEIQ_SKIP_STARTUP_DDL=true).
-[2026-08-04 18:10:22,683] [INFO] [User:SYSTEM] [Session:N/A] [app] - [TradeIQ] Starting up — DB host: 127.0.0.1 | DB name: tradeiq | SSL: false | Env: test
-[2026-08-04 18:10:22,725] [INFO] [User:SYSTEM] [Session:N/A] [app] - Skipping startup DDL (TRADEIQ_SKIP_STARTUP_DDL=true).
-[2026-08-04 18:10:22,830] [INFO] [User:SYSTEM] [Session:N/A] [app] - [TradeIQ] Starting up — DB host: 127.0.0.1 | DB name: tradeiq | SSL: false | Env: test
-[2026-08-04 18:10:22,875] [INFO] [User:SYSTEM] [Session:N/A] [app] - Skipping startup DDL (TRADEIQ_SKIP_STARTUP_DDL=true).
-[2026-08-04 18:10:22,984] [INFO] [User:SYSTEM] [Session:N/A] [app] - [TradeIQ] Starting up — DB host: 127.0.0.1 | DB name: tradeiq | SSL: false | Env: test
-[2026-08-04 18:10:23,046] [INFO] [User:SYSTEM] [Session:N/A] [app] - Skipping startup DDL (TRADEIQ_SKIP_STARTUP_DDL=true).
-[2026-08-04 18:10:23,095] [INFO] [User:SYSTEM] [Session:N/A] [app] - [TradeIQ] Starting up — DB host: 127.0.0.1 | DB name: tradeiq | SSL: false | Env: test
-[2026-08-04 18:10:23,115] [INFO] [User:SYSTEM] [Session:N/A] [app] - Skipping startup DDL (TRADEIQ_SKIP_STARTUP_DDL=true).
-[2026-08-04 18:10:23,176] [INFO] [User:SYSTEM] [Session:N/A] [app] - [TradeIQ] Starting up — DB host: 127.0.0.1 | DB name: tradeiq | SSL: false | Env: test
-[2026-08-04 18:10:23,196] [INFO] [User:SYSTEM] [Session:N/A] [app] - Skipping startup DDL (TRADEIQ_SKIP_STARTUP_DDL=true).
-[2026-08-04 18:10:23,230] [INFO] [User:SYSTEM] [Session:N/A] [app] - [TradeIQ] Starting up — DB host: 127.0.0.1 | DB name: tradeiq | SSL: false | Env: test
-[2026-08-04 18:10:23,252] [INFO] [User:SYSTEM] [Session:N/A] [app] - Skipping startup DDL (TRADEIQ_SKIP_STARTUP_DDL=true).
-[2026-08-04 18:10:23,310] [INFO] [User:SYSTEM] [Session:N/A] [app] - [TradeIQ] Starting up — DB host: 127.0.0.1 | DB name: tradeiq | SSL: false | Env: test
-[2026-08-04 18:10:23,335] [INFO] [User:SYSTEM] [Session:N/A] [app] - Skipping startup DDL (TRADEIQ_SKIP_STARTUP_DDL=true).
-[2026-08-04 18:10:23,364] [INFO] [User:SYSTEM] [Session:N/A] [app] - [TradeIQ] Starting up — DB host: 127.0.0.1 | DB name: tradeiq | SSL: false | Env: test
-[2026-08-04 18:10:23,392] [INFO] [User:SYSTEM] [Session:N/A] [app] - Skipping startup DDL (TRADEIQ_SKIP_STARTUP_DDL=true).
-[2026-08-04 18:10:23,441] [INFO] [User:SYSTEM] [Session:N/A] [app] - [TradeIQ] Starting up — DB host: 127.0.0.1 | DB name: tradeiq | SSL: false | Env: test
-[2026-08-04 18:10:23,473] [INFO] [User:SYSTEM] [Session:N/A] [app] - Skipping startup DDL (TRADEIQ_SKIP_STARTUP_DDL=true).
-[2026-08-04 18:10:23,601] [INFO] [User:SYSTEM] [Session:N/A] [app] - [TradeIQ] Starting up — DB host: 127.0.0.1 | DB name: tradeiq | SSL: false | Env: test
-[2026-08-04 18:10:23,626] [INFO] [User:SYSTEM] [Session:N/A] [app] - Skipping startup DDL (TRADEIQ_SKIP_STARTUP_DDL=true).
-[2026-08-04 18:10:23,646] [INFO] [User:SYSTEM] [Session:N/A] [app] - [TradeIQ] Starting up — DB host: 127.0.0.1 | DB name: tradeiq | SSL: false | Env: test
-[2026-08-04 18:10:23,670] [INFO] [User:SYSTEM] [Session:N/A] [app] - Skipping startup DDL (TRADEIQ_SKIP_STARTUP_DDL=true).
-[2026-08-04 18:10:24,063] [INFO] [User:SYSTEM] [Session:N/A] [app] - [TradeIQ] Starting up — DB host: 127.0.0.1 | DB name: tradeiq | SSL: false | Env: test
-[2026-08-04 18:10:24,075] [INFO] [User:SYSTEM] [Session:N/A] [app] - Skipping startup DDL (TRADEIQ_SKIP_STARTUP_DDL=true).
-[2026-08-04 18:10:24,097] [INFO] [User:SYSTEM] [Session:N/A] [app] - [TradeIQ] Starting up — DB host: 127.0.0.1 | DB name: tradeiq | SSL: false | Env: test
-[2026-08-04 18:10:24,111] [INFO] [User:SYSTEM] [Session:N/A] [app] - Skipping startup DDL (TRADEIQ_SKIP_STARTUP_DDL=true).
-[2026-08-04 18:10:24,128] [INFO] [User:SYSTEM] [Session:N/A] [app] - [TradeIQ] Starting up — DB host: 127.0.0.1 | DB name: tradeiq | SSL: false | Env: test
-[2026-08-04 18:10:24,143] [INFO] [User:SYSTEM] [Session:N/A] [app] - Skipping startup DDL (TRADEIQ_SKIP_STARTUP_DDL=true).
-[2026-08-04 18:10:24,163] [INFO] [User:SYSTEM] [Session:N/A] [app] - [TradeIQ] Starting up — DB host: 127.0.0.1 | DB name: tradeiq | SSL: false | Env: test
-[2026-08-04 18:10:24,184] [INFO] [User:SYSTEM] [Session:N/A] [app] - Skipping startup DDL (TRADEIQ_SKIP_STARTUP_DDL=true).
-[2026-08-04 20:09:13,793] [INFO] [User:SYSTEM] [Session:N/A] [app] - [TradeIQ] Starting up — DB host: 127.0.0.1 | DB name: tradeiq | SSL: false | Env: test
-[2026-08-04 20:09:19,008] [INFO] [User:SYSTEM] [Session:N/A] [app] - Skipping startup DDL (TRADEIQ_SKIP_STARTUP_DDL=true).
-[2026-08-04 20:09:19,123] [INFO] [User:SYSTEM] [Session:N/A] [app] - [TradeIQ] Starting up — DB host: 127.0.0.1 | DB name: tradeiq | SSL: false | Env: test
-[2026-08-04 20:09:19,133] [INFO] [User:SYSTEM] [Session:N/A] [app] - Skipping startup DDL (TRADEIQ_SKIP_STARTUP_DDL=true).
-[2026-08-04 20:09:19,145] [INFO] [User:SYSTEM] [Session:N/A] [app] - [TradeIQ] Starting up — DB host: 127.0.0.1 | DB name: tradeiq | SSL: false | Env: test
-[2026-08-04 20:09:19,156] [INFO] [User:SYSTEM] [Session:N/A] [app] - Skipping startup DDL (TRADEIQ_SKIP_STARTUP_DDL=true).
-[2026-08-04 20:09:19,183] [INFO] [User:SYSTEM] [Session:N/A] [app] - [TradeIQ] Starting up — DB host: 127.0.0.1 | DB name: tradeiq | SSL: false | Env: test
-[2026-08-04 20:09:19,194] [INFO] [User:SYSTEM] [Session:N/A] [app] - Skipping startup DDL (TRADEIQ_SKIP_STARTUP_DDL=true).
-[2026-08-04 20:09:19,240] [INFO] [User:SYSTEM] [Session:N/A] [app] - [TradeIQ] Starting up — DB host: 127.0.0.1 | DB name: tradeiq | SSL: false | Env: test
-[2026-08-04 20:09:19,249] [INFO] [User:SYSTEM] [Session:N/A] [app] - Skipping startup DDL (TRADEIQ_SKIP_STARTUP_DDL=true).
-[2026-08-04 20:09:19,273] [INFO] [User:SYSTEM] [Session:N/A] [app] - [TradeIQ] Starting up — DB host: 127.0.0.1 | DB name: tradeiq | SSL: false | Env: test
-[2026-08-04 20:09:19,284] [INFO] [User:SYSTEM] [Session:N/A] [app] - Skipping startup DDL (TRADEIQ_SKIP_STARTUP_DDL=true).
-[2026-08-04 20:09:19,321] [INFO] [User:SYSTEM] [Session:N/A] [app] - [TradeIQ] Starting up — DB host: 127.0.0.1 | DB name: tradeiq | SSL: false | Env: test
-[2026-08-04 20:09:19,359] [INFO] [User:SYSTEM] [Session:N/A] [app] - Skipping startup DDL (TRADEIQ_SKIP_STARTUP_DDL=true).
-[2026-08-04 20:09:19,378] [INFO] [User:SYSTEM] [Session:N/A] [app] - [TradeIQ] Starting up — DB host: 127.0.0.1 | DB name: tradeiq | SSL: false | Env: test
-[2026-08-04 20:09:19,387] [INFO] [User:SYSTEM] [Session:N/A] [app] - Skipping startup DDL (TRADEIQ_SKIP_STARTUP_DDL=true).
-[2026-08-04 20:09:19,412] [INFO] [User:SYSTEM] [Session:N/A] [app] - [TradeIQ] Starting up — DB host: 127.0.0.1 | DB name: tradeiq | SSL: false | Env: test
-[2026-08-04 20:09:19,427] [INFO] [User:SYSTEM] [Session:N/A] [app] - Skipping startup DDL (TRADEIQ_SKIP_STARTUP_DDL=true).
-[2026-08-04 20:09:19,443] [INFO] [User:SYSTEM] [Session:N/A] [app] - [TradeIQ] Starting up — DB host: 127.0.0.1 | DB name: tradeiq | SSL: false | Env: test
-[2026-08-04 20:09:19,453] [INFO] [User:SYSTEM] [Session:N/A] [app] - Skipping startup DDL (TRADEIQ_SKIP_STARTUP_DDL=true).
-[2026-08-04 20:09:19,470] [INFO] [User:SYSTEM] [Session:N/A] [app] - [TradeIQ] Starting up — DB host: 127.0.0.1 | DB name: tradeiq | SSL: false | Env: test
-[2026-08-04 20:09:19,479] [INFO] [User:SYSTEM] [Session:N/A] [app] - Skipping startup DDL (TRADEIQ_SKIP_STARTUP_DDL=true).
-[2026-08-04 21:12:45,384] [INFO] [User:SYSTEM] [Session:N/A] [app] - [TradeIQ] Starting up — DB host: 127.0.0.1 | DB name: tradeiq | SSL: false | Env: test
-[2026-08-04 21:12:47,893] [INFO] [User:SYSTEM] [Session:N/A] [app] - Skipping startup DDL (TRADEIQ_SKIP_STARTUP_DDL=true).
-[2026-08-04 21:12:47,985] [INFO] [User:SYSTEM] [Session:N/A] [app] - [TradeIQ] Starting up — DB host: 127.0.0.1 | DB name: tradeiq | SSL: false | Env: test
-[2026-08-04 21:12:48,008] [INFO] [User:SYSTEM] [Session:N/A] [app] - Skipping startup DDL (TRADEIQ_SKIP_STARTUP_DDL=true).
-[2026-08-04 21:12:48,027] [INFO] [User:SYSTEM] [Session:N/A] [app] - [TradeIQ] Starting up — DB host: 127.0.0.1 | DB name: tradeiq | SSL: false | Env: test
-[2026-08-04 21:12:48,053] [INFO] [User:SYSTEM] [Session:N/A] [app] - Skipping startup DDL (TRADEIQ_SKIP_STARTUP_DDL=true).
-[2026-08-04 21:12:48,123] [INFO] [User:SYSTEM] [Session:N/A] [app] - [TradeIQ] Starting up — DB host: 127.0.0.1 | DB name: tradeiq | SSL: false | Env: test
-[2026-08-04 21:12:48,142] [INFO] [User:SYSTEM] [Session:N/A] [app] - Skipping startup DDL (TRADEIQ_SKIP_STARTUP_DDL=true).
-[2026-08-04 21:12:48,236] [INFO] [User:SYSTEM] [Session:N/A] [app] - [TradeIQ] Starting up — DB host: 127.0.0.1 | DB name: tradeiq | SSL: false | Env: test
-[2026-08-04 21:12:48,299] [INFO] [User:SYSTEM] [Session:N/A] [app] - Skipping startup DDL (TRADEIQ_SKIP_STARTUP_DDL=true).
-[2026-08-04 21:12:49,075] [INFO] [User:SYSTEM] [Session:N/A] [app] - [TradeIQ] Starting up — DB host: 127.0.0.1 | DB name: tradeiq | SSL: false | Env: test
-[2026-08-04 21:12:49,102] [INFO] [User:SYSTEM] [Session:N/A] [app] - Skipping startup DDL (TRADEIQ_SKIP_STARTUP_DDL=true).
-[2026-08-04 21:12:49,160] [INFO] [User:SYSTEM] [Session:N/A] [app] - [TradeIQ] Starting up — DB host: 127.0.0.1 | DB name: tradeiq | SSL: false | Env: test
-[2026-08-04 21:12:49,177] [INFO] [User:SYSTEM] [Session:N/A] [app] - Skipping startup DDL (TRADEIQ_SKIP_STARTUP_DDL=true).
-[2026-08-04 21:12:49,204] [INFO] [User:SYSTEM] [Session:N/A] [app] - [TradeIQ] Starting up — DB host: 127.0.0.1 | DB name: tradeiq | SSL: false | Env: test
-[2026-08-04 21:12:49,223] [INFO] [User:SYSTEM] [Session:N/A] [app] - Skipping startup DDL (TRADEIQ_SKIP_STARTUP_DDL=true).
-[2026-08-04 21:12:49,272] [INFO] [User:SYSTEM] [Session:N/A] [app] - [TradeIQ] Starting up — DB host: 127.0.0.1 | DB name: tradeiq | SSL: false | Env: test
-[2026-08-04 21:12:49,296] [INFO] [User:SYSTEM] [Session:N/A] [app] - Skipping startup DDL (TRADEIQ_SKIP_STARTUP_DDL=true).
-[2026-08-04 21:12:49,323] [INFO] [User:SYSTEM] [Session:N/A] [app] - [TradeIQ] Starting up — DB host: 127.0.0.1 | DB name: tradeiq | SSL: false | Env: test
-[2026-08-04 21:12:49,345] [INFO] [User:SYSTEM] [Session:N/A] [app] - Skipping startup DDL (TRADEIQ_SKIP_STARTUP_DDL=true).
-[2026-08-04 21:12:49,370] [INFO] [User:SYSTEM] [Session:N/A] [app] - [TradeIQ] Starting up — DB host: 127.0.0.1 | DB name: tradeiq | SSL: false | Env: test
-[2026-08-04 21:12:49,388] [INFO] [User:SYSTEM] [Session:N/A] [app] - Skipping startup DDL (TRADEIQ_SKIP_STARTUP_DDL=true).
-[2026-08-04 21:14:07,092] [INFO] [User:SYSTEM] [Session:N/A] [app] - [TradeIQ] Starting up — DB host: 127.0.0.1 | DB name: tradeiq | SSL: false | Env: test
-[2026-08-04 21:14:08,534] [INFO] [User:SYSTEM] [Session:N/A] [app] - Skipping startup DDL (TRADEIQ_SKIP_STARTUP_DDL=true).
-[2026-08-04 21:14:08,588] [INFO] [User:SYSTEM] [Session:N/A] [app] - [TradeIQ] Starting up — DB host: 127.0.0.1 | DB name: tradeiq | SSL: false | Env: test
-[2026-08-04 21:14:08,602] [INFO] [User:SYSTEM] [Session:N/A] [app] - Skipping startup DDL (TRADEIQ_SKIP_STARTUP_DDL=true).
-[2026-08-04 21:14:08,616] [INFO] [User:SYSTEM] [Session:N/A] [app] - [TradeIQ] Starting up — DB host: 127.0.0.1 | DB name: tradeiq | SSL: false | Env: test
-[2026-08-04 21:14:08,630] [INFO] [User:SYSTEM] [Session:N/A] [app] - Skipping startup DDL (TRADEIQ_SKIP_STARTUP_DDL=true).
-[2026-08-04 21:14:08,664] [INFO] [User:SYSTEM] [Session:N/A] [app] - [TradeIQ] Starting up — DB host: 127.0.0.1 | DB name: tradeiq | SSL: false | Env: test
-[2026-08-04 21:14:08,678] [INFO] [User:SYSTEM] [Session:N/A] [app] - Skipping startup DDL (TRADEIQ_SKIP_STARTUP_DDL=true).
-[2026-08-04 21:14:08,735] [INFO] [User:SYSTEM] [Session:N/A] [app] - [TradeIQ] Starting up — DB host: 127.0.0.1 | DB name: tradeiq | SSL: false | Env: test
-[2026-08-04 21:14:08,748] [INFO] [User:SYSTEM] [Session:N/A] [app] - Skipping startup DDL (TRADEIQ_SKIP_STARTUP_DDL=true).
-[2026-08-04 21:14:08,777] [INFO] [User:SYSTEM] [Session:N/A] [app] - [TradeIQ] Starting up — DB host: 127.0.0.1 | DB name: tradeiq | SSL: false | Env: test
-[2026-08-04 21:14:08,790] [INFO] [User:SYSTEM] [Session:N/A] [app] - Skipping startup DDL (TRADEIQ_SKIP_STARTUP_DDL=true).
-[2026-08-04 21:14:08,836] [INFO] [User:SYSTEM] [Session:N/A] [app] - [TradeIQ] Starting up — DB host: 127.0.0.1 | DB name: tradeiq | SSL: false | Env: test
-[2026-08-04 21:14:08,881] [INFO] [User:SYSTEM] [Session:N/A] [app] - Skipping startup DDL (TRADEIQ_SKIP_STARTUP_DDL=true).
-[2026-08-04 21:14:08,898] [INFO] [User:SYSTEM] [Session:N/A] [app] - [TradeIQ] Starting up — DB host: 127.0.0.1 | DB name: tradeiq | SSL: false | Env: test
-[2026-08-04 21:14:08,911] [INFO] [User:SYSTEM] [Session:N/A] [app] - Skipping startup DDL (TRADEIQ_SKIP_STARTUP_DDL=true).
-[2026-08-04 21:14:08,945] [INFO] [User:SYSTEM] [Session:N/A] [app] - [TradeIQ] Starting up — DB host: 127.0.0.1 | DB name: tradeiq | SSL: false | Env: test
-[2026-08-04 21:14:08,958] [INFO] [User:SYSTEM] [Session:N/A] [app] - Skipping startup DDL (TRADEIQ_SKIP_STARTUP_DDL=true).
-[2026-08-04 21:14:08,977] [INFO] [User:SYSTEM] [Session:N/A] [app] - [TradeIQ] Starting up — DB host: 127.0.0.1 | DB name: tradeiq | SSL: false | Env: test
-[2026-08-04 21:14:08,990] [INFO] [User:SYSTEM] [Session:N/A] [app] - Skipping startup DDL (TRADEIQ_SKIP_STARTUP_DDL=true).
-[2026-08-04 21:14:09,010] [INFO] [User:SYSTEM] [Session:N/A] [app] - [TradeIQ] Starting up — DB host: 127.0.0.1 | DB name: tradeiq | SSL: false | Env: test
-[2026-08-04 21:14:09,024] [INFO] [User:SYSTEM] [Session:N/A] [app] - Skipping startup DDL (TRADEIQ_SKIP_STARTUP_DDL=true).
+[2026-08-14 16:32:59,250] [INFO] [User:SYSTEM] [Session:N/A] [app] - [TradeIQ] Starting up — DB host: gateway01.ap-southeast-1.prod.aws.tidbcloud.com | DB name: tradeiq | SSL: true | Env: development
+[2026-08-14 16:33:08,537] [INFO] [User:SYSTEM] [Session:N/A] [werkzeug] - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://192.168.1.5:5000
+[2026-08-14 16:33:08,537] [INFO] [User:SYSTEM] [Session:N/A] [werkzeug] - [33mPress CTRL+C to quit[0m
+[2026-08-14 16:33:08,540] [INFO] [User:SYSTEM] [Session:N/A] [werkzeug] -  * Restarting with stat
+[2026-08-14 16:33:09,572] [INFO] [User:SYSTEM] [Session:N/A] [app] - [TradeIQ] Starting up — DB host: gateway01.ap-southeast-1.prod.aws.tidbcloud.com | DB name: tradeiq | SSL: true | Env: development
+[2026-08-14 16:33:12,972] [WARNING] [User:SYSTEM] [Session:N/A] [werkzeug] -  * Debugger is active!
+[2026-08-14 16:33:12,976] [INFO] [User:SYSTEM] [Session:N/A] [werkzeug] -  * Debugger PIN: 883-375-101
+[2026-08-14 16:39:36,504] [INFO] [User:SYSTEM] [Session:N/A] [werkzeug] - 127.0.0.1 - - [14/Aug/2026 16:39:36] "OPTIONS /admin/stats/overview HTTP/1.1" 200 -
+[2026-08-14 16:39:36,500] [INFO] [User:SYSTEM] [Session:N/A] [werkzeug] - 127.0.0.1 - - [14/Aug/2026 16:39:36] "OPTIONS /admin/stats/overview HTTP/1.1" 200 -
+[2026-08-14 16:39:40,694] [WARNING] [User:ANONYMOUS] [Session:N/A] [flask-limiter] - Rate limit storage unreachable - falling back to in-memory storage
+[2026-08-14 16:39:44,765] [INFO] [User:SYSTEM] [Session:N/A] [werkzeug] - 127.0.0.1 - - [14/Aug/2026 16:39:44] "[31m[1mGET /admin/stats/overview HTTP/1.1[0m" 401 -
+[2026-08-14 16:39:49,185] [INFO] [User:SYSTEM] [Session:N/A] [werkzeug] - 127.0.0.1 - - [14/Aug/2026 16:39:49] "[31m[1mGET /admin/stats/overview HTTP/1.1[0m" 401 -
+[2026-08-14 16:39:53,640] [INFO] [User:SYSTEM] [Session:N/A] [werkzeug] - 127.0.0.1 - - [14/Aug/2026 16:39:53] "OPTIONS /auth/login HTTP/1.1" 200 -
+[2026-08-14 16:39:55,446] [INFO] [User:SYSTEM] [Session:N/A] [werkzeug] - 127.0.0.1 - - [14/Aug/2026 16:39:55] "POST /auth/login HTTP/1.1" 200 -
+[2026-08-14 16:39:55,756] [INFO] [User:SYSTEM] [Session:N/A] [werkzeug] - 127.0.0.1 - - [14/Aug/2026 16:39:55] "OPTIONS /admin/stats/overview HTTP/1.1" 200 -
+[2026-08-14 16:39:55,759] [INFO] [User:SYSTEM] [Session:N/A] [werkzeug] - 127.0.0.1 - - [14/Aug/2026 16:39:55] "OPTIONS /admin/stats/overview HTTP/1.1" 200 -
+[2026-08-14 16:39:57,553] [INFO] [User:SYSTEM] [Session:N/A] [werkzeug] - 127.0.0.1 - - [14/Aug/2026 16:39:57] "GET /admin/stats/overview HTTP/1.1" 200 -
+[2026-08-14 16:40:01,926] [INFO] [User:SYSTEM] [Session:N/A] [werkzeug] - 127.0.0.1 - - [14/Aug/2026 16:40:01] "OPTIONS /admin/users?page=1&per_page=25&sort=created_at&order=desc HTTP/1.1" 200 -
+[2026-08-14 16:40:01,929] [INFO] [User:SYSTEM] [Session:N/A] [werkzeug] - 127.0.0.1 - - [14/Aug/2026 16:40:01] "OPTIONS /admin/users?page=1&per_page=25&sort=created_at&order=desc HTTP/1.1" 200 -
+[2026-08-14 16:40:03,030] [INFO] [User:SYSTEM] [Session:N/A] [werkzeug] - 127.0.0.1 - - [14/Aug/2026 16:40:03] "GET /admin/stats/overview HTTP/1.1" 200 -
+[2026-08-14 16:40:03,237] [INFO] [User:TIQ-7E51] [Session:N/A] [app] - [admin] /admin/users page=1 per_page=25 q=None total=16 returned=16 timings_ms=list=109 aggs=350 build=2 total=461
+[2026-08-14 16:40:03,332] [INFO] [User:SYSTEM] [Session:N/A] [werkzeug] - 127.0.0.1 - - [14/Aug/2026 16:40:03] "GET /admin/users?page=1&per_page=25&sort=created_at&order=desc HTTP/1.1" 200 -
+[2026-08-14 16:40:04,144] [INFO] [User:TIQ-7E51] [Session:N/A] [app] - [admin] /admin/users page=1 per_page=25 q=None total=16 returned=16 timings_ms=list=106 aggs=285 build=0 total=392
+[2026-08-14 16:40:04,237] [INFO] [User:SYSTEM] [Session:N/A] [werkzeug] - 127.0.0.1 - - [14/Aug/2026 16:40:04] "GET /admin/users?page=1&per_page=25&sort=created_at&order=desc HTTP/1.1" 200 -
+[2026-08-14 16:40:06,604] [INFO] [User:SYSTEM] [Session:N/A] [werkzeug] - 127.0.0.1 - - [14/Aug/2026 16:40:06] "OPTIONS /admin/users/TIQ-D280 HTTP/1.1" 200 -
+[2026-08-14 16:40:06,606] [INFO] [User:SYSTEM] [Session:N/A] [werkzeug] - 127.0.0.1 - - [14/Aug/2026 16:40:06] "OPTIONS /admin/users/TIQ-D280 HTTP/1.1" 200 -
+[2026-08-14 16:40:07,856] [INFO] [User:SYSTEM] [Session:N/A] [werkzeug] - 127.0.0.1 - - [14/Aug/2026 16:40:07] "GET /admin/users/TIQ-D280 HTTP/1.1" 200 -
+[2026-08-14 16:40:08,643] [INFO] [User:SYSTEM] [Session:N/A] [werkzeug] - 127.0.0.1 - - [14/Aug/2026 16:40:08] "GET /admin/users/TIQ-D280 HTTP/1.1" 200 -
+[2026-08-14 16:40:13,071] [INFO] [User:SYSTEM] [Session:N/A] [werkzeug] - 127.0.0.1 - - [14/Aug/2026 16:40:13] "OPTIONS /admin/payments?page=1&per_page=50 HTTP/1.1" 200 -
+[2026-08-14 16:40:13,074] [INFO] [User:SYSTEM] [Session:N/A] [werkzeug] - 127.0.0.1 - - [14/Aug/2026 16:40:13] "OPTIONS /admin/payments?page=1&per_page=50 HTTP/1.1" 200 -
+[2026-08-14 16:40:13,698] [INFO] [User:SYSTEM] [Session:N/A] [werkzeug] - 127.0.0.1 - - [14/Aug/2026 16:40:13] "GET /admin/payments?page=1&per_page=50 HTTP/1.1" 200 -
+[2026-08-14 16:40:15,075] [INFO] [User:SYSTEM] [Session:N/A] [werkzeug] - 127.0.0.1 - - [14/Aug/2026 16:40:15] "OPTIONS /admin/competitions?page=1&per_page=50 HTTP/1.1" 200 -
+[2026-08-14 16:40:15,078] [INFO] [User:SYSTEM] [Session:N/A] [werkzeug] - 127.0.0.1 - - [14/Aug/2026 16:40:15] "OPTIONS /admin/competitions/rounds?page=1&per_page=50 HTTP/1.1" 200 -
+[2026-08-14 16:40:15,083] [INFO] [User:SYSTEM] [Session:N/A] [werkzeug] - 127.0.0.1 - - [14/Aug/2026 16:40:15] "OPTIONS /admin/competitions?page=1&per_page=50 HTTP/1.1" 200 -
+[2026-08-14 16:40:15,089] [INFO] [User:SYSTEM] [Session:N/A] [werkzeug] - 127.0.0.1 - - [14/Aug/2026 16:40:15] "OPTIONS /admin/competitions/rounds?page=1&per_page=50 HTTP/1.1" 200 -
+[2026-08-14 16:40:15,684] [INFO] [User:SYSTEM] [Session:N/A] [werkzeug] - 127.0.0.1 - - [14/Aug/2026 16:40:15] "GET /admin/competitions?page=1&per_page=50 HTTP/1.1" 200 -
+[2026-08-14 16:40:16,252] [INFO] [User:SYSTEM] [Session:N/A] [werkzeug] - 127.0.0.1 - - [14/Aug/2026 16:40:16] "[35m[1mGET /admin/competitions/rounds?page=1&per_page=50 HTTP/1.1[0m" 500 -
+[2026-08-14 16:40:16,290] [INFO] [User:SYSTEM] [Session:N/A] [werkzeug] - 127.0.0.1 - - [14/Aug/2026 16:40:16] "GET /admin/competitions?page=1&per_page=50 HTTP/1.1" 200 -
+[2026-08-14 16:40:16,869] [INFO] [User:SYSTEM] [Session:N/A] [werkzeug] - 127.0.0.1 - - [14/Aug/2026 16:40:16] "[35m[1mGET /admin/competitions/rounds?page=1&per_page=50 HTTP/1.1[0m" 500 -
+[2026-08-14 16:40:18,163] [INFO] [User:SYSTEM] [Session:N/A] [werkzeug] - 127.0.0.1 - - [14/Aug/2026 16:40:18] "GET /admin/payments?page=1&per_page=50 HTTP/1.1" 200 -
+[2026-08-14 16:40:18,552] [INFO] [User:SYSTEM] [Session:N/A] [werkzeug] - 127.0.0.1 - - [14/Aug/2026 16:40:18] "OPTIONS /admin/reports?page=1&per_page=20 HTTP/1.1" 200 -
+[2026-08-14 16:40:18,555] [INFO] [User:SYSTEM] [Session:N/A] [werkzeug] - 127.0.0.1 - - [14/Aug/2026 16:40:18] "OPTIONS /admin/reports?page=1&per_page=20 HTTP/1.1" 200 -
+[2026-08-14 16:40:19,131] [INFO] [User:SYSTEM] [Session:N/A] [werkzeug] - 127.0.0.1 - - [14/Aug/2026 16:40:19] "GET /admin/reports?page=1&per_page=20 HTTP/1.1" 200 -
+[2026-08-14 16:40:19,421] [INFO] [User:SYSTEM] [Session:N/A] [werkzeug] - 127.0.0.1 - - [14/Aug/2026 16:40:19] "GET /admin/reports?page=1&per_page=20 HTTP/1.1" 200 -
+[2026-08-14 16:40:21,854] [INFO] [User:SYSTEM] [Session:N/A] [werkzeug] - 127.0.0.1 - - [14/Aug/2026 16:40:21] "OPTIONS /admin/settings?page=1&per_page=1000 HTTP/1.1" 200 -
+[2026-08-14 16:40:21,856] [INFO] [User:SYSTEM] [Session:N/A] [werkzeug] - 127.0.0.1 - - [14/Aug/2026 16:40:21] "OPTIONS /admin/settings?page=1&per_page=1000 HTTP/1.1" 200 -
+[2026-08-14 16:40:22,449] [INFO] [User:SYSTEM] [Session:N/A] [werkzeug] - 127.0.0.1 - - [14/Aug/2026 16:40:22] "GET /admin/settings?page=1&per_page=1000 HTTP/1.1" 200 -
+[2026-08-14 16:40:22,742] [INFO] [User:SYSTEM] [Session:N/A] [werkzeug] - 127.0.0.1 - - [14/Aug/2026 16:40:22] "GET /admin/settings?page=1&per_page=1000 HTTP/1.1" 200 -
+[2026-08-14 16:40:25,226] [INFO] [User:SYSTEM] [Session:N/A] [werkzeug] - 127.0.0.1 - - [14/Aug/2026 16:40:25] "OPTIONS /admin/activity?page=1&per_page=50 HTTP/1.1" 200 -
+[2026-08-14 16:40:25,229] [INFO] [User:SYSTEM] [Session:N/A] [werkzeug] - 127.0.0.1 - - [14/Aug/2026 16:40:25] "OPTIONS /admin/activity?page=1&per_page=50 HTTP/1.1" 200 -
+[2026-08-14 16:40:25,803] [INFO] [User:SYSTEM] [Session:N/A] [werkzeug] - 127.0.0.1 - - [14/Aug/2026 16:40:25] "GET /admin/activity?page=1&per_page=50 HTTP/1.1" 200 -
+[2026-08-14 16:40:26,091] [INFO] [User:SYSTEM] [Session:N/A] [werkzeug] - 127.0.0.1 - - [14/Aug/2026 16:40:26] "GET /admin/activity?page=1&per_page=50 HTTP/1.1" 200 -
+[2026-08-14 16:40:29,609] [INFO] [User:SYSTEM] [Session:N/A] [werkzeug] - 127.0.0.1 - - [14/Aug/2026 16:40:29] "OPTIONS /admin/users?page=1&per_page=25&sort=created_at&order=desc HTTP/1.1" 200 -
+[2026-08-14 16:40:29,613] [INFO] [User:SYSTEM] [Session:N/A] [werkzeug] - 127.0.0.1 - - [14/Aug/2026 16:40:29] "OPTIONS /admin/users?page=1&per_page=25&sort=created_at&order=desc HTTP/1.1" 200 -
+[2026-08-14 16:40:30,344] [INFO] [User:TIQ-7E51] [Session:N/A] [app] - [admin] /admin/users page=1 per_page=25 q=None total=16 returned=16 timings_ms=list=102 aggs=271 build=0 total=374
+[2026-08-14 16:40:30,437] [INFO] [User:SYSTEM] [Session:N/A] [werkzeug] - 127.0.0.1 - - [14/Aug/2026 16:40:30] "GET /admin/users?page=1&per_page=25&sort=created_at&order=desc HTTP/1.1" 200 -
+[2026-08-14 16:40:30,949] [INFO] [User:TIQ-7E51] [Session:N/A] [app] - [admin] /admin/users page=1 per_page=25 q=None total=16 returned=16 timings_ms=list=108 aggs=293 build=1 total=403
+[2026-08-14 16:40:31,039] [INFO] [User:SYSTEM] [Session:N/A] [werkzeug] - 127.0.0.1 - - [14/Aug/2026 16:40:31] "GET /admin/users?page=1&per_page=25&sort=created_at&order=desc HTTP/1.1" 200 -
+[2026-08-14 16:40:34,598] [INFO] [User:SYSTEM] [Session:N/A] [werkzeug] - 127.0.0.1 - - [14/Aug/2026 16:40:34] "OPTIONS /admin/users/TIQ-D280 HTTP/1.1" 200 -
+[2026-08-14 16:40:34,600] [INFO] [User:SYSTEM] [Session:N/A] [werkzeug] - 127.0.0.1 - - [14/Aug/2026 16:40:34] "OPTIONS /admin/users/TIQ-D280 HTTP/1.1" 200 -
+[2026-08-14 16:40:35,684] [INFO] [User:SYSTEM] [Session:N/A] [werkzeug] - 127.0.0.1 - - [14/Aug/2026 16:40:35] "GET /admin/users/TIQ-D280 HTTP/1.1" 200 -
+[2026-08-14 16:40:36,494] [INFO] [User:SYSTEM] [Session:N/A] [werkzeug] - 127.0.0.1 - - [14/Aug/2026 16:40:36] "GET /admin/users/TIQ-D280 HTTP/1.1" 200 -
+[2026-08-14 16:44:41,458] [INFO] [User:SYSTEM] [Session:N/A] [werkzeug] - 127.0.0.1 - - [14/Aug/2026 16:44:41] "OPTIONS /admin/users?page=1&per_page=25&sort=created_at&order=desc HTTP/1.1" 200 -
+[2026-08-14 16:44:41,463] [INFO] [User:SYSTEM] [Session:N/A] [werkzeug] - 127.0.0.1 - - [14/Aug/2026 16:44:41] "OPTIONS /admin/users?page=1&per_page=25&sort=created_at&order=desc HTTP/1.1" 200 -
+[2026-08-14 16:44:46,855] [INFO] [User:TIQ-7E51] [Session:N/A] [app] - [admin] /admin/users page=1 per_page=25 q=None total=16 returned=16 timings_ms=list=166 aggs=379 build=0 total=547
+[2026-08-14 16:44:46,945] [INFO] [User:SYSTEM] [Session:N/A] [werkzeug] - 127.0.0.1 - - [14/Aug/2026 16:44:46] "GET /admin/users?page=1&per_page=25&sort=created_at&order=desc HTTP/1.1" 200 -
+[2026-08-14 16:44:49,771] [INFO] [User:SYSTEM] [Session:N/A] [werkzeug] - 127.0.0.1 - - [14/Aug/2026 16:44:49] "OPTIONS /admin/users/TIQ-E697 HTTP/1.1" 200 -
+[2026-08-14 16:44:49,774] [INFO] [User:SYSTEM] [Session:N/A] [werkzeug] - 127.0.0.1 - - [14/Aug/2026 16:44:49] "OPTIONS /admin/users/TIQ-E697 HTTP/1.1" 200 -
+[2026-08-14 16:44:51,972] [INFO] [User:TIQ-7E51] [Session:N/A] [app] - [admin] /admin/users page=1 per_page=25 q=None total=16 returned=16 timings_ms=list=107 aggs=267 build=0 total=375
+[2026-08-14 16:44:52,065] [INFO] [User:SYSTEM] [Session:N/A] [werkzeug] - 127.0.0.1 - - [14/Aug/2026 16:44:52] "GET /admin/users?page=1&per_page=25&sort=created_at&order=desc HTTP/1.1" 200 -
+[2026-08-14 16:44:55,051] [INFO] [User:SYSTEM] [Session:N/A] [werkzeug] - 127.0.0.1 - - [14/Aug/2026 16:44:55] "GET /admin/users/TIQ-E697 HTTP/1.1" 200 -
+[2026-08-14 16:45:00,295] [INFO] [User:SYSTEM] [Session:N/A] [werkzeug] - 127.0.0.1 - - [14/Aug/2026 16:45:00] "GET /admin/users/TIQ-E697 HTTP/1.1" 200 -

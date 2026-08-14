@@ -5,11 +5,21 @@ import LoginPage from "./pages/LoginPage";
 import DashboardPage from "./pages/DashboardPage";
 import UsersPage from "./pages/UsersPage";
 import UserDetailPage from "./pages/UserDetailPage";
+import PaymentsPage from "./pages/PaymentsPage";
+import CompetitionPage from "./pages/CompetitionPage";
+import ReportsPage from "./pages/ReportsPage";
+import ActivityLogPage from "./pages/ActivityLogPage";
+import SettingsPage from "./pages/SettingsPage";
 
 type View =
   | { name: "dashboard" }
   | { name: "users" }
-  | { name: "detail"; userId: string };
+  | { name: "detail"; userId: string }
+  | { name: "payments" }
+  | { name: "competitions" }
+  | { name: "reports" }
+  | { name: "activity" }
+  | { name: "settings" };
 
 const USER_KEY = "tradeiq.adminUser";
 
@@ -93,6 +103,41 @@ export default function App() {
           <span aria-hidden>☰</span>
           <span className="label">Users</span>
         </button>
+        <button
+          className={`nav-item ${view.name === "payments" ? "active" : ""}`}
+          onClick={() => setView({ name: "payments" })}
+        >
+          <span aria-hidden>💳</span>
+          <span className="label">Payments</span>
+        </button>
+        <button
+          className={`nav-item ${view.name === "competitions" ? "active" : ""}`}
+          onClick={() => setView({ name: "competitions" })}
+        >
+          <span aria-hidden>🏆</span>
+          <span className="label">Competitions</span>
+        </button>
+        <button
+          className={`nav-item ${view.name === "reports" ? "active" : ""}`}
+          onClick={() => setView({ name: "reports" })}
+        >
+          <span aria-hidden>📄</span>
+          <span className="label">Reports</span>
+        </button>
+        <button
+          className={`nav-item ${view.name === "settings" ? "active" : ""}`}
+          onClick={() => setView({ name: "settings" })}
+        >
+          <span aria-hidden>⚙️</span>
+          <span className="label">Settings</span>
+        </button>
+        <button
+          className={`nav-item ${view.name === "activity" ? "active" : ""}`}
+          onClick={() => setView({ name: "activity" })}
+        >
+          <span aria-hidden>🕘</span>
+          <span className="label">Activity Log</span>
+        </button>
 
         <div className="nav-spacer" />
 
@@ -115,6 +160,11 @@ export default function App() {
         {view.name === "users" && (
           <UsersPage onOpenUser={navToDetail} />
         )}
+        {view.name === "payments" && <PaymentsPage />}
+        {view.name === "competitions" && <CompetitionPage />}
+        {view.name === "reports" && <ReportsPage />}
+        {view.name === "settings" && <SettingsPage />}
+        {view.name === "activity" && <ActivityLogPage />}
         {view.name === "detail" && (
           <UserDetailPage
             userId={view.userId}

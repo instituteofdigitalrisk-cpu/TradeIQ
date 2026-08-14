@@ -1,0 +1,114 @@
+[2026-08-13 18:49:48,091] [INFO] [User:SYSTEM] [Session:N/A] [app] - [TradeIQ] Starting up — DB host: 127.0.0.1 | DB name: tradeiq | SSL: false | Env: test
+[2026-08-13 18:50:14,919] [INFO] [User:SYSTEM] [Session:N/A] [app] - Skipping startup DDL (TRADEIQ_SKIP_STARTUP_DDL=true).
+[2026-08-13 18:50:15,150] [INFO] [User:SYSTEM] [Session:N/A] [app] - [TradeIQ] Starting up — DB host: 127.0.0.1 | DB name: tradeiq | SSL: false | Env: test
+[2026-08-13 18:50:15,168] [INFO] [User:SYSTEM] [Session:N/A] [app] - Skipping startup DDL (TRADEIQ_SKIP_STARTUP_DDL=true).
+[2026-08-13 18:50:15,195] [INFO] [User:SYSTEM] [Session:N/A] [app] - [TradeIQ] Starting up — DB host: 127.0.0.1 | DB name: tradeiq | SSL: false | Env: test
+[2026-08-13 18:50:15,214] [INFO] [User:SYSTEM] [Session:N/A] [app] - Skipping startup DDL (TRADEIQ_SKIP_STARTUP_DDL=true).
+[2026-08-13 18:50:15,264] [INFO] [User:SYSTEM] [Session:N/A] [app] - [TradeIQ] Starting up — DB host: 127.0.0.1 | DB name: tradeiq | SSL: false | Env: test
+[2026-08-13 18:50:15,284] [INFO] [User:SYSTEM] [Session:N/A] [app] - Skipping startup DDL (TRADEIQ_SKIP_STARTUP_DDL=true).
+[2026-08-13 18:50:15,377] [INFO] [User:SYSTEM] [Session:N/A] [app] - [TradeIQ] Starting up — DB host: 127.0.0.1 | DB name: tradeiq | SSL: false | Env: test
+[2026-08-13 18:50:15,392] [INFO] [User:SYSTEM] [Session:N/A] [app] - Skipping startup DDL (TRADEIQ_SKIP_STARTUP_DDL=true).
+[2026-08-13 18:50:15,441] [INFO] [User:SYSTEM] [Session:N/A] [app] - [TradeIQ] Starting up — DB host: 127.0.0.1 | DB name: tradeiq | SSL: false | Env: test
+[2026-08-13 18:50:15,455] [INFO] [User:SYSTEM] [Session:N/A] [app] - Skipping startup DDL (TRADEIQ_SKIP_STARTUP_DDL=true).
+[2026-08-13 18:50:15,648] [INFO] [User:SYSTEM] [Session:N/A] [app] - [TradeIQ] Starting up — DB host: 127.0.0.1 | DB name: tradeiq | SSL: false | Env: test
+[2026-08-13 18:50:15,662] [INFO] [User:SYSTEM] [Session:N/A] [app] - Skipping startup DDL (TRADEIQ_SKIP_STARTUP_DDL=true).
+[2026-08-13 18:50:15,691] [INFO] [User:SYSTEM] [Session:N/A] [app] - [TradeIQ] Starting up — DB host: 127.0.0.1 | DB name: tradeiq | SSL: false | Env: test
+[2026-08-13 18:50:15,704] [INFO] [User:SYSTEM] [Session:N/A] [app] - Skipping startup DDL (TRADEIQ_SKIP_STARTUP_DDL=true).
+[2026-08-13 18:50:15,751] [INFO] [User:SYSTEM] [Session:N/A] [app] - [TradeIQ] Starting up — DB host: 127.0.0.1 | DB name: tradeiq | SSL: false | Env: test
+[2026-08-13 18:50:15,765] [INFO] [User:SYSTEM] [Session:N/A] [app] - Skipping startup DDL (TRADEIQ_SKIP_STARTUP_DDL=true).
+[2026-08-13 18:50:15,801] [INFO] [User:SYSTEM] [Session:N/A] [app] - [TradeIQ] Starting up — DB host: 127.0.0.1 | DB name: tradeiq | SSL: false | Env: test
+[2026-08-13 18:50:15,818] [INFO] [User:SYSTEM] [Session:N/A] [app] - Skipping startup DDL (TRADEIQ_SKIP_STARTUP_DDL=true).
+[2026-08-13 18:50:15,857] [INFO] [User:SYSTEM] [Session:N/A] [app] - [TradeIQ] Starting up — DB host: 127.0.0.1 | DB name: tradeiq | SSL: false | Env: test
+[2026-08-13 18:50:15,877] [INFO] [User:SYSTEM] [Session:N/A] [app] - Skipping startup DDL (TRADEIQ_SKIP_STARTUP_DDL=true).
+[2026-08-13 18:56:25,679] [INFO] [User:SYSTEM] [Session:N/A] [app] - [TradeIQ] Starting up — DB host: 127.0.0.1 | DB name: tradeiq | SSL: false | Env: test
+[2026-08-13 18:56:27,776] [INFO] [User:SYSTEM] [Session:N/A] [app] - Skipping startup DDL (TRADEIQ_SKIP_STARTUP_DDL=true).
+[2026-08-13 18:56:27,852] [INFO] [User:SYSTEM] [Session:N/A] [app] - [TradeIQ] Starting up — DB host: 127.0.0.1 | DB name: tradeiq | SSL: false | Env: test
+[2026-08-13 18:56:27,867] [INFO] [User:SYSTEM] [Session:N/A] [app] - Skipping startup DDL (TRADEIQ_SKIP_STARTUP_DDL=true).
+[2026-08-13 18:56:27,883] [INFO] [User:SYSTEM] [Session:N/A] [app] - [TradeIQ] Starting up — DB host: 127.0.0.1 | DB name: tradeiq | SSL: false | Env: test
+[2026-08-13 18:56:27,900] [INFO] [User:SYSTEM] [Session:N/A] [app] - Skipping startup DDL (TRADEIQ_SKIP_STARTUP_DDL=true).
+[2026-08-13 18:56:27,944] [INFO] [User:SYSTEM] [Session:N/A] [app] - [TradeIQ] Starting up — DB host: 127.0.0.1 | DB name: tradeiq | SSL: false | Env: test
+[2026-08-13 18:56:27,956] [INFO] [User:SYSTEM] [Session:N/A] [app] - Skipping startup DDL (TRADEIQ_SKIP_STARTUP_DDL=true).
+[2026-08-13 18:56:28,027] [INFO] [User:SYSTEM] [Session:N/A] [app] - [TradeIQ] Starting up — DB host: 127.0.0.1 | DB name: tradeiq | SSL: false | Env: test
+[2026-08-13 18:56:28,039] [INFO] [User:SYSTEM] [Session:N/A] [app] - Skipping startup DDL (TRADEIQ_SKIP_STARTUP_DDL=true).
+[2026-08-13 18:56:28,093] [INFO] [User:SYSTEM] [Session:N/A] [app] - [TradeIQ] Starting up — DB host: 127.0.0.1 | DB name: tradeiq | SSL: false | Env: test
+[2026-08-13 18:56:28,106] [INFO] [User:SYSTEM] [Session:N/A] [app] - Skipping startup DDL (TRADEIQ_SKIP_STARTUP_DDL=true).
+[2026-08-13 18:56:28,176] [INFO] [User:SYSTEM] [Session:N/A] [app] - [TradeIQ] Starting up — DB host: 127.0.0.1 | DB name: tradeiq | SSL: false | Env: test
+[2026-08-13 18:56:28,192] [INFO] [User:SYSTEM] [Session:N/A] [app] - Skipping startup DDL (TRADEIQ_SKIP_STARTUP_DDL=true).
+[2026-08-13 18:56:28,224] [INFO] [User:SYSTEM] [Session:N/A] [app] - [TradeIQ] Starting up — DB host: 127.0.0.1 | DB name: tradeiq | SSL: false | Env: test
+[2026-08-13 18:56:28,341] [INFO] [User:SYSTEM] [Session:N/A] [app] - Skipping startup DDL (TRADEIQ_SKIP_STARTUP_DDL=true).
+[2026-08-13 18:56:28,388] [INFO] [User:SYSTEM] [Session:N/A] [app] - [TradeIQ] Starting up — DB host: 127.0.0.1 | DB name: tradeiq | SSL: false | Env: test
+[2026-08-13 18:56:28,403] [INFO] [User:SYSTEM] [Session:N/A] [app] - Skipping startup DDL (TRADEIQ_SKIP_STARTUP_DDL=true).
+[2026-08-13 18:56:28,433] [INFO] [User:SYSTEM] [Session:N/A] [app] - [TradeIQ] Starting up — DB host: 127.0.0.1 | DB name: tradeiq | SSL: false | Env: test
+[2026-08-13 18:56:28,446] [INFO] [User:SYSTEM] [Session:N/A] [app] - Skipping startup DDL (TRADEIQ_SKIP_STARTUP_DDL=true).
+[2026-08-13 18:56:28,474] [INFO] [User:SYSTEM] [Session:N/A] [app] - [TradeIQ] Starting up — DB host: 127.0.0.1 | DB name: tradeiq | SSL: false | Env: test
+[2026-08-13 18:56:28,491] [INFO] [User:SYSTEM] [Session:N/A] [app] - Skipping startup DDL (TRADEIQ_SKIP_STARTUP_DDL=true).
+[2026-08-13 18:57:37,696] [INFO] [User:SYSTEM] [Session:N/A] [app] - [TradeIQ] Starting up — DB host: 127.0.0.1 | DB name: tradeiq | SSL: false | Env: test
+[2026-08-13 18:57:39,168] [INFO] [User:SYSTEM] [Session:N/A] [app] - Skipping startup DDL (TRADEIQ_SKIP_STARTUP_DDL=true).
+[2026-08-13 18:59:46,252] [INFO] [User:SYSTEM] [Session:N/A] [app] - [TradeIQ] Starting up — DB host: 127.0.0.1 | DB name: tradeiq | SSL: false | Env: test
+[2026-08-13 18:59:51,990] [INFO] [User:SYSTEM] [Session:N/A] [app] - Skipping startup DDL (TRADEIQ_SKIP_STARTUP_DDL=true).
+[2026-08-13 18:59:52,288] [INFO] [User:SYSTEM] [Session:N/A] [app] - [TradeIQ] Starting up — DB host: 127.0.0.1 | DB name: tradeiq | SSL: false | Env: test
+[2026-08-13 18:59:52,321] [INFO] [User:SYSTEM] [Session:N/A] [app] - Skipping startup DDL (TRADEIQ_SKIP_STARTUP_DDL=true).
+[2026-08-13 18:59:52,385] [INFO] [User:SYSTEM] [Session:N/A] [app] - [TradeIQ] Starting up — DB host: 127.0.0.1 | DB name: tradeiq | SSL: false | Env: test
+[2026-08-13 18:59:52,420] [INFO] [User:SYSTEM] [Session:N/A] [app] - Skipping startup DDL (TRADEIQ_SKIP_STARTUP_DDL=true).
+[2026-08-13 18:59:52,517] [INFO] [User:SYSTEM] [Session:N/A] [app] - [TradeIQ] Starting up — DB host: 127.0.0.1 | DB name: tradeiq | SSL: false | Env: test
+[2026-08-13 18:59:52,569] [INFO] [User:SYSTEM] [Session:N/A] [app] - Skipping startup DDL (TRADEIQ_SKIP_STARTUP_DDL=true).
+[2026-08-13 18:59:52,774] [INFO] [User:SYSTEM] [Session:N/A] [app] - [TradeIQ] Starting up — DB host: 127.0.0.1 | DB name: tradeiq | SSL: false | Env: test
+[2026-08-13 18:59:52,813] [INFO] [User:SYSTEM] [Session:N/A] [app] - Skipping startup DDL (TRADEIQ_SKIP_STARTUP_DDL=true).
+[2026-08-13 18:59:52,928] [INFO] [User:SYSTEM] [Session:N/A] [app] - [TradeIQ] Starting up — DB host: 127.0.0.1 | DB name: tradeiq | SSL: false | Env: test
+[2026-08-13 18:59:52,963] [INFO] [User:SYSTEM] [Session:N/A] [app] - Skipping startup DDL (TRADEIQ_SKIP_STARTUP_DDL=true).
+[2026-08-13 18:59:53,156] [INFO] [User:SYSTEM] [Session:N/A] [app] - [TradeIQ] Starting up — DB host: 127.0.0.1 | DB name: tradeiq | SSL: false | Env: test
+[2026-08-13 18:59:53,195] [INFO] [User:SYSTEM] [Session:N/A] [app] - Skipping startup DDL (TRADEIQ_SKIP_STARTUP_DDL=true).
+[2026-08-13 18:59:53,272] [INFO] [User:SYSTEM] [Session:N/A] [app] - [TradeIQ] Starting up — DB host: 127.0.0.1 | DB name: tradeiq | SSL: false | Env: test
+[2026-08-13 18:59:53,487] [INFO] [User:SYSTEM] [Session:N/A] [app] - Skipping startup DDL (TRADEIQ_SKIP_STARTUP_DDL=true).
+[2026-08-13 18:59:53,665] [INFO] [User:SYSTEM] [Session:N/A] [app] - [TradeIQ] Starting up — DB host: 127.0.0.1 | DB name: tradeiq | SSL: false | Env: test
+[2026-08-13 18:59:53,709] [INFO] [User:SYSTEM] [Session:N/A] [app] - Skipping startup DDL (TRADEIQ_SKIP_STARTUP_DDL=true).
+[2026-08-13 18:59:53,802] [INFO] [User:SYSTEM] [Session:N/A] [app] - [TradeIQ] Starting up — DB host: 127.0.0.1 | DB name: tradeiq | SSL: false | Env: test
+[2026-08-13 18:59:53,851] [INFO] [User:SYSTEM] [Session:N/A] [app] - Skipping startup DDL (TRADEIQ_SKIP_STARTUP_DDL=true).
+[2026-08-13 18:59:53,928] [INFO] [User:SYSTEM] [Session:N/A] [app] - [TradeIQ] Starting up — DB host: 127.0.0.1 | DB name: tradeiq | SSL: false | Env: test
+[2026-08-13 18:59:53,970] [INFO] [User:SYSTEM] [Session:N/A] [app] - Skipping startup DDL (TRADEIQ_SKIP_STARTUP_DDL=true).
+[2026-08-13 19:02:53,057] [INFO] [User:SYSTEM] [Session:N/A] [app] - [TradeIQ] Starting up — DB host: 127.0.0.1 | DB name: tradeiq | SSL: false | Env: test
+[2026-08-13 19:02:55,624] [INFO] [User:SYSTEM] [Session:N/A] [app] - Skipping startup DDL (TRADEIQ_SKIP_STARTUP_DDL=true).
+[2026-08-13 19:02:55,664] [INFO] [User:SYSTEM] [Session:N/A] [app] - [TradeIQ] Starting up — DB host: 127.0.0.1 | DB name: tradeiq | SSL: false | Env: test
+[2026-08-13 19:02:55,682] [INFO] [User:SYSTEM] [Session:N/A] [app] - Skipping startup DDL (TRADEIQ_SKIP_STARTUP_DDL=true).
+[2026-08-13 19:02:55,705] [INFO] [User:SYSTEM] [Session:N/A] [app] - [TradeIQ] Starting up — DB host: 127.0.0.1 | DB name: tradeiq | SSL: false | Env: test
+[2026-08-13 19:02:55,720] [INFO] [User:SYSTEM] [Session:N/A] [app] - Skipping startup DDL (TRADEIQ_SKIP_STARTUP_DDL=true).
+[2026-08-13 19:02:55,737] [INFO] [User:SYSTEM] [Session:N/A] [app] - [TradeIQ] Starting up — DB host: 127.0.0.1 | DB name: tradeiq | SSL: false | Env: test
+[2026-08-13 19:02:55,757] [INFO] [User:SYSTEM] [Session:N/A] [app] - Skipping startup DDL (TRADEIQ_SKIP_STARTUP_DDL=true).
+[2026-08-13 19:03:27,494] [INFO] [User:SYSTEM] [Session:N/A] [app] - [TradeIQ] Starting up — DB host: 127.0.0.1 | DB name: tradeiq | SSL: false | Env: test
+[2026-08-13 19:03:30,977] [INFO] [User:SYSTEM] [Session:N/A] [app] - Skipping startup DDL (TRADEIQ_SKIP_STARTUP_DDL=true).
+[2026-08-13 19:03:31,134] [INFO] [User:SYSTEM] [Session:N/A] [app] - [TradeIQ] Starting up — DB host: 127.0.0.1 | DB name: tradeiq | SSL: false | Env: test
+[2026-08-13 19:03:31,166] [INFO] [User:SYSTEM] [Session:N/A] [app] - Skipping startup DDL (TRADEIQ_SKIP_STARTUP_DDL=true).
+[2026-08-13 19:03:32,452] [INFO] [User:SYSTEM] [Session:N/A] [app] - [TradeIQ] Starting up — DB host: 127.0.0.1 | DB name: tradeiq | SSL: false | Env: test
+[2026-08-13 19:03:32,495] [INFO] [User:SYSTEM] [Session:N/A] [app] - Skipping startup DDL (TRADEIQ_SKIP_STARTUP_DDL=true).
+[2026-08-13 19:03:32,545] [INFO] [User:SYSTEM] [Session:N/A] [app] - [TradeIQ] Starting up — DB host: 127.0.0.1 | DB name: tradeiq | SSL: false | Env: test
+[2026-08-13 19:03:32,570] [INFO] [User:SYSTEM] [Session:N/A] [app] - Skipping startup DDL (TRADEIQ_SKIP_STARTUP_DDL=true).
+[2026-08-13 19:03:48,557] [INFO] [User:SYSTEM] [Session:N/A] [app] - [TradeIQ] Starting up — DB host: 127.0.0.1 | DB name: tradeiq | SSL: false | Env: test
+[2026-08-13 19:03:50,273] [INFO] [User:SYSTEM] [Session:N/A] [app] - Skipping startup DDL (TRADEIQ_SKIP_STARTUP_DDL=true).
+[2026-08-13 19:03:50,391] [INFO] [User:SYSTEM] [Session:N/A] [app] - [TradeIQ] Starting up — DB host: 127.0.0.1 | DB name: tradeiq | SSL: false | Env: test
+[2026-08-13 19:03:50,408] [INFO] [User:SYSTEM] [Session:N/A] [app] - Skipping startup DDL (TRADEIQ_SKIP_STARTUP_DDL=true).
+[2026-08-13 19:03:50,455] [INFO] [User:SYSTEM] [Session:N/A] [app] - [TradeIQ] Starting up — DB host: 127.0.0.1 | DB name: tradeiq | SSL: false | Env: test
+[2026-08-13 19:03:50,477] [INFO] [User:SYSTEM] [Session:N/A] [app] - Skipping startup DDL (TRADEIQ_SKIP_STARTUP_DDL=true).
+[2026-08-13 19:03:50,530] [INFO] [User:SYSTEM] [Session:N/A] [app] - [TradeIQ] Starting up — DB host: 127.0.0.1 | DB name: tradeiq | SSL: false | Env: test
+[2026-08-13 19:03:50,570] [INFO] [User:SYSTEM] [Session:N/A] [app] - Skipping startup DDL (TRADEIQ_SKIP_STARTUP_DDL=true).
+[2026-08-13 19:05:30,561] [INFO] [User:SYSTEM] [Session:N/A] [app] - [TradeIQ] Starting up — DB host: 127.0.0.1 | DB name: tradeiq | SSL: false | Env: test
+[2026-08-13 19:05:34,105] [INFO] [User:SYSTEM] [Session:N/A] [app] - Skipping startup DDL (TRADEIQ_SKIP_STARTUP_DDL=true).
+[2026-08-13 19:05:34,243] [INFO] [User:SYSTEM] [Session:N/A] [app] - [TradeIQ] Starting up — DB host: 127.0.0.1 | DB name: tradeiq | SSL: false | Env: test
+[2026-08-13 19:05:34,263] [INFO] [User:SYSTEM] [Session:N/A] [app] - Skipping startup DDL (TRADEIQ_SKIP_STARTUP_DDL=true).
+[2026-08-13 19:05:34,297] [INFO] [User:SYSTEM] [Session:N/A] [app] - [TradeIQ] Starting up — DB host: 127.0.0.1 | DB name: tradeiq | SSL: false | Env: test
+[2026-08-13 19:05:34,327] [INFO] [User:SYSTEM] [Session:N/A] [app] - Skipping startup DDL (TRADEIQ_SKIP_STARTUP_DDL=true).
+[2026-08-13 19:05:34,398] [INFO] [User:SYSTEM] [Session:N/A] [app] - [TradeIQ] Starting up — DB host: 127.0.0.1 | DB name: tradeiq | SSL: false | Env: test
+[2026-08-13 19:05:34,420] [INFO] [User:SYSTEM] [Session:N/A] [app] - Skipping startup DDL (TRADEIQ_SKIP_STARTUP_DDL=true).
+[2026-08-13 19:05:34,533] [INFO] [User:SYSTEM] [Session:N/A] [app] - [TradeIQ] Starting up — DB host: 127.0.0.1 | DB name: tradeiq | SSL: false | Env: test
+[2026-08-13 19:05:34,562] [INFO] [User:SYSTEM] [Session:N/A] [app] - Skipping startup DDL (TRADEIQ_SKIP_STARTUP_DDL=true).
+[2026-08-13 19:05:34,743] [INFO] [User:SYSTEM] [Session:N/A] [app] - [TradeIQ] Starting up — DB host: 127.0.0.1 | DB name: tradeiq | SSL: false | Env: test
+[2026-08-13 19:05:34,773] [INFO] [User:SYSTEM] [Session:N/A] [app] - Skipping startup DDL (TRADEIQ_SKIP_STARTUP_DDL=true).
+[2026-08-13 19:05:34,905] [INFO] [User:SYSTEM] [Session:N/A] [app] - [TradeIQ] Starting up — DB host: 127.0.0.1 | DB name: tradeiq | SSL: false | Env: test
+[2026-08-13 19:05:34,938] [INFO] [User:SYSTEM] [Session:N/A] [app] - Skipping startup DDL (TRADEIQ_SKIP_STARTUP_DDL=true).
+[2026-08-13 19:05:34,970] [INFO] [User:SYSTEM] [Session:N/A] [app] - [TradeIQ] Starting up — DB host: 127.0.0.1 | DB name: tradeiq | SSL: false | Env: test
+[2026-08-13 19:05:34,995] [INFO] [User:SYSTEM] [Session:N/A] [app] - Skipping startup DDL (TRADEIQ_SKIP_STARTUP_DDL=true).
+[2026-08-13 19:05:35,083] [INFO] [User:SYSTEM] [Session:N/A] [app] - [TradeIQ] Starting up — DB host: 127.0.0.1 | DB name: tradeiq | SSL: false | Env: test
+[2026-08-13 19:05:35,103] [INFO] [User:SYSTEM] [Session:N/A] [app] - Skipping startup DDL (TRADEIQ_SKIP_STARTUP_DDL=true).
+[2026-08-13 19:05:35,164] [INFO] [User:SYSTEM] [Session:N/A] [app] - [TradeIQ] Starting up — DB host: 127.0.0.1 | DB name: tradeiq | SSL: false | Env: test
+[2026-08-13 19:05:35,206] [INFO] [User:SYSTEM] [Session:N/A] [app] - Skipping startup DDL (TRADEIQ_SKIP_STARTUP_DDL=true).
+[2026-08-13 19:05:35,249] [INFO] [User:SYSTEM] [Session:N/A] [app] - [TradeIQ] Starting up — DB host: 127.0.0.1 | DB name: tradeiq | SSL: false | Env: test
+[2026-08-13 19:05:35,308] [INFO] [User:SYSTEM] [Session:N/A] [app] - Skipping startup DDL (TRADEIQ_SKIP_STARTUP_DDL=true).
