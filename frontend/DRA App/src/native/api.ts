@@ -13,6 +13,7 @@ console.log("API BASES =", API_BASES);
 
 // ── Token storage ──────────────────────────────────────────────────────────────
 const TOKEN_KEY = "dra.jwtToken";
+const API_TIMEOUT_MS = 15000;
 
 // In-memory fallback for React Native (no window.localStorage)
 let _memToken: string | null = null;
@@ -84,10 +85,14 @@ async function apiFetch<T>(
 
     console.log("API URL =", url);
 
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), API_TIMEOUT_MS);
+
     try {
       const res = await fetch(url, {
         ...options,
         headers,
+        signal: controller.signal,
       });
 
       console.log("STATUS =", res.status);
@@ -110,12 +115,18 @@ async function apiFetch<T>(
     } catch (err) {
       console.log("FETCH ERROR =", err);
 
+      if (err instanceof Error && err.name === "AbortError") {
+        throw new Error("The TradeIQ backend is taking too long to respond. Please try again.");
+      }
+
       if (err instanceof TypeError && err.message === "Failed to fetch") {
         lastNetworkError = err;
         continue;
       }
 
       throw err;
+    } finally {
+      clearTimeout(timeout);
     }
   }
 

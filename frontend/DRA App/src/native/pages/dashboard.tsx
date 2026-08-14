@@ -285,9 +285,9 @@ export function Dashboard({ userName, studentId }: { userName: string; studentId
     if (!studentId) return;
     setScoreLoading(true);
     analytics
-      .computeScores(studentId)
-      .catch(() => null)
-      .then(() => analytics.getScores(studentId))
+      // Score computation is a write-heavy operation.  Do not run it every
+      // time the dashboard opens; the Scores page/job owns recalculation.
+      analytics.getScores(studentId)
       .then((data) => {
         if (data.scores.length === 0) {
           setLatestScore(null);
