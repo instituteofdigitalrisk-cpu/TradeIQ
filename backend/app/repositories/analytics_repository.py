@@ -4,7 +4,7 @@ Isolated database access for leaderboard, weekly scores, risk metrics, portfolio
 """
 from app.extensions import db
 from sqlalchemy.exc import IntegrityError
-from app.models import WeeklyScore, Leaderboard
+from app.models import WeeklyScore, Leaderboard, InvestmentThesis, ThesisScore
 from app.models import (
     User, PortfolioSetup, TradeLog, Holding, WeeklyScore, Leaderboard, RiskMetrics
 )
@@ -83,6 +83,38 @@ def upsert_weekly_score(user_id: str, week_number: int, scores_dict: dict) -> We
     weekly.final_score = scores_dict.get("final_score", 0.0)
 
     return weekly
+
+
+def upsert_thesis_score(
+    trade: TradeLog,
+    component_scores: dict,
+    total_score: float,
+    feedback: str,
+) -> ThesisScore:
+    """Persist the normalized thesis and its per-thesis evaluation."""
+    thesis = InvestmentThesis.query.filter_by(trade_id=trade.trade_id).first()
+    if thesis is None:
+        thesis = InvestmentThesis(
+            trade_id=trade.trade_id,
+            user_id=trade.user_id,
+        )
+        db.session.add(thesis)
+
+    thesis.reason_text = trade.thesis
+    db.session.flush()
+
+    score = ThesisScore.query.filter_by(thesis_id=thesis.thesis_id).first()
+    if score is None:
+        score = ThesisScore(thesis_id=thesis.thesis_id)
+        db.session.add(score)
+
+    score.clarity_score = component_scores.get("clarity", 0.0)
+    score.reasoning_score = component_scores.get("financial_logic", 0.0)
+    score.risk_awareness_score = component_scores.get("risk_awareness", 0.0)
+    score.market_understanding_score = component_scores.get("market_understanding", 0.0)
+    score.total_score = total_score
+    score.feedback = feedback
+    return score
 
 
 

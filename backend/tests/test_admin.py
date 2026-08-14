@@ -11,6 +11,8 @@ from app.models import (
     Holding,
     WeeklyScore,
     RiskMetrics,
+    PaymentRecord,
+    ActivityLog,
 )
 
 
@@ -47,6 +49,26 @@ def seeded(admin_app):
             user_id="STU001", stock_ticker="AAPL", stock_name="Apple",
             quantity=10, avg_buy_price=400, current_price=200,
             market_value=2000, profit_loss=-2000,
+        )
+    )
+    db.session.add(
+        PaymentRecord(
+            user_id="STU001",
+            amount=499.99,
+            currency="USD",
+            status="completed",
+            payment_method="stripe",
+            reference="CHARGE-001",
+            notes="Initial course fee",
+            processed_at=datetime.utcnow(),
+        )
+    )
+    db.session.add(
+        ActivityLog(
+            user_id="STU001",
+            event_type="login",
+            description="User logged in successfully",
+            metadata="{\"ip\": \"127.0.0.1\"}",
         )
     )
     db.session.add(
@@ -122,6 +144,8 @@ def test_list_users(client, seeded):
     assert stu["trade_count"] == 1
     assert stu["latest_final_score"] == 88.0
     assert stu["latest_week_number"] == 1
+    assert stu["is_paid"] is False
+    assert stu["registration_status"] == "pending"
     assert "password_hash" not in stu
 
 
@@ -158,6 +182,8 @@ def test_user_detail(client, seeded):
     assert res.status_code == 200
     data = res.get_json()
     assert data["profile"]["full_name"] == "Student One"
+    assert data["profile"]["is_paid"] is False
+    assert data["profile"]["registration_status"] == "pending"
     assert data["portfolio"]["cash_balance"] == 6000.0
     assert len(data["holdings"]) == 1
     assert len(data["trades"]) == 1
@@ -165,6 +191,10 @@ def test_user_detail(client, seeded):
     assert data["risk_metrics"]["sharpe_ratio"] == 1.2
     assert len(data["theses"]) == 1
     assert data["theses"][0]["reason_text"] == "This thesis came from the trade record."
+    assert len(data["payments"]) == 1
+    assert data["payments"][0]["status"] == "completed"
+    assert len(data["activity_logs"]) == 1
+    assert data["activity_logs"][0]["event_type"] == "login"
 
     res = client.get("/admin/users/NOPE", headers=headers)
     assert res.status_code == 404
@@ -185,6 +215,17 @@ def test_update_user_role(client, seeded):
     assert res.status_code == 200
     assert res.get_json()["role"] == "student"
     assert res.get_json()["university"] == "Gamma University"
+
+    res = client.put("/admin/users/STU002", json={"is_paid": True, "registration_status": "completed"}, headers=headers)
+    assert res.status_code == 200
+    assert res.get_json()["is_paid"] is True
+    assert res.get_json()["registration_status"] == "completed"
+
+    res = client.put("/admin/users/STU002", json={"role": "superuser"}, headers=headers)
+    assert res.status_code == 400
+
+    res = client.put("/admin/users/MISSING", json={"role": "student"}, headers=headers)
+    assert res.status_code == 404
 
     res = client.put("/admin/users/STU002", json={"role": "superuser"}, headers=headers)
     assert res.status_code == 400
@@ -248,3 +289,9 @@ def test_stats_overview(client, seeded):
     assert any(b["university"] == "Alpha University" for b in data["university_breakdown"])
     assert len(data["top_performers"]) == 1
     assert data["top_performers"][0]["final_score"] == 88.0
+    # CRM/payments/enrollment aggregates
+    assert data["totals"]["total_payments"] == 1
+    assert data["totals"]["payments_amount"] == 499.99
+    assert data["totals"]["payments_completed"] == 1
+    assert data["totals"]["payments_pending"] == 0
+    assert data["totals"]["total_enrollments"] == 0

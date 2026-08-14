@@ -10,6 +10,9 @@
     "newArchEnabled": true,
     "android": {
       "package": "com.tradeiq.draapp",
+      "permissions": [
+        "INTERNET"
+      ],
       "googleServicesFile": "./google-services.json",
       "adaptiveIcon": {
         "foregroundImage": "./src/imports/brand-icon.png",

@@ -17,6 +17,10 @@ from app.models import (
     RiskMetrics,
     InvestmentThesis,
     ThesisScore,
+    PaymentRecord,
+    ActivityLog,
+    CompetitionEnrollment,
+    CRMNote,
 )
 
 
@@ -150,6 +154,11 @@ def build_user_row(user, portfolio, holdings_value, holdings_count, trade_count,
         "university": user.university,
         "year_of_study": user.year_of_study,
         "role": user.role,
+        "account_status": getattr(user, "account_status", None),
+        "competition_status": getattr(user, "competition_status", None),
+        "mt5_account_id": getattr(user, "mt5_account_id", None),
+        "is_paid": bool(user.is_paid),
+        "registration_status": user.registration_status,
         "created_at": str(user.created_at) if user.created_at else None,
         "total_capital": total_capital,
         "cash_balance": cash,
@@ -197,6 +206,54 @@ def count_admins():
 # User drill-down
 # ─────────────────────────────────────────
 
+def payment_records(user_id, limit=20):
+    return (
+        PaymentRecord.query.filter_by(user_id=user_id)
+        .order_by(PaymentRecord.created_at.desc())
+        .limit(limit)
+        .all()
+    )
+
+
+def activity_logs(user_id, limit=50):
+    return (
+        ActivityLog.query.filter_by(user_id=user_id)
+        .order_by(ActivityLog.created_at.desc())
+        .limit(limit)
+        .all()
+    )
+
+
+def competition_enrollments(user_id, limit=20):
+    return (
+        CompetitionEnrollment.query.filter_by(user_id=user_id)
+        .order_by(CompetitionEnrollment.enrolled_at.desc())
+        .limit(limit)
+        .all()
+    )
+
+
+def crm_notes(user_id, limit=50):
+    return (
+        CRMNote.query.filter_by(user_id=user_id)
+        .order_by(CRMNote.created_at.desc())
+        .limit(limit)
+        .all()
+    )
+
+
+def list_competition_enrollments(search=None, page=1, per_page=50):
+    query = CompetitionEnrollment.query
+    if search:
+        like = f"%{search.strip()}%"
+        query = query.filter(
+            db.or_(CompetitionEnrollment.user_id.ilike(like), CompetitionEnrollment.competition_round.ilike(like))
+        )
+    total = query.count()
+    rows = query.order_by(CompetitionEnrollment.enrolled_at.desc()).offset((page - 1) * per_page).limit(per_page).all()
+    return total, rows
+
+
 def user_detail(user_id):
     user = User.query.filter_by(user_id=user_id).first()
     if not user:
@@ -213,6 +270,10 @@ def user_detail(user_id):
         .order_by(InvestmentThesis.created_at.desc())
         .all()
     )
+    payments = payment_records(user_id)
+    activities = activity_logs(user_id)
+    enrollments = competition_enrollments(user_id)
+    notes = crm_notes(user_id)
     trade_theses = [
         {
             "thesis_id": f"trade-{trade.trade_id}",
@@ -256,6 +317,10 @@ def user_detail(user_id):
         "weekly_scores": [s.to_dict() for s in weekly_scores],
         "risk_metrics": risk.to_dict() if risk else None,
         "theses": thesis_payloads,
+        "payments": [p.to_dict() for p in payments],
+        "activity_logs": [a.to_dict() for a in activities],
+        "competition_enrollments": [e.to_dict() for e in enrollments],
+        "crm_notes": [n.to_dict() for n in notes],
     }
 
 
@@ -339,6 +404,28 @@ def stats_overview():
         if avg_total_capital > 0
         else 0.0
     )
+    # Payment aggregates
+    total_payments = PaymentRecord.query.count()
+    payments_amount = (
+        PaymentRecord.query.with_entities(db.func.coalesce(db.func.sum(PaymentRecord.amount), 0)).scalar()
+    )
+    payments_completed = (
+        PaymentRecord.query.filter(PaymentRecord.status.ilike("%completed%") | (PaymentRecord.status.ilike("%paid%"))).count()
+    )
+    payments_pending = (
+        PaymentRecord.query.filter(~(PaymentRecord.status.ilike("%completed%") | (PaymentRecord.status.ilike("%paid%")))).count()
+    )
+
+    # Enrollment aggregates
+    total_enrollments = CompetitionEnrollment.query.count()
+    enrollment_breakdown = [
+        {"competition_round": r or "", "count": int(c)}
+        for r, c in (
+            db.session.query(CompetitionEnrollment.competition_round, db.func.count(CompetitionEnrollment.enrollment_id))
+            .group_by(CompetitionEnrollment.competition_round)
+            .all()
+        )
+    ]
 
     return {
         "totals": {
@@ -350,6 +437,11 @@ def stats_overview():
             "total_trades": total_trades,
             "buy_volume": round(float(buy_volume or 0), 2),
             "sell_volume": round(float(sell_volume or 0), 2),
+            "total_payments": int(total_payments),
+            "payments_amount": round(float(payments_amount or 0), 2),
+            "payments_completed": int(payments_completed),
+            "payments_pending": int(payments_pending),
+            "total_enrollments": int(total_enrollments),
             "active_holdings": active_holdings,
             "portfolios": portfolios,
         },

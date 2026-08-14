@@ -7,6 +7,7 @@ import uuid
 import psutil
 from flask import Flask, g, jsonify, request
 from dotenv import load_dotenv
+from urllib.parse import quote_plus  # Make sure to add quote_plus import at top
 
 # Load environment variables before running config checks
 load_dotenv(override=True)
@@ -58,8 +59,7 @@ def _build_database_uri() -> str:
     port = int(os.getenv("DB_PORT", "3306"))
     database = os.getenv("DB_NAME", "tradeiq")
     username = os.getenv("DB_USER", "root")
-    password = os.getenv("DB_PASSWORD", "yamuna")
-
+    password = quote_plus(os.getenv("DB_PASSWORD", "yamuna"))
     return f"mysql+pymysql://{username}:{password}@{host}:{port}/{database}"
 
 
@@ -94,12 +94,21 @@ def _check_required_config() -> None:
 def _build_engine_options() -> dict:
     options = {"pool_pre_ping": True, "pool_recycle": 280}
 
+    # Enable SSL for TiDB Cloud
     if os.getenv("DB_SSL", "false").lower() == "true":
         ca_path = os.getenv(
             "DB_SSL_CA",
             os.path.join(os.path.dirname(os.path.dirname(__file__)), "tidb-ca.pem"),
         )
-        ctx = ssl.create_default_context(cafile=ca_path)
+        
+        # Check if local CA file exists; if not, fallback to default system SSL context
+        if os.path.exists(ca_path):
+            ctx = ssl.create_default_context(cafile=ca_path)
+        else:
+            ctx = ssl.create_default_context()
+            ctx.check_hostname = False
+            ctx.verify_mode = ssl.CERT_NONE
+            
         options["connect_args"] = {"ssl": ctx}
 
     return options
@@ -243,6 +252,9 @@ def create_app() -> Flask:
                 missing_user_columns = {
                     "is_paid": "BOOLEAN NOT NULL DEFAULT FALSE",
                     "registration_status": "VARCHAR(30) NOT NULL DEFAULT 'pending'",
+                    "account_status": "VARCHAR(20) NOT NULL DEFAULT 'active'",
+                    "competition_status": "VARCHAR(30) NOT NULL DEFAULT 'none'",
+                    "mt5_account_id": "VARCHAR(100)",
                 }
                 for column_name, column_definition in missing_user_columns.items():
                     if column_name not in user_columns:

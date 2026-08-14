@@ -1,0 +1,167 @@
+[2026-08-13 20:12:58,702] [INFO] [User:SYSTEM] [Session:N/A] [app] - [TradeIQ] Starting up — DB host: gateway01.us-east-1.prod.aws.tidbcloud.com | DB name: tradeiq | SSL: true | Env: development
+[2026-08-13 20:26:18,696] [INFO] [User:SYSTEM] [Session:N/A] [app] - [TradeIQ] Starting up — DB host: gateway01.us-east-1.prod.aws.tidbcloud.com | DB name: tradeiq | SSL: true | Env: development
+[2026-08-13 20:37:57,290] [INFO] [User:SYSTEM] [Session:N/A] [app] - [TradeIQ] Starting up — DB host: gateway01.ap-southeast-1.prod.aws.tidbcloud.com | DB name: tradeiq | SSL: true | Env: development
+[2026-08-13 20:38:05,396] [INFO] [User:SYSTEM] [Session:N/A] [werkzeug] - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://192.168.1.5:5000
+[2026-08-13 20:38:05,397] [INFO] [User:SYSTEM] [Session:N/A] [werkzeug] - [33mPress CTRL+C to quit[0m
+[2026-08-13 20:38:05,398] [INFO] [User:SYSTEM] [Session:N/A] [werkzeug] -  * Restarting with stat
+[2026-08-13 20:38:06,714] [INFO] [User:SYSTEM] [Session:N/A] [app] - [TradeIQ] Starting up — DB host: gateway01.ap-southeast-1.prod.aws.tidbcloud.com | DB name: tradeiq | SSL: true | Env: development
+[2026-08-13 20:38:09,787] [WARNING] [User:SYSTEM] [Session:N/A] [werkzeug] -  * Debugger is active!
+[2026-08-13 20:38:09,799] [INFO] [User:SYSTEM] [Session:N/A] [werkzeug] -  * Debugger PIN: 111-444-385
+[2026-08-13 20:41:34,285] [INFO] [User:SYSTEM] [Session:N/A] [werkzeug] - 127.0.0.1 - - [13/Aug/2026 20:41:34] "OPTIONS /auth/login HTTP/1.1" 200 -
+[2026-08-13 20:41:34,626] [INFO] [User:SYSTEM] [Session:N/A] [werkzeug] - 127.0.0.1 - - [13/Aug/2026 20:41:34] "POST /auth/login HTTP/1.1" 200 -
+[2026-08-13 20:41:34,954] [INFO] [User:SYSTEM] [Session:N/A] [werkzeug] - 127.0.0.1 - - [13/Aug/2026 20:41:34] "OPTIONS /admin/stats/overview HTTP/1.1" 200 -
+[2026-08-13 20:41:34,960] [INFO] [User:SYSTEM] [Session:N/A] [werkzeug] - 127.0.0.1 - - [13/Aug/2026 20:41:34] "OPTIONS /admin/stats/overview HTTP/1.1" 200 -
+[2026-08-13 20:41:39,368] [WARNING] [User:TIQ-7E51] [Session:N/A] [flask-limiter] - Rate limit storage unreachable - falling back to in-memory storage
+[2026-08-13 20:41:44,881] [INFO] [User:SYSTEM] [Session:N/A] [werkzeug] - 127.0.0.1 - - [13/Aug/2026 20:41:44] "GET /admin/stats/overview HTTP/1.1" 200 -
+[2026-08-13 20:41:49,451] [INFO] [User:SYSTEM] [Session:N/A] [werkzeug] - 127.0.0.1 - - [13/Aug/2026 20:41:49] "OPTIONS /admin/users?page=1&per_page=25&sort=created_at&order=desc HTTP/1.1" 200 -
+[2026-08-13 20:41:49,456] [INFO] [User:SYSTEM] [Session:N/A] [werkzeug] - 127.0.0.1 - - [13/Aug/2026 20:41:49] "OPTIONS /admin/users?page=1&per_page=25&sort=created_at&order=desc HTTP/1.1" 200 -
+[2026-08-13 20:41:50,186] [INFO] [User:SYSTEM] [Session:N/A] [werkzeug] - 127.0.0.1 - - [13/Aug/2026 20:41:50] "GET /admin/stats/overview HTTP/1.1" 200 -
+[2026-08-13 20:41:54,430] [INFO] [User:SYSTEM] [Session:N/A] [werkzeug] - 127.0.0.1 - - [13/Aug/2026 20:41:54] "GET /admin/users?page=1&per_page=25&sort=created_at&order=desc HTTP/1.1" 200 -
+[2026-08-13 20:41:55,294] [INFO] [User:SYSTEM] [Session:N/A] [werkzeug] - 127.0.0.1 - - [13/Aug/2026 20:41:55] "GET /admin/users?page=1&per_page=25&sort=created_at&order=desc HTTP/1.1" 200 -
+[2026-08-13 20:41:59,673] [INFO] [User:SYSTEM] [Session:N/A] [werkzeug] - 127.0.0.1 - - [13/Aug/2026 20:41:59] "OPTIONS /admin/users/TIQ-E3E0 HTTP/1.1" 200 -
+[2026-08-13 20:41:59,677] [INFO] [User:SYSTEM] [Session:N/A] [werkzeug] - 127.0.0.1 - - [13/Aug/2026 20:41:59] "OPTIONS /admin/users/TIQ-E3E0 HTTP/1.1" 200 -
+[2026-08-13 20:42:04,900] [INFO] [User:SYSTEM] [Session:N/A] [werkzeug] - 127.0.0.1 - - [13/Aug/2026 20:42:04] "GET /admin/users/TIQ-E3E0 HTTP/1.1" 200 -
+[2026-08-13 20:42:05,705] [INFO] [User:SYSTEM] [Session:N/A] [werkzeug] - 127.0.0.1 - - [13/Aug/2026 20:42:05] "GET /admin/users/TIQ-E3E0 HTTP/1.1" 200 -
+[2026-08-13 20:42:14,852] [INFO] [User:SYSTEM] [Session:N/A] [werkzeug] - 127.0.0.1 - - [13/Aug/2026 20:42:14] "OPTIONS /admin/payments?page=1&per_page=50 HTTP/1.1" 200 -
+[2026-08-13 20:42:14,856] [INFO] [User:SYSTEM] [Session:N/A] [werkzeug] - 127.0.0.1 - - [13/Aug/2026 20:42:14] "OPTIONS /admin/payments?page=1&per_page=50 HTTP/1.1" 200 -
+[2026-08-13 20:42:15,419] [INFO] [User:SYSTEM] [Session:N/A] [werkzeug] - 127.0.0.1 - - [13/Aug/2026 20:42:15] "GET /admin/payments?page=1&per_page=50 HTTP/1.1" 200 -
+[2026-08-13 20:42:15,722] [INFO] [User:SYSTEM] [Session:N/A] [werkzeug] - 127.0.0.1 - - [13/Aug/2026 20:42:15] "GET /admin/payments?page=1&per_page=50 HTTP/1.1" 200 -
+[2026-08-13 20:42:18,710] [INFO] [User:SYSTEM] [Session:N/A] [werkzeug] - 127.0.0.1 - - [13/Aug/2026 20:42:18] "OPTIONS /admin/competitions?page=1&per_page=50 HTTP/1.1" 200 -
+[2026-08-13 20:42:18,713] [INFO] [User:SYSTEM] [Session:N/A] [werkzeug] - 127.0.0.1 - - [13/Aug/2026 20:42:18] "OPTIONS /admin/competitions?page=1&per_page=50 HTTP/1.1" 200 -
+[2026-08-13 20:42:23,308] [INFO] [User:SYSTEM] [Session:N/A] [werkzeug] - 127.0.0.1 - - [13/Aug/2026 20:42:23] "GET /admin/competitions?page=1&per_page=50 HTTP/1.1" 200 -
+[2026-08-13 20:42:23,603] [INFO] [User:SYSTEM] [Session:N/A] [werkzeug] - 127.0.0.1 - - [13/Aug/2026 20:42:23] "GET /admin/competitions?page=1&per_page=50 HTTP/1.1" 200 -
+[2026-08-13 20:42:28,880] [INFO] [User:SYSTEM] [Session:N/A] [werkzeug] - 127.0.0.1 - - [13/Aug/2026 20:42:28] "OPTIONS /admin/payments?page=1&per_page=50 HTTP/1.1" 200 -
+[2026-08-13 20:42:28,885] [INFO] [User:SYSTEM] [Session:N/A] [werkzeug] - 127.0.0.1 - - [13/Aug/2026 20:42:28] "OPTIONS /admin/payments?page=1&per_page=50 HTTP/1.1" 200 -
+[2026-08-13 20:42:29,474] [INFO] [User:SYSTEM] [Session:N/A] [werkzeug] - 127.0.0.1 - - [13/Aug/2026 20:42:29] "GET /admin/payments?page=1&per_page=50 HTTP/1.1" 200 -
+[2026-08-13 20:42:29,784] [INFO] [User:SYSTEM] [Session:N/A] [werkzeug] - 127.0.0.1 - - [13/Aug/2026 20:42:29] "GET /admin/payments?page=1&per_page=50 HTTP/1.1" 200 -
+[2026-08-13 20:42:31,420] [INFO] [User:SYSTEM] [Session:N/A] [werkzeug] - 127.0.0.1 - - [13/Aug/2026 20:42:31] "OPTIONS /admin/users?page=1&per_page=25&sort=created_at&order=desc HTTP/1.1" 200 -
+[2026-08-13 20:42:31,423] [INFO] [User:SYSTEM] [Session:N/A] [werkzeug] - 127.0.0.1 - - [13/Aug/2026 20:42:31] "OPTIONS /admin/users?page=1&per_page=25&sort=created_at&order=desc HTTP/1.1" 200 -
+[2026-08-13 20:42:32,251] [INFO] [User:SYSTEM] [Session:N/A] [werkzeug] - 127.0.0.1 - - [13/Aug/2026 20:42:32] "GET /admin/users?page=1&per_page=25&sort=created_at&order=desc HTTP/1.1" 200 -
+[2026-08-13 20:42:32,829] [INFO] [User:SYSTEM] [Session:N/A] [werkzeug] - 127.0.0.1 - - [13/Aug/2026 20:42:32] "GET /admin/users?page=1&per_page=25&sort=created_at&order=desc HTTP/1.1" 200 -
+[2026-08-13 20:42:37,566] [INFO] [User:SYSTEM] [Session:N/A] [werkzeug] - 127.0.0.1 - - [13/Aug/2026 20:42:37] "OPTIONS /admin/payments?page=1&per_page=50 HTTP/1.1" 200 -
+[2026-08-13 20:42:37,570] [INFO] [User:SYSTEM] [Session:N/A] [werkzeug] - 127.0.0.1 - - [13/Aug/2026 20:42:37] "OPTIONS /admin/payments?page=1&per_page=50 HTTP/1.1" 200 -
+[2026-08-13 20:42:38,109] [INFO] [User:SYSTEM] [Session:N/A] [werkzeug] - 127.0.0.1 - - [13/Aug/2026 20:42:38] "GET /admin/payments?page=1&per_page=50 HTTP/1.1" 200 -
+[2026-08-13 20:42:38,393] [INFO] [User:SYSTEM] [Session:N/A] [werkzeug] - 127.0.0.1 - - [13/Aug/2026 20:42:38] "GET /admin/payments?page=1&per_page=50 HTTP/1.1" 200 -
+[2026-08-13 20:42:42,132] [INFO] [User:SYSTEM] [Session:N/A] [werkzeug] - 127.0.0.1 - - [13/Aug/2026 20:42:42] "OPTIONS /admin/competitions?page=1&per_page=50 HTTP/1.1" 200 -
+[2026-08-13 20:42:42,135] [INFO] [User:SYSTEM] [Session:N/A] [werkzeug] - 127.0.0.1 - - [13/Aug/2026 20:42:42] "OPTIONS /admin/competitions?page=1&per_page=50 HTTP/1.1" 200 -
+[2026-08-13 20:42:42,692] [INFO] [User:SYSTEM] [Session:N/A] [werkzeug] - 127.0.0.1 - - [13/Aug/2026 20:42:42] "GET /admin/competitions?page=1&per_page=50 HTTP/1.1" 200 -
+[2026-08-13 20:42:42,988] [INFO] [User:SYSTEM] [Session:N/A] [werkzeug] - 127.0.0.1 - - [13/Aug/2026 20:42:42] "GET /admin/competitions?page=1&per_page=50 HTTP/1.1" 200 -
+[2026-08-13 20:42:44,938] [INFO] [User:SYSTEM] [Session:N/A] [werkzeug] - 127.0.0.1 - - [13/Aug/2026 20:42:44] "OPTIONS /admin/payments?page=1&per_page=50 HTTP/1.1" 200 -
+[2026-08-13 20:42:44,942] [INFO] [User:SYSTEM] [Session:N/A] [werkzeug] - 127.0.0.1 - - [13/Aug/2026 20:42:44] "OPTIONS /admin/payments?page=1&per_page=50 HTTP/1.1" 200 -
+[2026-08-13 20:42:45,485] [INFO] [User:SYSTEM] [Session:N/A] [werkzeug] - 127.0.0.1 - - [13/Aug/2026 20:42:45] "GET /admin/payments?page=1&per_page=50 HTTP/1.1" 200 -
+[2026-08-13 20:42:45,770] [INFO] [User:SYSTEM] [Session:N/A] [werkzeug] - 127.0.0.1 - - [13/Aug/2026 20:42:45] "GET /admin/payments?page=1&per_page=50 HTTP/1.1" 200 -
+[2026-08-13 20:42:45,808] [INFO] [User:SYSTEM] [Session:N/A] [werkzeug] - 127.0.0.1 - - [13/Aug/2026 20:42:45] "OPTIONS /admin/users?page=1&per_page=25&sort=created_at&order=desc HTTP/1.1" 200 -
+[2026-08-13 20:42:45,811] [INFO] [User:SYSTEM] [Session:N/A] [werkzeug] - 127.0.0.1 - - [13/Aug/2026 20:42:45] "OPTIONS /admin/users?page=1&per_page=25&sort=created_at&order=desc HTTP/1.1" 200 -
+[2026-08-13 20:42:46,662] [INFO] [User:SYSTEM] [Session:N/A] [werkzeug] - 127.0.0.1 - - [13/Aug/2026 20:42:46] "GET /admin/users?page=1&per_page=25&sort=created_at&order=desc HTTP/1.1" 200 -
+[2026-08-13 20:42:46,839] [INFO] [User:SYSTEM] [Session:N/A] [werkzeug] - 127.0.0.1 - - [13/Aug/2026 20:42:46] "OPTIONS /admin/stats/overview HTTP/1.1" 200 -
+[2026-08-13 20:42:46,844] [INFO] [User:SYSTEM] [Session:N/A] [werkzeug] - 127.0.0.1 - - [13/Aug/2026 20:42:46] "OPTIONS /admin/stats/overview HTTP/1.1" 200 -
+[2026-08-13 20:42:47,568] [INFO] [User:SYSTEM] [Session:N/A] [werkzeug] - 127.0.0.1 - - [13/Aug/2026 20:42:47] "GET /admin/users?page=1&per_page=25&sort=created_at&order=desc HTTP/1.1" 200 -
+[2026-08-13 20:42:49,041] [INFO] [User:SYSTEM] [Session:N/A] [werkzeug] - 127.0.0.1 - - [13/Aug/2026 20:42:49] "GET /admin/stats/overview HTTP/1.1" 200 -
+[2026-08-13 20:42:50,970] [INFO] [User:SYSTEM] [Session:N/A] [werkzeug] - 127.0.0.1 - - [13/Aug/2026 20:42:50] "GET /admin/stats/overview HTTP/1.1" 200 -
+[2026-08-13 20:43:08,033] [INFO] [User:SYSTEM] [Session:N/A] [werkzeug] - 127.0.0.1 - - [13/Aug/2026 20:43:08] "OPTIONS /admin/users?page=1&per_page=25&sort=created_at&order=desc HTTP/1.1" 200 -
+[2026-08-13 20:43:08,035] [INFO] [User:SYSTEM] [Session:N/A] [werkzeug] - 127.0.0.1 - - [13/Aug/2026 20:43:08] "OPTIONS /admin/users?page=1&per_page=25&sort=created_at&order=desc HTTP/1.1" 200 -
+[2026-08-13 20:43:13,148] [INFO] [User:SYSTEM] [Session:N/A] [werkzeug] - 127.0.0.1 - - [13/Aug/2026 20:43:13] "GET /admin/users?page=1&per_page=25&sort=created_at&order=desc HTTP/1.1" 200 -
+[2026-08-13 20:43:17,776] [INFO] [User:SYSTEM] [Session:N/A] [werkzeug] - 127.0.0.1 - - [13/Aug/2026 20:43:17] "GET /admin/users?page=1&per_page=25&sort=created_at&order=desc HTTP/1.1" 200 -
+[2026-08-13 20:43:29,268] [INFO] [User:SYSTEM] [Session:N/A] [werkzeug] - 127.0.0.1 - - [13/Aug/2026 20:43:29] "OPTIONS /admin/users/TIQ-336E HTTP/1.1" 200 -
+[2026-08-13 20:43:29,276] [INFO] [User:SYSTEM] [Session:N/A] [werkzeug] - 127.0.0.1 - - [13/Aug/2026 20:43:29] "OPTIONS /admin/users/TIQ-336E HTTP/1.1" 200 -
+[2026-08-13 20:43:32,574] [INFO] [User:SYSTEM] [Session:N/A] [werkzeug] - 127.0.0.1 - - [13/Aug/2026 20:43:32] "OPTIONS /admin/users?page=1&per_page=25&sort=created_at&order=desc HTTP/1.1" 200 -
+[2026-08-13 20:43:32,885] [INFO] [User:SYSTEM] [Session:N/A] [werkzeug] - 127.0.0.1 - - [13/Aug/2026 20:43:32] "OPTIONS /admin/users?page=1&per_page=25&sort=created_at&order=desc HTTP/1.1" 200 -
+[2026-08-13 20:43:33,429] [INFO] [User:SYSTEM] [Session:N/A] [werkzeug] - 127.0.0.1 - - [13/Aug/2026 20:43:33] "GET /admin/users?page=1&per_page=25&sort=created_at&order=desc HTTP/1.1" 200 -
+[2026-08-13 20:43:34,410] [INFO] [User:SYSTEM] [Session:N/A] [werkzeug] - 127.0.0.1 - - [13/Aug/2026 20:43:34] "GET /admin/users/TIQ-336E HTTP/1.1" 200 -
+[2026-08-13 20:43:35,425] [INFO] [User:SYSTEM] [Session:N/A] [werkzeug] - 127.0.0.1 - - [13/Aug/2026 20:43:35] "OPTIONS /admin/users/TIQ-896E HTTP/1.1" 200 -
+[2026-08-13 20:43:35,431] [INFO] [User:SYSTEM] [Session:N/A] [werkzeug] - 127.0.0.1 - - [13/Aug/2026 20:43:35] "OPTIONS /admin/users/TIQ-896E HTTP/1.1" 200 -
+[2026-08-13 20:43:35,526] [INFO] [User:SYSTEM] [Session:N/A] [werkzeug] - 127.0.0.1 - - [13/Aug/2026 20:43:35] "GET /admin/users/TIQ-336E HTTP/1.1" 200 -
+[2026-08-13 20:43:36,512] [INFO] [User:SYSTEM] [Session:N/A] [werkzeug] - 127.0.0.1 - - [13/Aug/2026 20:43:36] "GET /admin/users/TIQ-896E HTTP/1.1" 200 -
+[2026-08-13 20:43:37,641] [INFO] [User:SYSTEM] [Session:N/A] [werkzeug] - 127.0.0.1 - - [13/Aug/2026 20:43:37] "GET /admin/users/TIQ-896E HTTP/1.1" 200 -
+[2026-08-13 20:43:38,442] [INFO] [User:SYSTEM] [Session:N/A] [werkzeug] - 127.0.0.1 - - [13/Aug/2026 20:43:38] "GET /admin/users?page=1&per_page=25&sort=created_at&order=desc HTTP/1.1" 200 -
+[2026-08-13 20:43:39,390] [INFO] [User:SYSTEM] [Session:N/A] [werkzeug] - 127.0.0.1 - - [13/Aug/2026 20:43:39] "OPTIONS /admin/users?page=1&per_page=25&sort=created_at&order=desc HTTP/1.1" 200 -
+[2026-08-13 20:43:39,394] [INFO] [User:SYSTEM] [Session:N/A] [werkzeug] - 127.0.0.1 - - [13/Aug/2026 20:43:39] "OPTIONS /admin/users?page=1&per_page=25&sort=created_at&order=desc HTTP/1.1" 200 -
+[2026-08-13 20:43:40,213] [INFO] [User:SYSTEM] [Session:N/A] [werkzeug] - 127.0.0.1 - - [13/Aug/2026 20:43:40] "GET /admin/users?page=1&per_page=25&sort=created_at&order=desc HTTP/1.1" 200 -
+[2026-08-13 20:43:40,780] [INFO] [User:SYSTEM] [Session:N/A] [werkzeug] - 127.0.0.1 - - [13/Aug/2026 20:43:40] "GET /admin/users?page=1&per_page=25&sort=created_at&order=desc HTTP/1.1" 200 -
+[2026-08-13 20:43:54,320] [INFO] [User:SYSTEM] [Session:N/A] [werkzeug] - 127.0.0.1 - - [13/Aug/2026 20:43:54] "OPTIONS /admin/users/TIQ-E697 HTTP/1.1" 200 -
+[2026-08-13 20:43:54,323] [INFO] [User:SYSTEM] [Session:N/A] [werkzeug] - 127.0.0.1 - - [13/Aug/2026 20:43:54] "OPTIONS /admin/users/TIQ-E697 HTTP/1.1" 200 -
+[2026-08-13 20:43:59,500] [INFO] [User:SYSTEM] [Session:N/A] [werkzeug] - 127.0.0.1 - - [13/Aug/2026 20:43:59] "GET /admin/users/TIQ-E697 HTTP/1.1" 200 -
+[2026-08-13 20:44:00,435] [INFO] [User:SYSTEM] [Session:N/A] [werkzeug] - 127.0.0.1 - - [13/Aug/2026 20:44:00] "GET /admin/users/TIQ-E697 HTTP/1.1" 200 -
+[2026-08-13 20:44:07,659] [INFO] [User:SYSTEM] [Session:N/A] [werkzeug] - 127.0.0.1 - - [13/Aug/2026 20:44:07] "OPTIONS /admin/competitions?page=1&per_page=50 HTTP/1.1" 200 -
+[2026-08-13 20:44:07,663] [INFO] [User:SYSTEM] [Session:N/A] [werkzeug] - 127.0.0.1 - - [13/Aug/2026 20:44:07] "OPTIONS /admin/competitions?page=1&per_page=50 HTTP/1.1" 200 -
+[2026-08-13 20:44:08,223] [INFO] [User:SYSTEM] [Session:N/A] [werkzeug] - 127.0.0.1 - - [13/Aug/2026 20:44:08] "GET /admin/competitions?page=1&per_page=50 HTTP/1.1" 200 -
+[2026-08-13 20:44:08,534] [INFO] [User:SYSTEM] [Session:N/A] [werkzeug] - 127.0.0.1 - - [13/Aug/2026 20:44:08] "GET /admin/competitions?page=1&per_page=50 HTTP/1.1" 200 -
+[2026-08-13 20:50:20,061] [INFO] [User:SYSTEM] [Session:N/A] [werkzeug] - 127.0.0.1 - - [13/Aug/2026 20:50:20] "OPTIONS /admin/competitions?page=1&per_page=50 HTTP/1.1" 200 -
+[2026-08-13 20:50:21,344] [INFO] [User:SYSTEM] [Session:N/A] [werkzeug] - 127.0.0.1 - - [13/Aug/2026 20:50:21] "OPTIONS /admin/stats/overview HTTP/1.1" 200 -
+[2026-08-13 20:50:21,359] [INFO] [User:SYSTEM] [Session:N/A] [werkzeug] - 127.0.0.1 - - [13/Aug/2026 20:50:21] "OPTIONS /admin/stats/overview HTTP/1.1" 200 -
+[2026-08-13 20:50:25,279] [INFO] [User:SYSTEM] [Session:N/A] [werkzeug] - 127.0.0.1 - - [13/Aug/2026 20:50:25] "GET /admin/stats/overview HTTP/1.1" 200 -
+[2026-08-13 20:50:25,386] [INFO] [User:SYSTEM] [Session:N/A] [werkzeug] - 127.0.0.1 - - [13/Aug/2026 20:50:25] "GET /admin/competitions?page=1&per_page=50 HTTP/1.1" 200 -
+[2026-08-13 20:50:27,061] [INFO] [User:SYSTEM] [Session:N/A] [werkzeug] - 127.0.0.1 - - [13/Aug/2026 20:50:27] "GET /admin/stats/overview HTTP/1.1" 200 -
+[2026-08-13 20:50:31,588] [INFO] [User:SYSTEM] [Session:N/A] [werkzeug] -  * Detected change in 'C:\\Projects\\SalesTrading\\backend\\app\\admin\\routes.py', reloading
+[2026-08-13 20:50:36,514] [INFO] [User:SYSTEM] [Session:N/A] [werkzeug] -  * Restarting with stat
+[2026-08-13 20:50:38,269] [INFO] [User:SYSTEM] [Session:N/A] [app] - [TradeIQ] Starting up — DB host: gateway01.ap-southeast-1.prod.aws.tidbcloud.com | DB name: tradeiq | SSL: true | Env: development
+[2026-08-13 20:50:45,048] [WARNING] [User:SYSTEM] [Session:N/A] [werkzeug] -  * Debugger is active!
+[2026-08-13 20:50:45,669] [INFO] [User:SYSTEM] [Session:N/A] [werkzeug] -  * Debugger PIN: 111-444-385
+[2026-08-13 20:52:17,127] [INFO] [User:SYSTEM] [Session:N/A] [werkzeug] -  * Detected change in 'C:\\Projects\\SalesTrading\\backend\\app\\admin\\routes.py', reloading
+[2026-08-13 20:52:19,118] [INFO] [User:SYSTEM] [Session:N/A] [werkzeug] -  * Restarting with stat
+[2026-08-13 20:52:21,604] [INFO] [User:SYSTEM] [Session:N/A] [app] - [TradeIQ] Starting up — DB host: gateway01.ap-southeast-1.prod.aws.tidbcloud.com | DB name: tradeiq | SSL: true | Env: development
+[2026-08-13 20:52:33,896] [WARNING] [User:SYSTEM] [Session:N/A] [werkzeug] -  * Debugger is active!
+[2026-08-13 20:52:33,973] [INFO] [User:SYSTEM] [Session:N/A] [werkzeug] -  * Debugger PIN: 111-444-385
+[2026-08-13 20:53:52,765] [INFO] [User:SYSTEM] [Session:N/A] [werkzeug] -  * Detected change in 'C:\\Projects\\SalesTrading\\backend\\app\\admin\\routes.py', reloading
+[2026-08-13 20:53:55,478] [INFO] [User:SYSTEM] [Session:N/A] [werkzeug] -  * Restarting with stat
+[2026-08-13 20:53:57,613] [INFO] [User:SYSTEM] [Session:N/A] [app] - [TradeIQ] Starting up — DB host: gateway01.ap-southeast-1.prod.aws.tidbcloud.com | DB name: tradeiq | SSL: true | Env: development
+[2026-08-13 20:54:07,240] [WARNING] [User:SYSTEM] [Session:N/A] [werkzeug] -  * Debugger is active!
+[2026-08-13 20:54:07,274] [INFO] [User:SYSTEM] [Session:N/A] [werkzeug] -  * Debugger PIN: 111-444-385
+[2026-08-13 21:02:20,666] [INFO] [User:SYSTEM] [Session:N/A] [werkzeug] -  * Detected change in 'C:\\Projects\\SalesTrading\\backend\\app\\admin\\routes.py', reloading
+[2026-08-13 21:02:22,000] [INFO] [User:SYSTEM] [Session:N/A] [werkzeug] -  * Restarting with stat
+[2026-08-13 21:02:23,381] [INFO] [User:SYSTEM] [Session:N/A] [app] - [TradeIQ] Starting up — DB host: gateway01.ap-southeast-1.prod.aws.tidbcloud.com | DB name: tradeiq | SSL: true | Env: development
+[2026-08-13 21:02:27,950] [WARNING] [User:SYSTEM] [Session:N/A] [werkzeug] -  * Debugger is active!
+[2026-08-13 21:02:27,990] [INFO] [User:SYSTEM] [Session:N/A] [werkzeug] -  * Debugger PIN: 111-444-385
+[2026-08-13 21:03:23,428] [INFO] [User:SYSTEM] [Session:N/A] [werkzeug] -  * Detected change in 'C:\\Projects\\SalesTrading\\backend\\app\\admin\\routes.py', reloading
+[2026-08-13 21:03:26,169] [INFO] [User:SYSTEM] [Session:N/A] [werkzeug] -  * Restarting with stat
+[2026-08-13 21:03:29,074] [INFO] [User:SYSTEM] [Session:N/A] [app] - [TradeIQ] Starting up — DB host: gateway01.ap-southeast-1.prod.aws.tidbcloud.com | DB name: tradeiq | SSL: true | Env: development
+[2026-08-13 21:03:39,628] [WARNING] [User:SYSTEM] [Session:N/A] [werkzeug] -  * Debugger is active!
+[2026-08-13 21:03:40,463] [INFO] [User:SYSTEM] [Session:N/A] [werkzeug] -  * Debugger PIN: 111-444-385
+[2026-08-13 21:06:03,337] [INFO] [User:SYSTEM] [Session:N/A] [werkzeug] -  * Detected change in 'C:\\Projects\\SalesTrading\\backend\\app\\admin\\routes.py', reloading
+[2026-08-13 21:06:05,175] [INFO] [User:SYSTEM] [Session:N/A] [werkzeug] -  * Restarting with stat
+[2026-08-13 21:06:07,168] [INFO] [User:SYSTEM] [Session:N/A] [app] - [TradeIQ] Starting up — DB host: gateway01.ap-southeast-1.prod.aws.tidbcloud.com | DB name: tradeiq | SSL: true | Env: development
+[2026-08-13 21:06:11,877] [WARNING] [User:SYSTEM] [Session:N/A] [werkzeug] -  * Debugger is active!
+[2026-08-13 21:06:11,902] [INFO] [User:SYSTEM] [Session:N/A] [werkzeug] -  * Debugger PIN: 111-444-385
+[2026-08-13 21:07:18,074] [INFO] [User:SYSTEM] [Session:N/A] [werkzeug] -  * Detected change in 'C:\\Projects\\SalesTrading\\backend\\app\\admin\\routes.py', reloading
+[2026-08-13 21:07:18,817] [INFO] [User:SYSTEM] [Session:N/A] [werkzeug] -  * Restarting with stat
+[2026-08-13 21:07:20,103] [INFO] [User:SYSTEM] [Session:N/A] [app] - [TradeIQ] Starting up — DB host: gateway01.ap-southeast-1.prod.aws.tidbcloud.com | DB name: tradeiq | SSL: true | Env: development
+[2026-08-13 21:07:23,287] [WARNING] [User:SYSTEM] [Session:N/A] [werkzeug] -  * Debugger is active!
+[2026-08-13 21:07:23,296] [INFO] [User:SYSTEM] [Session:N/A] [werkzeug] -  * Debugger PIN: 111-444-385
+[2026-08-13 21:08:25,057] [INFO] [User:SYSTEM] [Session:N/A] [werkzeug] -  * Detected change in 'C:\\Projects\\SalesTrading\\backend\\app\\models.py', reloading
+[2026-08-13 21:08:30,681] [INFO] [User:SYSTEM] [Session:N/A] [werkzeug] -  * Restarting with stat
+[2026-08-13 21:08:33,394] [INFO] [User:SYSTEM] [Session:N/A] [app] - [TradeIQ] Starting up — DB host: gateway01.ap-southeast-1.prod.aws.tidbcloud.com | DB name: tradeiq | SSL: true | Env: development
+[2026-08-13 21:08:40,769] [WARNING] [User:SYSTEM] [Session:N/A] [werkzeug] -  * Debugger is active!
+[2026-08-13 21:08:40,929] [INFO] [User:SYSTEM] [Session:N/A] [werkzeug] -  * Debugger PIN: 111-444-385
+[2026-08-13 21:08:45,813] [INFO] [User:SYSTEM] [Session:N/A] [werkzeug] -  * Detected change in 'C:\\Projects\\SalesTrading\\backend\\app\\admin\\routes.py', reloading
+[2026-08-13 21:08:46,156] [INFO] [User:SYSTEM] [Session:N/A] [werkzeug] -  * Restarting with stat
+[2026-08-13 21:08:47,827] [INFO] [User:SYSTEM] [Session:N/A] [app] - [TradeIQ] Starting up — DB host: gateway01.ap-southeast-1.prod.aws.tidbcloud.com | DB name: tradeiq | SSL: true | Env: development
+[2026-08-13 21:08:52,107] [WARNING] [User:SYSTEM] [Session:N/A] [werkzeug] -  * Debugger is active!
+[2026-08-13 21:08:52,113] [INFO] [User:SYSTEM] [Session:N/A] [werkzeug] -  * Debugger PIN: 111-444-385
+[2026-08-13 21:09:06,932] [INFO] [User:SYSTEM] [Session:N/A] [werkzeug] -  * Detected change in 'C:\\Projects\\SalesTrading\\backend\\app\\admin\\routes.py', reloading
+[2026-08-13 21:09:07,443] [INFO] [User:SYSTEM] [Session:N/A] [werkzeug] -  * Restarting with stat
+[2026-08-13 21:09:09,476] [INFO] [User:SYSTEM] [Session:N/A] [app] - [TradeIQ] Starting up — DB host: gateway01.ap-southeast-1.prod.aws.tidbcloud.com | DB name: tradeiq | SSL: true | Env: development
+[2026-08-13 21:09:14,268] [WARNING] [User:SYSTEM] [Session:N/A] [werkzeug] -  * Debugger is active!
+[2026-08-13 21:09:14,278] [INFO] [User:SYSTEM] [Session:N/A] [werkzeug] -  * Debugger PIN: 111-444-385
+[2026-08-13 21:10:51,063] [INFO] [User:SYSTEM] [Session:N/A] [werkzeug] -  * Detected change in 'C:\\Projects\\SalesTrading\\backend\\app\\models.py', reloading
+[2026-08-13 21:10:52,852] [INFO] [User:SYSTEM] [Session:N/A] [werkzeug] -  * Restarting with stat
+[2026-08-13 21:10:55,728] [INFO] [User:SYSTEM] [Session:N/A] [app] - [TradeIQ] Starting up — DB host: gateway01.ap-southeast-1.prod.aws.tidbcloud.com | DB name: tradeiq | SSL: true | Env: development
+[2026-08-13 21:11:02,631] [WARNING] [User:SYSTEM] [Session:N/A] [werkzeug] -  * Debugger is active!
+[2026-08-13 21:11:02,666] [INFO] [User:SYSTEM] [Session:N/A] [werkzeug] -  * Debugger PIN: 111-444-385
+[2026-08-13 21:12:12,201] [INFO] [User:SYSTEM] [Session:N/A] [werkzeug] -  * Detected change in 'C:\\Projects\\SalesTrading\\backend\\app\\models.py', reloading
+[2026-08-13 21:12:13,417] [INFO] [User:SYSTEM] [Session:N/A] [werkzeug] -  * Restarting with stat
+[2026-08-13 21:12:15,433] [INFO] [User:SYSTEM] [Session:N/A] [app] - [TradeIQ] Starting up — DB host: gateway01.ap-southeast-1.prod.aws.tidbcloud.com | DB name: tradeiq | SSL: true | Env: development
+[2026-08-13 21:12:24,885] [WARNING] [User:SYSTEM] [Session:N/A] [werkzeug] -  * Debugger is active!
+[2026-08-13 21:12:24,959] [INFO] [User:SYSTEM] [Session:N/A] [werkzeug] -  * Debugger PIN: 111-444-385
+[2026-08-13 21:13:14,065] [INFO] [User:SYSTEM] [Session:N/A] [werkzeug] -  * Detected change in 'C:\\Projects\\SalesTrading\\backend\\app\\admin\\routes.py', reloading
+[2026-08-13 21:13:14,710] [INFO] [User:SYSTEM] [Session:N/A] [werkzeug] -  * Restarting with stat
+[2026-08-13 21:13:16,290] [INFO] [User:SYSTEM] [Session:N/A] [app] - [TradeIQ] Starting up — DB host: gateway01.ap-southeast-1.prod.aws.tidbcloud.com | DB name: tradeiq | SSL: true | Env: development
+[2026-08-13 21:13:22,343] [WARNING] [User:SYSTEM] [Session:N/A] [werkzeug] -  * Debugger is active!
+[2026-08-13 21:13:22,365] [INFO] [User:SYSTEM] [Session:N/A] [werkzeug] -  * Debugger PIN: 111-444-385
+[2026-08-13 21:15:27,380] [INFO] [User:SYSTEM] [Session:N/A] [werkzeug] -  * Detected change in 'C:\\Projects\\SalesTrading\\backend\\app\\admin\\routes.py', reloading
+[2026-08-13 21:15:27,687] [INFO] [User:SYSTEM] [Session:N/A] [werkzeug] -  * Restarting with stat
+[2026-08-13 21:15:28,677] [INFO] [User:SYSTEM] [Session:N/A] [app] - [TradeIQ] Starting up — DB host: gateway01.ap-southeast-1.prod.aws.tidbcloud.com | DB name: tradeiq | SSL: true | Env: development
+[2026-08-13 21:15:32,569] [WARNING] [User:SYSTEM] [Session:N/A] [werkzeug] -  * Debugger is active!
+[2026-08-13 21:15:32,575] [INFO] [User:SYSTEM] [Session:N/A] [werkzeug] -  * Debugger PIN: 111-444-385

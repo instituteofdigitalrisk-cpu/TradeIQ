@@ -1,7 +1,6 @@
-import { Fragment, useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { admin } from "../api";
-import { saveLoggedInUser } from "../App";
-import type { Role, UserDetail } from "../types";
+import type { UserDetail } from "../types";
 
 type Props = {
   userId: string;
@@ -15,8 +14,7 @@ const fmtMoney = (n: number): string =>
     maximumFractionDigits: 2,
   });
 
-const fmtNum = (n: number | null | undefined): string =>
-  n == null ? "—" : n.toLocaleString("en-US", { maximumFractionDigits: 2 });
+// helper for formatting numbers if needed
 
 function DetailGrid({ items }: { items: { k: string; v: string | number | null }[] }) {
   return (
@@ -31,22 +29,51 @@ function DetailGrid({ items }: { items: { k: string; v: string | number | null }
   );
 }
 
+function NoteList({ notes }: { notes: { note_id: number; content: string | null; created_at: string | null }[] }) {
+  if (!notes || notes.length === 0) return <div>No notes</div>;
+  return (
+    <ul>
+      {notes.map((n) => (
+        <li key={n.note_id}>{n.created_at ? n.created_at.slice(0, 19) : ""} — {n.content}</li>
+      ))}
+    </ul>
+  );
+}
+
+function AddNoteForm({ onAdd }: { onAdd: (content: string, note_type?: string) => Promise<void> }) {
+  const [content, setContent] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+  return (
+    <div style={{ marginTop: 8 }}>
+      <textarea value={content} onChange={(e) => setContent(e.target.value)} rows={3} style={{ width: "100%" }} />
+      <div style={{ marginTop: 6 }}>
+        <button
+          onClick={async () => {
+            if (!content.trim()) return;
+            setSubmitting(true);
+            try {
+              await onAdd(content.trim());
+              setContent("");
+            } finally {
+              setSubmitting(false);
+            }
+          }}
+          disabled={submitting}
+        >
+          Add Note
+        </button>
+      </div>
+    </div>
+  );
+}
+
+
 export default function UserDetailPage({ userId, onBack }: Props) {
   const [detail, setDetail] = useState<UserDetail | null>(null);
+  const [tab, setTab] = useState<"overview" | "account" | "competition" | "trading" | "thesis" | "activity">("overview");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
-  const [expandedTradeId, setExpandedTradeId] = useState<string | null>(null);
-
-  // Edit state (profile fields only)
-  const [edit, setEdit] = useState(false);
-  const [fullName, setFullName] = useState("");
-  const [university, setUniversity] = useState("");
-  const [year, setYear] = useState("");
-  const [phone, setPhone] = useState("");
-  const [saving, setSaving] = useState(false);
-
-  const [confirmDelete, setConfirmDelete] = useState(false);
-  const [deleting, setDeleting] = useState(false);
+  // Note: profile edit, trade expansion, and delete actions removed from simplified view
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -54,10 +81,7 @@ export default function UserDetailPage({ userId, onBack }: Props) {
     try {
       const d = await admin.userDetail(userId);
       setDetail(d);
-      setFullName(d.profile.full_name ?? "");
-      setUniversity(d.profile.university ?? "");
-      setYear(d.profile.year_of_study != null ? String(d.profile.year_of_study) : "");
-      setPhone(d.profile.phone_number ?? "");
+      // load basic detail into state (no editable profile in simplified view)
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to load user.");
     } finally {
@@ -69,93 +93,8 @@ export default function UserDetailPage({ userId, onBack }: Props) {
     void load();
   }, [load]);
 
-  const saveEdits = async () => {
-    setSaving(true);
-    setError(null);
-    try {
-      const fields: Partial<{
-        full_name: string;
-        university: string;
-        year_of_study: number;
-        phone_number: string;
-      }> = {};
-      if (fullName.trim()) fields.full_name = fullName.trim();
-      if (university.trim()) fields.university = university.trim();
-      if (year.trim()) fields.year_of_study = parseInt(year, 10);
-      if (phone.trim()) fields.phone_number = phone.trim();
 
-      await admin.updateUser(userId, fields);
-      const d = await admin.userDetail(userId);
-      setDetail(d);
-      setEdit(false);
-      // Keep the sidebar identity fresh in case the edited user is the admin.
-      const stored = window.localStorage.getItem("tradeiq.adminUser");
-      if (stored) {
-        try {
-          const me = JSON.parse(stored) as { user_id?: string };
-          if (me.user_id === userId) {
-            const next: {
-              user_id: string;
-              full_name: string;
-              email: string;
-              university: string | null;
-              year_of_study: number | null;
-              role: Role;
-              created_at: string;
-            } = {
-              ...(JSON.parse(stored) as {
-                user_id: string;
-                full_name: string;
-                email: string;
-                university: string | null;
-                year_of_study: number | null;
-                role: Role;
-                created_at: string;
-              }),
-              full_name: d.profile.full_name,
-              university: d.profile.university,
-              year_of_study: d.profile.year_of_study,
-              role: d.profile.role as Role,
-            };
-            saveLoggedInUser(next);
-          }
-        } catch {
-          /* ignore */
-        }
-      }
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to save changes.");
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  const promoteDemote = async () => {
-    if (!detail) return;
-    setSaving(true);
-    setError(null);
-    try {
-      const nextRole: Role = detail.profile.role === "admin" ? "student" : "admin";
-      await admin.updateUser(userId, { role: nextRole });
-      await load();
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to update role.");
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  const handleDelete = async () => {
-    setDeleting(true);
-    setError(null);
-    try {
-      await admin.deleteUser(userId);
-      onBack();
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to delete user.");
-      setDeleting(false);
-    }
-  };
+  // Removed edit/promote/delete handlers for now
 
   if (error && !detail) {
     return (
@@ -195,274 +134,135 @@ export default function UserDetailPage({ userId, onBack }: Props) {
 
       {error && <div className="error-banner" style={{ marginBottom: 14 }}>{error}</div>}
 
+      <div style={{ display: "flex", gap: 8, marginBottom: 12 }}>
+        <button onClick={() => setTab("overview")} className={tab === "overview" ? "active" : ""}>Overview</button>
+        <button onClick={() => setTab("account")} className={tab === "account" ? "active" : ""}>Account</button>
+        <button onClick={() => setTab("competition")} className={tab === "competition" ? "active" : ""}>Competition</button>
+        <button onClick={() => setTab("trading")} className={tab === "trading" ? "active" : ""}>Trading</button>
+        <button onClick={() => setTab("thesis")} className={tab === "thesis" ? "active" : ""}>Thesis & Scores</button>
+        <button onClick={() => setTab("activity")} className={tab === "activity" ? "active" : ""}>Activity</button>
+      </div>
+
       <div className="panel">
-        <h2>Profile</h2>
-        {!edit ? (
-          <>
+        {tab === "overview" ? (
+          <div>
+            <h2>Profile</h2>
             <DetailGrid
               items={[
                 { k: "Email", v: p.email },
                 { k: "Phone", v: p.phone_number },
                 { k: "University", v: p.university },
                 { k: "Year of study", v: p.year_of_study },
+                { k: "Paid", v: p.is_paid ? "Yes" : "No" },
+                { k: "Status", v: p.registration_status ?? "—" },
+                { k: "Account status", v: p.account_status ?? "—" },
                 { k: "Age", v: p.age },
                 { k: "Date of birth", v: p.date_of_birth },
                 { k: "Joined", v: p.created_at ? p.created_at.slice(0, 10) : "—" },
               ]}
             />
-            <div style={{ marginTop: 16, display: "flex", gap: 10 }}>
-              <button onClick={() => setEdit(true)}>Edit</button>
-              <button onClick={() => void promoteDemote()} disabled={saving}>
-                {p.role === "admin" ? "Demote to student" : "Promote to admin"}
-              </button>
+            <div style={{ marginTop: 16 }} />
+
+            <div style={{ marginTop: 20 }}>
+              <h3>Payments</h3>
+              {(detail.payments || []).length === 0 ? (
+                <div className="empty">No payment history.</div>
+              ) : (
+                <table>
+                  <thead>
+                    <tr><th>Date</th><th>Amount</th><th>Status</th><th>Method</th><th>Reference</th></tr>
+                  </thead>
+                  <tbody>
+                    {(detail.payments || []).map((payment) => (
+                      <tr key={payment.payment_id}>
+                        <td>{payment.created_at ? payment.created_at.slice(0,10) : ""}</td>
+                        <td>{fmtMoney(payment.amount)}</td>
+                        <td>{payment.status}</td>
+                        <td>{payment.payment_method || ""}</td>
+                        <td>{payment.reference || ""}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              )}
             </div>
-          </>
-        ) : (
-          <div className="inline-form">
-            <div className="field">
-              <label>Full name</label>
-              <input value={fullName} onChange={(e) => setFullName(e.target.value)} />
-            </div>
-            <div className="field">
-              <label>University</label>
-              <input value={university} onChange={(e) => setUniversity(e.target.value)} />
-            </div>
-            <div className="field">
-              <label>Year of study</label>
-              <input
-                type="number"
-                value={year}
-                onChange={(e) => setYear(e.target.value)}
-              />
-            </div>
-            <div className="field">
-              <label>Phone</label>
-              <input value={phone} onChange={(e) => setPhone(e.target.value)} />
-            </div>
-            <button className="primary" onClick={() => void saveEdits()} disabled={saving}>
-              {saving ? "Saving…" : "Save"}
-            </button>
-            <button onClick={() => setEdit(false)} disabled={saving}>
-              Cancel
-            </button>
           </div>
+        ) : tab === "account" ? (
+          <div>
+            <h2>Account & Payments</h2>
+            <div style={{ marginBottom: 12 }}>
+              <strong>Account status:</strong> {p.account_status ?? "—"}
+            </div>
+            <div>
+              <h3>Payments</h3>
+              {detail.payments && detail.payments.length > 0 ? (
+                <table className="simple-table">
+                  <thead>
+                    <tr>
+                      <th>When</th>
+                      <th>Amount</th>
+                      <th>Status</th>
+                      <th>Method</th>
+                      <th>Notes</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {detail.payments.map((pp) => (
+                      <tr key={pp.payment_id}>
+                        <td>{pp.created_at ? pp.created_at.slice(0, 19) : "—"}</td>
+                        <td>{fmtMoney(pp.amount)}</td>
+                        <td>{pp.status}</td>
+                        <td>{pp.payment_method}</td>
+                        <td>{pp.notes}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              ) : (
+                <div>No payments found.</div>
+              )}
+            </div>
+          </div>
+        ) : tab === "competition" ? (
+          <div>
+            <h2>Competition enrollments</h2>
+            <ul>
+              {(detail.competition_enrollments || []).map((e) => (
+                <li key={e.enrollment_id}>{e.competition_round || ""} — {e.status}</li>
+              ))}
+            </ul>
+          </div>
+        ) : tab === "activity" ? (
+          <div>
+            <h2>Activity & CRM Notes</h2>
+            <NoteList notes={detail.crm_notes ?? []} />
+            <AddNoteForm
+              onAdd={async (content, note_type) => {
+                try {
+                  await admin.createActivity(userId, { content, note_type });
+                  await load();
+                } catch (err) {
+                  setError(err instanceof Error ? err.message : "Failed to add note.");
+                }
+              }}
+            />
+            <div style={{ marginTop: 16 }}>
+              <h3>Activity Log</h3>
+              {detail.activity_logs && detail.activity_logs.length > 0 ? (
+                <ul>
+                  {detail.activity_logs.map((a) => (
+                    <li key={a.activity_id}>{a.event_type}: {a.description} — {a.created_at}</li>
+                  ))}
+                </ul>
+              ) : (
+                <div>No activity</div>
+              )}
+            </div>
+          </div>
+        ) : (
+          <div />
         )}
       </div>
-
-      <div className="grid-2">
-        <div className="panel">
-          <h2>Portfolio</h2>
-          {detail.portfolio ? (
-            <DetailGrid
-              items={[
-                { k: "Total capital", v: fmtMoney(detail.portfolio.total_capital) },
-                { k: "Cash balance", v: fmtMoney(detail.portfolio.cash_balance) },
-                {
-                  k: "Portfolio value",
-                  v: fmtMoney(p.portfolio_value),
-                },
-                {
-                  k: "Return",
-                  v: `${p.return_pct >= 0 ? "+" : ""}${p.return_pct.toFixed(2)}%`,
-                },
-                { k: "Risk appetite", v: detail.portfolio.risk_appetite },
-                { k: "Horizon", v: detail.portfolio.investment_horizon },
-                { k: "Round", v: detail.portfolio.competition_round },
-              ]}
-            />
-          ) : (
-            <div className="empty">No portfolio setup.</div>
-          )}
-        </div>
-
-        <div className="panel">
-          <h2>Risk metrics</h2>
-          {detail.risk_metrics ? (
-            <DetailGrid
-              items={[
-                { k: "Sharpe", v: fmtNum(detail.risk_metrics.sharpe_ratio) },
-                { k: "Beta", v: fmtNum(detail.risk_metrics.beta) },
-                { k: "Volatility", v: fmtNum(detail.risk_metrics.volatility) },
-                { k: "Max drawdown", v: fmtNum(detail.risk_metrics.max_drawdown) },
-                { k: "VaR", v: fmtNum(detail.risk_metrics.var_value) },
-              ]}
-            />
-          ) : (
-            <div className="empty">No risk metrics.</div>
-          )}
-        </div>
       </div>
-
-      <div className="section-label">Holdings ({detail.holdings.length})</div>
-      {detail.holdings.length === 0 ? (
-        <div className="empty">No holdings.</div>
-      ) : (
-        <table>
-          <thead>
-            <tr>
-              <th>Ticker</th>
-              <th>Name</th>
-              <th>Qty</th>
-              <th>Avg buy</th>
-              <th>Price</th>
-              <th>Value</th>
-              <th>P/L</th>
-            </tr>
-          </thead>
-          <tbody>
-            {detail.holdings.map((h) => (
-              <tr key={h.holding_id}>
-                <td className="mono">{h.stock_ticker}</td>
-                <td>{h.stock_name ?? "—"}</td>
-                <td>{h.quantity}</td>
-                <td>{fmtMoney(h.avg_buy_price)}</td>
-                <td>{fmtMoney(h.current_price)}</td>
-                <td>{fmtMoney(h.market_value)}</td>
-                <td style={{ color: h.profit_loss >= 0 ? "var(--green)" : "var(--red)" }}>
-                  {h.profit_loss >= 0 ? "+" : ""}
-                  {fmtMoney(h.profit_loss)}
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      )}
-
-      <div className="section-label">Trades ({detail.trades.length})</div>
-      {detail.trades.length === 0 ? (
-        <div className="empty">No trades.</div>
-      ) : (
-        <table>
-          <thead>
-            <tr>
-              <th>Thesis</th>
-              <th>Date</th>
-              <th>Ticker</th>
-              <th>Type</th>
-              <th>Qty</th>
-              <th>Price</th>
-              <th>Amount</th>
-              <th>Sector</th>
-              <th>Alloc %</th>
-            </tr>
-          </thead>
-          <tbody>
-            {detail.trades.map((t) => (
-              <Fragment key={t.trade_id}>
-                <tr>
-                  <td>
-                    <button
-                      type="button"
-                      onClick={() =>
-                        setExpandedTradeId((current) =>
-                          current === t.trade_id ? null : t.trade_id,
-                        )
-                      }
-                      style={{ padding: "4px 10px", minWidth: 96 }}
-                    >
-                      {expandedTradeId === t.trade_id ? "Hide" : "View"}
-                    </button>
-                  </td>
-                  <td>{t.created_at ? t.created_at.slice(0, 10) : "—"}</td>
-                  <td className="mono">{t.stock_ticker ?? "—"}</td>
-                  <td>
-                    <span style={{ color: t.trade_type === "BUY" ? "var(--green)" : "var(--red)" }}>
-                      {t.trade_type}
-                    </span>
-                  </td>
-                  <td>{t.quantity ?? "—"}</td>
-                  <td>{fmtMoney(t.buy_price)}</td>
-                  <td>{fmtMoney(t.amount_invested)}</td>
-                  <td>{t.sector ?? "—"}</td>
-                  <td>{fmtNum(t.allocation_percent)}</td>
-                </tr>
-                {expandedTradeId === t.trade_id && (
-                  <tr>
-                    <td colSpan={9} style={{ paddingTop: 0 }}>
-                      <div
-                        style={{
-                          padding: "12px 14px",
-                          borderTop: "1px solid rgba(255,255,255,0.08)",
-                          color: "var(--text)",
-                          lineHeight: 1.55,
-                        }}
-                      >
-                        <div
-                          style={{
-                            marginBottom: 6,
-                            color: "var(--muted)",
-                            fontSize: 12,
-                            textTransform: "uppercase",
-                            letterSpacing: 0.08,
-                          }}
-                        >
-                          Thesis
-                        </div>
-                        <div style={{ whiteSpace: "normal" }}>{t.thesis || "No thesis recorded."}</div>
-                      </div>
-                    </td>
-                  </tr>
-                )}
-              </Fragment>
-            ))}
-          </tbody>
-        </table>
-      )}
-
-      <div className="section-label">Weekly scores</div>
-      {detail.weekly_scores.length === 0 ? (
-        <div className="empty">No scores.</div>
-      ) : (
-        <table>
-          <thead>
-            <tr>
-              <th>Week</th>
-              <th>Portfolio</th>
-              <th>Risk</th>
-              <th>Thesis</th>
-              <th>Execution</th>
-              <th>Strategy</th>
-              <th>Final</th>
-              <th>Rank</th>
-            </tr>
-          </thead>
-          <tbody>
-            {detail.weekly_scores.map((s) => (
-              <tr key={s.week_number}>
-                <td>{s.week_number}</td>
-                <td>{fmtNum(s.portfolio_score)}</td>
-                <td>{fmtNum(s.risk_score)}</td>
-                <td>{fmtNum(s.thesis_score)}</td>
-                <td>{fmtNum(s.execution_score)}</td>
-                <td>{fmtNum(s.strategy_score)}</td>
-                <td>{fmtNum(s.final_score)}</td>
-                <td>{s.rank_position ?? "—"}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      )}
-
-      <div className="panel" style={{ marginTop: 24 }}>
-        <h2 style={{ color: "var(--red)" }}>Danger zone</h2>
-        {!confirmDelete ? (
-          <button className="danger" onClick={() => setConfirmDelete(true)}>
-            Delete user
-          </button>
-        ) : (
-          <div style={{ display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap" }}>
-            <span>
-              Permanently delete <strong>{p.full_name || p.email}</strong> and all their data?
-            </span>
-            <button className="danger" onClick={() => void handleDelete()} disabled={deleting}>
-              {deleting ? "Deleting…" : "Yes, delete"}
-            </button>
-            <button onClick={() => setConfirmDelete(false)} disabled={deleting}>
-              Cancel
-            </button>
-          </div>
-        )}
-      </div>
-    </div>
-  );
-}
+    );
+  }

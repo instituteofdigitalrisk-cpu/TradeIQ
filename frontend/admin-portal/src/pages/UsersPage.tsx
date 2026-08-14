@@ -155,6 +155,8 @@ export default function UsersPage({ onOpenUser }: Props) {
                   {SORT_LABELS[key]} {sort === key ? (order === "asc" ? "▲" : "▼") : ""}
                 </th>
               ))}
+                  <th>Account</th>
+                  <th>Competition</th>
               <th>Uni</th>
               <th>Role</th>
               <th>Portfolio</th>
@@ -177,9 +179,13 @@ export default function UsersPage({ onOpenUser }: Props) {
                 <td className="mono">{u.user_id}</td>
                 <td className="muted">{u.created_at ? u.created_at.slice(0, 10) : "—"}</td>
                 <td>{u.university ?? "—"}</td>
+                <td>{u.account_status ?? "—"}</td>
+                <td>{u.competition_status ?? "—"}</td>
                 <td>
                   <span className={`role-badge ${u.role}`}>{u.role}</span>
                 </td>
+                <td>{u.is_paid ? "Yes" : "No"}</td>
+                <td>{u.registration_status ?? "—"}</td>
                 <td>{fmtMoney(u.portfolio_value)}</td>
                 <td
                   style={{
@@ -193,13 +199,70 @@ export default function UsersPage({ onOpenUser }: Props) {
                 <td>{u.trade_count}</td>
                 <td>{u.latest_final_score ?? "—"}</td>
                 <td>
-                  <button
-                    disabled={busyId === u.user_id}
-                    onClick={() => void toggleRole(u)}
-                    title={u.role === "admin" ? "Demote to student" : "Promote to admin"}
-                  >
-                    {busyId === u.user_id ? "…" : u.role === "admin" ? "Demote" : "Promote"}
-                  </button>
+                  <div style={{ display: "flex", gap: 6 }}>
+                    <button
+                      disabled={busyId === u.user_id}
+                      onClick={() => void toggleRole(u)}
+                      title={u.role === "admin" ? "Demote to student" : "Promote to admin"}
+                    >
+                      {busyId === u.user_id ? "…" : u.role === "admin" ? "Demote" : "Promote"}
+                    </button>
+                    <button
+                      disabled={busyId === u.user_id || u.is_paid}
+                      onClick={async () => {
+                        setBusyId(u.user_id);
+                        try {
+                          await admin.updateUserAccount(u.user_id, { is_paid: true });
+                          await load();
+                        } catch (err) {
+                          setError(err instanceof Error ? err.message : "Failed to mark paid.");
+                        } finally {
+                          setBusyId(null);
+                        }
+                      }}
+                      title="Mark as paid"
+                    >
+                      {u.is_paid ? "Paid" : "Mark Paid"}
+                    </button>
+                    <button
+                      disabled={busyId === u.user_id}
+                      onClick={async () => {
+                        setBusyId(u.user_id);
+                        try {
+                          // toggle enrollment: if enrolled -> withdraw, else enroll
+                          if ((u.competition_status || "").toLowerCase() === "enrolled") {
+                            await admin.updateUserCompetition(u.user_id, { action: "withdraw" });
+                          } else {
+                            await admin.updateUserCompetition(u.user_id, { action: "enroll", competition_round: "default" });
+                          }
+                          await load();
+                        } catch (err) {
+                          setError(err instanceof Error ? err.message : "Failed to update competition");
+                        } finally {
+                          setBusyId(null);
+                        }
+                      }}
+                    >
+                      {u.competition_status === "enrolled" ? "Withdraw" : "Enroll"}
+                    </button>
+                    <button
+                      disabled={busyId === u.user_id}
+                      onClick={async () => {
+                        setBusyId(u.user_id);
+                        try {
+                          const next = u.account_status === "suspended" ? "active" : "suspended";
+                          await admin.updateUserAccount(u.user_id, { account_status: next });
+                          await load();
+                        } catch (err) {
+                          setError(err instanceof Error ? err.message : "Failed to update account status");
+                        } finally {
+                          setBusyId(null);
+                        }
+                      }}
+                    >
+                      {u.account_status === "suspended" ? "Reactivate" : "Suspend"}
+                    </button>
+                  </div>
                 </td>
               </tr>
             ))}

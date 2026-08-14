@@ -1,26 +1,53 @@
 import { getApp, getApps, initializeApp } from "firebase/app";
-import { getAuth } from "firebase/auth";
+import { getAuth, initializeAuth } from "firebase/auth";
+import type { Persistence } from "firebase/auth";
+import * as FirebaseAuth from "firebase/auth";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Platform } from "react-native";
-// TODO: Add SDKs for Firebase products that you want to use
-// https://firebase.google.com/docs/web/setup#available-libraries
 
-// Your web app's Firebase configuration
-// For Firebase JS SDK v7.20.0 and later, measurementId is optional
+const isWeb = Platform.OS === "web";
+
+// Use the matching Firebase client configuration for each platform.
 const firebaseConfig = {
-  apiKey: "AIzaSyBOOJfdXxrbgR6lmGHjrFPlGwx24-NCtyw",
+  apiKey: isWeb ? "AIzaSyBOOJfdXxrbgR6lmGHjrFPlGwx24-NCtyw" : "AIzaSyABJIIXZljuRcqx9Y7uQN1FFEp7qKpp3BM",
   authDomain: "tradeiq-26.firebaseapp.com",
   projectId: "tradeiq-26",
   storageBucket: "tradeiq-26.firebasestorage.app",
   messagingSenderId: "1013397127798",
-  appId: "1:1013397127798:web:291855f83ec0abf0659557",
-  measurementId: "G-WQZ7BE0H9Q"
+  appId: isWeb
+    ? "1:1013397127798:web:291855f83ec0abf0659557"
+    : "1:1013397127798:android:affc54be5e7806b4659557",
 };
 
-// Initialize Firebase exactly once. The app's backend session/token is persisted
-// through auth-store.ts using AsyncStorage on native platforms.
+// Initialize Firebase App
 export const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
-export const firebaseAuth = getAuth(app);
 
+// Initialize Auth with cross-platform persistence
+export const firebaseAuth =
+  Platform.OS === "web"
+    ? getAuth(app)
+    : (() => {
+        try {
+          // Firebase's public facade types omit this React Native export even
+          // though Metro resolves it from the RN build at runtime.
+          const getReactNativePersistence = (
+            FirebaseAuth as typeof FirebaseAuth & {
+              getReactNativePersistence: (storage: typeof AsyncStorage) => unknown;
+            }
+          ).getReactNativePersistence;
+          return initializeAuth(app, {
+            persistence: getReactNativePersistence(AsyncStorage) as Persistence,
+          });
+        } catch {
+          // Fallback if auth is already initialized during Fast Refresh
+          return getAuth(app);
+        }
+      })();
+
+// Alias export for compatibility
+export const auth = firebaseAuth;
+
+// Optional Web Analytics handler
 export const analyticsPromise =
   Platform.OS === "web"
     ? import("firebase/analytics")
@@ -29,3 +56,5 @@ export const analyticsPromise =
         )
         .catch(() => null)
     : Promise.resolve(null);
+
+export default app;
