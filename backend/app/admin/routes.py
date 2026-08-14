@@ -750,10 +750,16 @@ def list_activity():
     search = (request.args.get("q") or "").strip() or None
     module = (request.args.get("module") or "").strip() or None
     action = (request.args.get("action") or "").strip() or None
+    role = (request.args.get("role") or "").strip().lower() or None
     start = (request.args.get("start") or "").strip() or None
     end = (request.args.get("end") or "").strip() or None
 
     query = ActivityLog.query
+    if role in {"admin", "student", "system"}:
+        if role == "system":
+            query = query.filter(ActivityLog.event_type.ilike("%system%"))
+        else:
+            query = query.join(User, User.user_id == ActivityLog.user_id).filter(db.func.lower(User.role) == role)
     if user_id:
         query = query.filter(ActivityLog.user_id == user_id)
     if event_type:
@@ -799,7 +805,8 @@ def list_activity():
         except (TypeError, ValueError):
             metadata = {}
         actor = metadata.get("actor") or ("System" if any(word in text for word in ("thesis", "score", "enroll", "trade executed")) else "Admin")
-        item.update({"actor": actor, "action": event, "module": module_name, "target_name": target.full_name if target else row.user_id, "status": "Success", "details": row.description or row.event_metadata or "Activity recorded."})
+        actor_role = metadata.get("actor_role") or (target.role if target else None) or ("System" if actor == "System" else "Student")
+        item.update({"actor": actor, "action": event, "module": module_name, "role": str(actor_role).title(), "target_name": target.full_name if target else row.user_id, "status": "Success", "details": row.description or row.event_metadata or "Activity recorded."})
         return item
 
     return jsonify({"total": total, "page": page, "per_page": per_page, "activity_logs": [audit_row(r) for r in rows]}), 200
