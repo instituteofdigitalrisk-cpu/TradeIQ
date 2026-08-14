@@ -246,7 +246,7 @@ export const admin = {
     return `${base}/admin/payments/export${qs}`;
   },
 
-  listActivity(query: { page?: number; per_page?: number; user_id?: string; event_type?: string; start?: string; end?: string } = {}) {
+  listActivity(query: { page?: number; per_page?: number; user_id?: string; event_type?: string; start?: string; end?: string; q?: string; module?: string; action?: string } = {}) {
     const params = new URLSearchParams();
     if (query.page != null) params.set("page", String(query.page));
     if (query.per_page != null) params.set("per_page", String(query.per_page));
@@ -254,6 +254,9 @@ export const admin = {
     if (query.event_type) params.set("event_type", query.event_type);
     if (query.start) params.set("start", query.start);
     if (query.end) params.set("end", query.end);
+    if (query.q) params.set("q", query.q);
+    if (query.module) params.set("module", query.module);
+    if (query.action) params.set("action", query.action);
     const qs = params.toString();
     return apiFetch<{ total: number; page: number; per_page: number; activity_logs: ActivityLog[] }>(`/admin/activity${qs ? `?${qs}` : ""}`);
   },
@@ -287,6 +290,10 @@ export const admin = {
       method: "POST",
       body: JSON.stringify(payload),
     });
+  },
+
+  deleteReport(reportId: number) {
+    return apiFetch(`/admin/reports/${reportId}`, { method: "DELETE" });
   },
 
   downloadReport(reportId: number) {

@@ -1,82 +1,27 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { admin } from "../api";
 import type { ActivityLog } from "../types";
 
+const formatDate = (value?: string | null) => value ? new Date(value).toLocaleString([], { month: "short", day: "2-digit", hour: "2-digit", minute: "2-digit" }) : "-";
+const moduleOptions = ["Users", "Payments", "Competition", "Trading", "Thesis & Scores"];
+
 export default function ActivityLogPage() {
-  const [logs, setLogs] = useState<ActivityLog[]>([]);
-  const [page, setPage] = useState(1);
-  const [perPage] = useState(50);
-  const [total, setTotal] = useState(0);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [userIdFilter, setUserIdFilter] = useState("");
-  const [eventFilter, setEventFilter] = useState("");
-
-  const load = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const res = await admin.listActivity({ page, per_page: perPage, user_id: userIdFilter || undefined, event_type: eventFilter || undefined });
-      setLogs(res.activity_logs);
-      setTotal(res.total);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to load activity");
-    } finally {
-      setLoading(false);
-    }
-  }, [page, perPage, userIdFilter, eventFilter]);
-
-  useEffect(() => {
-    void load();
-  }, [load]);
-
-  return (
-    <div>
-      <div className="page-header">
-        <h1>Activity Log</h1>
-        <div>
-          <button onClick={() => void load()} className="primary">Refresh</button>
-        </div>
-      </div>
-
-      <div className="toolbar">
-        <input placeholder="User ID filter" value={userIdFilter} onChange={(e) => setUserIdFilter(e.target.value)} />
-        <input placeholder="Event type" value={eventFilter} onChange={(e) => setEventFilter(e.target.value)} />
-        <button onClick={() => { setPage(1); void load(); }}>Apply</button>
-      </div>
-
-      {error && <div className="error-banner">{error}</div>}
-
-      {loading ? (
-        <span className="spinner" />
-      ) : (
-        <table>
-          <thead>
-            <tr>
-              <th>When</th>
-              <th>User</th>
-              <th>Type</th>
-              <th>Description</th>
-            </tr>
-          </thead>
-          <tbody>
-            {logs.map((l) => (
-              <tr key={l.activity_id}>
-                <td>{l.created_at ?? "-"}</td>
-                <td>{l.user_id}</td>
-                <td>{l.event_type}</td>
-                <td>{l.description ?? l.metadata ?? "-"}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      )}
-
-      <div className="pagination">
-        <button disabled={page <= 1} onClick={() => setPage(page - 1)}>← Prev</button>
-        <span>Page {page} ({total} total)</span>
-        <button disabled={page * perPage >= total} onClick={() => setPage(page + 1)}>Next →</button>
-      </div>
-    </div>
-  );
+  const [logs, setLogs] = useState<ActivityLog[]>([]); const [page, setPage] = useState(1); const perPage = 25; const [total, setTotal] = useState(0); const [loading, setLoading] = useState(true); const [error, setError] = useState<string | null>(null);
+  const [search, setSearch] = useState(""); const [userId, setUserId] = useState(""); const [module, setModule] = useState(""); const [action, setAction] = useState(""); const [start, setStart] = useState(""); const [end, setEnd] = useState(""); const [selected, setSelected] = useState<ActivityLog | null>(null);
+  const load = useCallback(async () => { setLoading(true); setError(null); try { const result = await admin.listActivity({ page, per_page: perPage, q: search || undefined, user_id: userId || undefined, module: module || undefined, action: action || undefined, start: start || undefined, end: end ? `${end}T23:59:59` : undefined }); setLogs(result.activity_logs); setTotal(result.total); } catch (e) { setError(e instanceof Error ? e.message : "Failed to load activity."); } finally { setLoading(false); } }, [page, search, userId, module, action, start, end]);
+  useEffect(() => { void load(); }, [load]);
+  const today = new Date().toISOString().slice(0, 10); const todayCount = useMemo(() => logs.filter((l) => l.created_at?.slice(0, 10) === today).length, [logs, today]); const adminCount = logs.filter((l) => l.actor === "Admin").length; const systemCount = logs.filter((l) => l.actor === "System").length;
+  const apply = () => { setPage(1); void load(); };
+  const clear = () => { setSearch(""); setUserId(""); setModule(""); setAction(""); setStart(""); setEnd(""); setPage(1); };
+  return <div className="activity-page">
+    <div className="page-header"><h1>Activity Log</h1><button className="primary" onClick={() => void load()}>Refresh</button></div>
+    <section className="activity-overview"><h2>Activity Overview</h2><div className="activity-summary"><Summary label="Total Activities" value={total} /><Summary label="Today" value={todayCount} /><Summary label="Admin Actions" value={adminCount} /><Summary label="System Events" value={systemCount} /></div></section>
+    <section className="activity-filters"><h2>Filters</h2><div className="activity-filter-grid"><input placeholder="Search activity..." value={search} onChange={(e) => setSearch(e.target.value)} /><input placeholder="User ID or name" value={userId} onChange={(e) => setUserId(e.target.value)} /><select value={module} onChange={(e) => setModule(e.target.value)}><option value="">All Modules</option>{moduleOptions.map((item) => <option key={item}>{item}</option>)}</select><input placeholder="Action" value={action} onChange={(e) => setAction(e.target.value)} /><input type="date" value={start} onChange={(e) => setStart(e.target.value)} /><input type="date" value={end} onChange={(e) => setEnd(e.target.value)} /></div><div className="activity-filter-actions"><button className="primary" onClick={apply}>Apply</button><button onClick={clear}>Clear</button></div></section>
+    {error && <div className="error-banner">{error}</div>}
+    <section className="activity-table-card"><h2>Activity</h2>{loading ? <span className="spinner" /> : <div className="activity-table-wrap"><table className="activity-table"><thead><tr><th>Time</th><th>Actor</th><th>Action</th><th>Module</th><th>Target</th><th>Status</th><th></th></tr></thead><tbody>{logs.map((log) => <tr key={log.activity_id}><td>{formatDate(log.created_at)}</td><td>{log.actor || log.user_id}</td><td>{log.action || log.event_type}</td><td>{log.module || "-"}</td><td>{log.target_name || log.user_id}</td><td><span className="activity-status">{log.status || "Success"}</span></td><td><button className="activity-view" onClick={() => setSelected(log)}>View</button></td></tr>)}</tbody></table>{!logs.length && <div className="empty">No activity matches these filters.</div>}</div>}</section>
+    <div className="activity-pagination"><button disabled={page <= 1} onClick={() => setPage(page - 1)}>Prev</button><span>Page {page} of {Math.max(1, Math.ceil(total / perPage))}</span><button disabled={page * perPage >= total} onClick={() => setPage(page + 1)}>Next</button></div>
+    {selected && <div className="activity-modal-backdrop" onClick={() => setSelected(null)}><section className="activity-detail-modal" onClick={(e) => e.stopPropagation()}><button className="activity-close" onClick={() => setSelected(null)}>×</button><h2>Activity Details</h2><div className="activity-detail-grid"><Detail label="Action" value={selected.action || selected.event_type} /><Detail label="Actor" value={selected.actor || selected.user_id} /><Detail label="Student / Target" value={selected.target_name || selected.user_id} /><Detail label="Time" value={formatDate(selected.created_at)} /><Detail label="Module" value={selected.module || "-"} /><Detail label="Result" value={selected.status || "Success"} /></div><div className="activity-detail-notes"><span>Details</span><p>{selected.details || selected.description || selected.metadata || "Activity recorded."}</p></div></section></div>}
+  </div>;
 }
+function Summary({ label, value }: { label: string; value: number }) { return <div className="activity-summary-card"><span>{label}</span><strong>{value}</strong></div>; }
+function Detail({ label, value }: { label: string; value: string }) { return <div><span>{label}</span><strong>{value}</strong></div>; }

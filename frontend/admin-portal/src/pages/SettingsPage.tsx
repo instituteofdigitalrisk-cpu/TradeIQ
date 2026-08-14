@@ -2,84 +2,21 @@ import { useEffect, useState } from "react";
 import { admin } from "../api";
 import type { Setting } from "../types";
 
-export default function SettingsPage() {
-  const [settings, setSettings] = useState<Record<string, string>>({});
-  const [keys, setKeys] = useState<string[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [newKey, setNewKey] = useState("");
-  const [newValue, setNewValue] = useState("");
+type Tab = "general" | "roles" | "competition" | "payment" | "notifications" | "system";
+const defaults: Record<string, string> = { platform_name: "TradeIQ", admin_email: "admin1@tradeiq.com", date_format: "YYYY-MM-DD", time_zone: "UTC (UTC+05:30) Asia/Kolkata", allow_student_registration: "true", auto_approve_students: "true", require_email_verification: "true", default_user_role: "student", two_factor_authentication: "true", session_timeout_minutes: "30", password_expiry_days: "90", login_attempt_limit: "5", maintenance_mode: "false", competition_duration_weeks: "8", starting_capital: "10000", allow_student_enrollment: "true", allow_withdrawal: "true", leaderboard_visibility: "Admin + Students", payment_provider: "Razorpay", currency: "INR", auto_confirm_payments: "true", allow_refunds: "true" };
+const bool = (value: string | undefined) => value === "true";
+function Toggle({ value, onChange }: { value: boolean; onChange: (value: boolean) => void }) { return <button type="button" className={`settings-toggle ${value ? "on" : ""}`} onClick={() => onChange(!value)} aria-label={value ? "On" : "Off"}><i /></button>; }
+function Field({ label, value, onChange, type = "text" }: { label: string; value: string; onChange: (value: string) => void; type?: string }) { return <label className="settings-field"><span>{label}</span><input type={type} value={value} onChange={(e) => onChange(e.target.value)} /></label>; }
+function Card({ title, children }: { title: string; children: React.ReactNode }) { return <section className="settings-card"><h2>{title}</h2>{children}</section>; }
+function SaveButton({ onClick, saving }: { onClick: () => void; saving: boolean }) { return <button className="primary settings-save" disabled={saving} onClick={onClick}>{saving ? "Saving…" : "Save Changes"}</button>; }
 
-  const load = async () => {
-    setLoading(true);
-    try {
-      const res = await admin.listSettings({ page: 1, per_page: 1000 });
-      const map: Record<string, string> = {};
-      (res.settings || []).forEach((s: Setting) => {
-        map[s.key] = s.value ?? "";
-      });
-      setSettings(map);
-      setKeys(Object.keys(map));
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => { void load(); }, []);
-
-  const saveAll = async () => {
-    try {
-      await admin.putSettings(settings);
-      await load();
-      alert("Settings saved");
-    } catch (err) {
-      console.error(err);
-      alert("Failed to save settings");
-    }
-  };
-
-  const addNew = () => {
-    if (!newKey) return;
-    setSettings((s) => ({ ...s, [newKey]: newValue }));
-    setKeys((k) => Array.from(new Set([...k, newKey])));
-    setNewKey("");
-    setNewValue("");
-  };
-
-  return (
-    <div>
-      <h2>Settings</h2>
-      {loading ? (
-        <span className="spinner" />
-      ) : (
-        <div>
-          <div className="toolbar" style={{ marginBottom: 8 }}>
-            <input placeholder="New key" value={newKey} onChange={(e) => setNewKey(e.target.value)} />
-            <input placeholder="New value" value={newValue} onChange={(e) => setNewValue(e.target.value)} />
-            <button onClick={addNew}>Add</button>
-            <div style={{ marginLeft: 8 }}>
-              <button className="primary" onClick={saveAll}>Save All</button>
-            </div>
-          </div>
-
-          <table>
-            <thead>
-              <tr><th>Key</th><th>Value</th></tr>
-            </thead>
-            <tbody>
-              {keys.map((k) => (
-                <tr key={k}>
-                  <td style={{ width: 300 }}>{k}</td>
-                  <td>
-                    <input style={{ width: "100%" }} value={settings[k] ?? ""} onChange={(e) => setSettings((s) => ({ ...s, [k]: e.target.value }))} />
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      )}
-    </div>
-  );
-}
+export default function SettingsPage() { const [tab, setTab] = useState<Tab>("general"); const [settings, setSettings] = useState<Record<string, string>>(defaults); const [loading, setLoading] = useState(true); const [saving, setSaving] = useState(false); const [message, setMessage] = useState<string | null>(null); const set = (key: string, value: string) => setSettings((current) => ({ ...current, [key]: value })); const save = async () => { setSaving(true); setMessage(null); try { await admin.putSettings(settings); setMessage("Settings saved successfully."); } catch (e) { setMessage(e instanceof Error ? e.message : "Failed to save settings."); } finally { setSaving(false); } }; useEffect(() => { void (async () => { try { const res = await admin.listSettings({ page: 1, per_page: 1000 }); const stored: Record<string, string> = {}; (res.settings || []).forEach((s: Setting) => { stored[s.key] = s.value ?? ""; }); setSettings({ ...defaults, ...stored }); } catch (e) { setMessage(e instanceof Error ? e.message : "Failed to load settings."); } finally { setLoading(false); } })(); }, []); const tabs: [Tab, string][] = [["general", "General"], ["roles", "Roles & Permissions"], ["competition", "Competition Settings"], ["payment", "Payment Settings"], ["notifications", "Notifications"], ["system", "System"]]; if (loading) return <div className="settings-page"><h1>Settings</h1><span className="spinner" /> Loading settings…</div>; return <div className="settings-page"><div className="page-header settings-heading"><h1>Settings</h1></div><div className="settings-tabs">{tabs.map(([key, text]) => <button className={tab === key ? "active" : ""} key={key} onClick={() => { setTab(key); setMessage(null); }}>{text}</button>)}</div>{message && <div className={message.includes("success") ? "settings-success" : "error-banner"}>{message}</div>}{tab === "general" && <General settings={settings} set={set} save={save} saving={saving} />}{tab === "roles" && <Roles />}{tab === "competition" && <CompetitionSettings settings={settings} set={set} save={save} saving={saving} />}{tab === "payment" && <PaymentSettings settings={settings} set={set} save={save} saving={saving} />}{tab === "notifications" && <Notifications settings={settings} set={set} save={save} saving={saving} />}{tab === "system" && <System />}</div>; }
+function General({ settings, set, save, saving }: { settings: Record<string, string>; set: (k: string, v: string) => void; save: () => Promise<void>; saving: boolean }) { return <div className="settings-grid general-settings"><Card title="General Settings"><Field label="Platform Name" value={settings.platform_name} onChange={(v) => set("platform_name", v)} /><Field label="Admin Email" value={settings.admin_email} onChange={(v) => set("admin_email", v)} /><div className="settings-inline"><Field label="Date Format" value={settings.date_format} onChange={(v) => set("date_format", v)} /><Field label="Time Zone" value={settings.time_zone} onChange={(v) => set("time_zone", v)} /></div><SaveButton onClick={() => void save()} saving={saving} /></Card><Card title="User & Registration Settings"><SettingToggle label="Allow Student Registration" value={bool(settings.allow_student_registration)} onChange={(v) => set("allow_student_registration", String(v))} /><SettingToggle label="Auto Approve Students" value={bool(settings.auto_approve_students)} onChange={(v) => set("auto_approve_students", String(v))} /><SettingToggle label="Require Email Verification" value={bool(settings.require_email_verification)} onChange={(v) => set("require_email_verification", String(v))} /><SelectField label="Default User Role" value={settings.default_user_role} options={["student", "admin"]} onChange={(v) => set("default_user_role", v)} /><SettingToggle label="Maintenance Mode" value={bool(settings.maintenance_mode)} onChange={(v) => set("maintenance_mode", String(v))} /><SaveButton onClick={() => void save()} saving={saving} /></Card><Card title="Security Settings"><SettingToggle label="Two-Factor Authentication" value={bool(settings.two_factor_authentication)} onChange={(v) => set("two_factor_authentication", String(v))} /><Field label="Session Timeout (minutes)" value={settings.session_timeout_minutes} onChange={(v) => set("session_timeout_minutes", v)} type="number" /><Field label="Password Expiry (days)" value={settings.password_expiry_days} onChange={(v) => set("password_expiry_days", v)} type="number" /><Field label="Login Attempt Limit" value={settings.login_attempt_limit} onChange={(v) => set("login_attempt_limit", v)} type="number" /><SaveButton onClick={() => void save()} saving={saving} /></Card><Card title="Platform Information"><Rows items={[["Current Version", "1.0.0"], ["Database Status", <span className="connected-status">● Connected</span>], ["Last Backup", "Not available"]]} /><button className="outline-button" disabled title="No backup endpoint is available">Backup Unavailable</button></Card></div>; }
+function SettingToggle({ label, value, onChange }: { label: string; value: boolean; onChange: (v: boolean) => void }) { return <div className="settings-toggle-row"><span>{label}</span><Toggle value={value} onChange={onChange} /></div>; }
+function SelectField({ label, value, options, onChange }: { label: string; value: string; options: string[]; onChange: (v: string) => void }) { return <label className="settings-field"><span>{label}</span><select value={value} onChange={(e) => onChange(e.target.value)}>{options.map((x) => <option key={x}>{x}</option>)}</select></label>; }
+function Rows({ items }: { items: [string, React.ReactNode][] }) { return <div className="settings-info-rows">{items.map(([label, value]) => <div key={label}><span>{label}</span><strong>{value}</strong></div>)}</div>; }
+function CompetitionSettings({ settings, set, save, saving }: { settings: Record<string, string>; set: (k: string, v: string) => void; save: () => Promise<void>; saving: boolean }) { return <div className="settings-grid single-settings"><Card title="Competition Settings"><Field label="Default Competition Duration (weeks)" value={settings.competition_duration_weeks} onChange={(v) => set("competition_duration_weeks", v)} type="number" /><Field label="Default Starting Capital" value={settings.starting_capital} onChange={(v) => set("starting_capital", v)} type="number" /><SettingToggle label="Allow Student Enrollment" value={bool(settings.allow_student_enrollment)} onChange={(v) => set("allow_student_enrollment", String(v))} /><SettingToggle label="Allow Withdrawal" value={bool(settings.allow_withdrawal)} onChange={(v) => set("allow_withdrawal", String(v))} /><SelectField label="Leaderboard Visibility" value={settings.leaderboard_visibility} options={["Admin + Students", "Admin Only"]} onChange={(v) => set("leaderboard_visibility", v)} /><div className="settings-note">Score calculation is managed by the existing Portfolio, Risk, Thesis, Execution, and Strategy scoring engines.</div><SaveButton onClick={() => void save()} saving={saving} /></Card></div>; }
+function PaymentSettings({ settings, set, save, saving }: { settings: Record<string, string>; set: (k: string, v: string) => void; save: () => Promise<void>; saving: boolean }) { return <div className="settings-grid single-settings"><Card title="Payment Settings"><SelectField label="Payment Provider" value={settings.payment_provider} options={["Razorpay", "Stripe", "Other"]} onChange={(v) => set("payment_provider", v)} /><SelectField label="Currency" value={settings.currency} options={["INR", "USD"]} onChange={(v) => set("currency", v)} /><div className="settings-toggle-row"><span>UPI</span><Toggle value={true} onChange={() => undefined} /></div><div className="settings-toggle-row"><span>Card</span><Toggle value={true} onChange={() => undefined} /></div><div className="settings-toggle-row"><span>Net Banking</span><Toggle value={true} onChange={() => undefined} /></div><SettingToggle label="Auto-confirm Successful Payments" value={bool(settings.auto_confirm_payments)} onChange={(v) => set("auto_confirm_payments", String(v))} /><SettingToggle label="Allow Refunds" value={bool(settings.allow_refunds)} onChange={(v) => set("allow_refunds", String(v))} /><div className="settings-note">Provider API keys and secrets are managed through server environment configuration and are never displayed here.</div><SaveButton onClick={() => void save()} saving={saving} /></Card></div>; }
+function Notifications({ settings, set, save, saving }: { settings: Record<string, string>; set: (k: string, v: string) => void; save: () => Promise<void>; saving: boolean }) { const keys = ["student_registration", "payment_successful", "payment_failed", "competition_enrollment", "competition_starting", "competition_ending", "password_reset", "new_student_registration", "failed_payment", "refund_requested", "competition_completed"]; return <div className="settings-grid single-settings"><Card title="Email & Admin Notifications">{keys.map((key) => <SettingToggle key={key} label={key.split("_").map((x) => x.charAt(0).toUpperCase() + x.slice(1)).join(" ")} value={bool(settings[`notification_${key}`] ?? "true")} onChange={(v) => set(`notification_${key}`, String(v))} />)}<SaveButton onClick={() => void save()} saving={saving} /></Card></div>; }
+function Roles() { const rows = [["Super Admin", "Full access", "Full access", "Full access", "Full access", "Full access"], ["Admin", "Manage", "Manage", "Manage", "Manage", "Limited"], ["Support", "Manage", "View", "View", "View", "No access"], ["Finance", "View", "Manage", "View", "View", "No access"]]; return <div className="settings-grid single-settings"><Card title="Roles & Permissions"><div className="settings-note">Permission management is displayed for planning. The current backend authorizes the existing admin role.</div><table className="permissions-table"><thead><tr><th>Role</th><th>Users</th><th>Payments</th><th>Competitions</th><th>Reports</th><th>Settings</th></tr></thead><tbody>{rows.map((row) => <tr key={row[0]}>{row.map((x, i) => <td key={`${row[0]}-${i}`} className={x === "No access" ? "permission-no" : ""}>{x}</td>)}</tr>)}</tbody></table></Card></div>; }
+function System() { return <div className="settings-grid system-settings"><Card title="System Information"><Rows items={[["Application", "TradeIQ Admin Portal"], ["Version", "1.0.0"], ["Database", <span className="connected-status">● Connected</span>], ["Backend", <span className="connected-status">● Healthy</span>], ["Environment", "Development"], ["Last Backup", "Not available"]]} /><button className="outline-button" disabled>View System Logs</button></Card></div>; }

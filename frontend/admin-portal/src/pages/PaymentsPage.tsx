@@ -1,83 +1,43 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { admin } from "../api";
-import type { PaymentRecord } from "../types";
+import type { PaymentRecord, UserRow } from "../types";
+
+type Tab = "overview" | "all";
+const money = (n: number) => n.toLocaleString("en-US", { style: "currency", currency: "USD", minimumFractionDigits: 2 });
+const date = (s: string | null) => s ? s.slice(0, 10) : "—";
+const paymentStatusKey = (value: string) => {
+  const s = value.trim().toLowerCase();
+  if (s.includes("paid") || s.includes("complete") || s.includes("success")) return "succeeded";
+  if (s.includes("pending") || s.includes("process") || s.includes("created")) return "pending";
+  if (s.includes("fail") || s.includes("declin") || s.includes("cancel")) return "failed";
+  if (s.includes("refund")) return "refunded";
+  return s;
+};
+const statusTone = (s: string) => paymentStatusKey(s) === "succeeded" ? "green" : paymentStatusKey(s) === "pending" ? "orange" : paymentStatusKey(s) === "failed" ? "red" : "grey";
+const normalize = paymentStatusKey;
+function Status({ value }: { value: string }) { const key = paymentStatusKey(value); const label = key === "succeeded" ? "Paid" : key.charAt(0).toUpperCase() + key.slice(1); return <span className={`payment-status ${statusTone(value)}`}>{label}</span>; }
 
 export default function PaymentsPage() {
-  const [payments, setPayments] = useState<PaymentRecord[]>([]);
-  const [q, setQ] = useState("");
-  const [page, setPage] = useState(1);
-  const [total, setTotal] = useState(0);
-  const [loading, setLoading] = useState(true);
-  const [totalAmount, setTotalAmount] = useState<number | null>(null);
-  const [totalsByStatus, setTotalsByStatus] = useState<Record<string, number> | null>(null);
-
-  const load = async () => {
-    setLoading(true);
-    try {
-      const res = await admin.listPayments({ page, per_page: 50, q: q.trim() || undefined });
-      setPayments(res.payments);
-      setTotal(res.total);
-      setTotalAmount(res.total_amount ?? null);
-      setTotalsByStatus(res.totals_by_status ?? null);
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    void load();
-  }, [page]);
-
-  return (
-    <div>
-      <div className="page-header">
-        <h1>Payments</h1>
-        <span className="muted">{total} payments</span>
-      </div>
-      <div className="toolbar">
-        <input placeholder="Search reference or notes…" value={q} onChange={(e) => setQ(e.target.value)} />
-        <button onClick={() => { setPage(1); void load(); }}>Search</button>
-        <button onClick={() => { setPage(1); setQ(""); void load(); }}>Clear</button>
-        <div style={{ marginLeft: 8 }}>
-          <button onClick={() => { window.location.href = admin.exportPayments(q.trim() || undefined); }}>
-            Export CSV
-          </button>
-        </div>
-      </div>
-      {totalAmount != null && (
-        <div style={{ marginBottom: 8 }}>
-          <strong>Total amount:</strong> ${totalAmount.toFixed(2)}
-          {totalsByStatus && (
-            <span style={{ marginLeft: 12 }}>
-              {Object.entries(totalsByStatus).map(([k, v]) => (
-                <span key={k} style={{ marginLeft: 8 }}>{k}: ${v.toFixed(2)}</span>
-              ))}
-            </span>
-          )}
-        </div>
-      )}
-      {loading ? <span className="spinner" /> : (
-        <table>
-          <thead>
-            <tr><th>When</th><th>User</th><th>Amount</th><th>Status</th><th>Method</th><th>Reference</th><th>Notes</th></tr>
-          </thead>
-          <tbody>
-            {payments.map((p) => (
-              <tr key={p.payment_id}>
-                <td>{p.created_at ? p.created_at.slice(0,19) : ""}</td>
-                <td>{p.user_id}</td>
-                <td>{p.amount.toFixed(2)}</td>
-                <td>{p.status}</td>
-                <td>{p.payment_method}</td>
-                <td>{p.reference}</td>
-                <td>{p.notes}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      )}
-    </div>
-  );
+  const [payments, setPayments] = useState<PaymentRecord[]>([]); const [users, setUsers] = useState<UserRow[]>([]); const [tab, setTab] = useState<Tab>("overview"); const [q, setQ] = useState(""); const [status, setStatus] = useState(""); const [method, setMethod] = useState(""); const [from, setFrom] = useState(""); const [to, setTo] = useState(""); const [page, setPage] = useState(1); const [loading, setLoading] = useState(true); const [error, setError] = useState<string | null>(null); const [selected, setSelected] = useState<PaymentRecord | null>(null);
+  const load = async () => { setLoading(true); setError(null); try { const [paymentRes, userRes] = await Promise.all([admin.listPayments({ page: 1, per_page: 200, q: q.trim() || undefined }), admin.listUsers({ page: 1, per_page: 100 })]); setPayments(paymentRes.payments); setUsers(userRes.users); } catch (e) { setError(e instanceof Error ? e.message : "Failed to load payments."); } finally { setLoading(false); } };
+  useEffect(() => { void load(); }, []);
+  const userMap = useMemo(() => new Map(users.map((u) => [u.user_id, u])), [users]); const methods = useMemo(() => Array.from(new Set(payments.map((p) => p.payment_method).filter(Boolean))), [payments]);
+  const counts = useMemo(() => { const result = { all: payments.length, succeeded: 0, pending: 0, failed: 0, refunded: 0 }; payments.forEach((p) => { const s = paymentStatusKey(p.status); if (s in result) result[s as keyof typeof result] += 1; }); return result; }, [payments]);
+  const amount = useMemo(() => payments.reduce((s, p) => s + Number(p.amount || 0), 0), [payments]);
+  const filtered = useMemo(() => payments.filter((p) => { const s = paymentStatusKey(p.status); const u = userMap.get(p.user_id); const haystack = `${p.user_id} ${u?.full_name || ""} ${u?.email || ""} ${p.reference || ""} ${p.notes || ""}`.toLowerCase(); return (!q.trim() || haystack.includes(q.trim().toLowerCase())) && (!status || s === status) && (!method || p.payment_method === method) && (!from || (p.created_at || "") >= from) && (!to || (p.created_at || "").slice(0, 10) <= to) && (tab === "overview" || tab === "all" || s === tab); }), [payments, userMap, q, status, method, from, to, tab]);
+  const pageSize = 8; const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize)); const visible = filtered.slice((page - 1) * pageSize, page * pageSize); const setFilter = (fn: (v: string) => void, v: string) => { fn(v); setPage(1); };
+  const tabs: [Tab, string][] = [["overview", "Overview"], ["all", "All Payments"]];
+  return <div className="payments-page"><div className="page-header payments-heading"><div><h1>Payments</h1></div><button className="record-payment-button" disabled title="Payment creation requires a student selection">+ Record Payment</button></div><div className="payment-tabs">{tabs.map(([key, text]) => <button className={tab === key ? "active" : ""} key={key} onClick={() => { setTab(key); setStatus(""); setPage(1); }}>{text}</button>)}</div>{error && <div className="error-banner">{error}</div>}
+    <div className="payment-summary"><Summary label="Total Payments" value={counts.all} sub="Total transactions" /><Summary label="Total Amount" value={money(amount)} sub="All time" /><Summary label="Succeeded" value={counts.succeeded} sub={money(payments.filter((p) => paymentStatusKey(p.status) === "succeeded").reduce((s, p) => s + p.amount, 0))} tone="green" /><Summary label="Pending" value={counts.pending} sub={money(payments.filter((p) => paymentStatusKey(p.status) === "pending").reduce((s, p) => s + p.amount, 0))} tone="orange" /><Summary label="Failed" value={counts.failed} sub={money(payments.filter((p) => paymentStatusKey(p.status) === "failed").reduce((s, p) => s + p.amount, 0))} tone="red" /><Summary label="Refunded" value={counts.refunded} sub={money(payments.filter((p) => paymentStatusKey(p.status) === "refunded").reduce((s, p) => s + p.amount, 0))} tone="yellow" /></div>
+    {tab === "overview" && <PaymentTrends payments={payments} />}
+    <div className="payment-filters"><input value={q} onChange={(e) => setFilter(setQ, e.target.value)} placeholder="Search by name, email, or ID…" /><select value={status} onChange={(e) => setFilter(setStatus, e.target.value)}><option value="">All Payment Status</option><option value="succeeded">Succeeded</option><option value="pending">Pending</option><option value="failed">Failed</option><option value="refunded">Refunded</option></select><select value={method} onChange={(e) => setFilter(setMethod, e.target.value)}><option value="">All Payment Methods</option>{methods.map((m) => <option key={m} value={m!}>{m}</option>)}</select><input type="date" value={from} onChange={(e) => setFilter(setFrom, e.target.value)} /><input type="date" value={to} onChange={(e) => setFilter(setTo, e.target.value)} /><button onClick={() => void load()}>Refresh</button><button onClick={() => { window.location.href = admin.exportPayments(q.trim() || undefined); }}>Export</button></div>
+    <div className="payments-table-wrap">{loading ? <div className="users-loading"><span className="spinner" /> Loading payments…</div> : <table className="payments-table"><thead><tr><th>Date</th><th>Student</th><th>ID</th><th>Amount</th><th>Method</th><th>Provider</th><th>Status</th><th>Transaction ID</th><th>Actions</th></tr></thead><tbody>{visible.map((p) => { const u = userMap.get(p.user_id); return <tr key={p.payment_id}><td>{date(p.created_at)}</td><td>{u?.full_name || p.user_id}</td><td>{p.user_id}</td><td>{money(p.amount)}</td><td>{p.payment_method || "—"}</td><td>{p.notes?.match(/provider[:=]\s*([^,]+)/i)?.[1] || "—"}</td><td><Status value={p.status} /></td><td>{p.reference || "—"}</td><td><button className="view-payment" title="View payment details" onClick={() => setSelected(p)}>◉</button></td></tr>; })}</tbody></table>}{!loading && !visible.length && <div className="empty payment-empty">No payments match these filters.</div>}</div>
+    <div className="payments-footer"><span>Showing {visible.length ? (page - 1) * pageSize + 1 : 0} to {Math.min(page * pageSize, filtered.length)} of {filtered.length} payments</span><div className="pagination"><button disabled={page <= 1} onClick={() => setPage(page - 1)}>‹</button>{Array.from({ length: Math.min(totalPages, 3) }, (_, i) => i + 1).map((n) => <button key={n} className={n === page ? "current" : ""} onClick={() => setPage(n)}>{n}</button>)}<button disabled={page >= totalPages} onClick={() => setPage(page + 1)}>›</button></div></div>
+    {selected && <PaymentDetails payment={selected} user={userMap.get(selected.user_id)} onClose={() => setSelected(null)} />}
+  </div>;
 }
+
+function Summary({ label, value, sub, tone = "" }: { label: string; value: React.ReactNode; sub: string; tone?: string }) { return <div className={`payment-summary-card ${tone}`}><span>{label}</span><strong>{value}</strong><small>{sub}</small></div>; }
+function PaymentTrends({ payments }: { payments: PaymentRecord[] }) { const sorted = [...payments].sort((a, b) => (a.created_at || "").localeCompare(b.created_at || "")).slice(-12); const max = Math.max(1, ...sorted.map((p) => p.amount)); return <section className="payment-trends"><h2>Payment Trends</h2><div className="trend-legend"><span><i className="trend-dot success" />Amount collected over time</span><span><i className="trend-dot failed" />Successful vs failed payments</span></div><svg viewBox="0 0 640 150" role="img" aria-label="Payment amount trend"><line x1="25" x2="620" y1="125" y2="125" className="trend-axis" />{sorted.map((p, i) => { const x = sorted.length > 1 ? 28 + i * (584 / (sorted.length - 1)) : 320; const y = 120 - (p.amount / max) * 90; return <g key={p.payment_id}><rect x={x - 9} y={y} width="18" height={120 - y} className={normalize(p.status) === "succeeded" ? "trend-bar-success" : "trend-bar-other"} /><circle cx={x} cy={y} r="3" className={normalize(p.status) === "failed" ? "trend-point-failed" : "trend-point"} /><title>{date(p.created_at)} · {money(p.amount)} · {p.status}</title></g>; })}</svg></section>; }
+function PaymentDetails({ payment, user, onClose }: { payment: PaymentRecord; user?: UserRow; onClose: () => void }) { const provider = payment.notes?.match(/provider[:=]\s*([^,]+)/i)?.[1] || "—"; return <div className="payment-modal-backdrop" onClick={onClose}><aside className="payment-details-modal" onClick={(e) => e.stopPropagation()}><button className="modal-close" onClick={onClose}>×</button><h2>Payment Details</h2><div className="payment-student"><div className="avatar">{(user?.full_name || payment.user_id).slice(0, 2).toUpperCase()}</div><div><strong>{user?.full_name || "Unknown student"}</strong><small>{payment.user_id}</small></div></div><div className="payment-detail-grid"><Rows label="Amount" value={money(payment.amount)} /><Rows label="Status" value={<Status value={payment.status} />} /><Rows label="Payment Date" value={date(payment.created_at)} /><Rows label="Payment Method" value={payment.payment_method || "—"} /><Rows label="Provider" value={provider} /><Rows label="Transaction ID" value={payment.reference || "—"} /><Rows label="Competition" value="TradeIQ Competition" /><Rows label="Round" value="Round 1" /></div><h3>Payment Timeline</h3><div className="payment-timeline"><div>Payment initiated<small>{date(payment.created_at)}</small></div><div>Payment processed<small>{date(payment.processed_at || payment.created_at)}</small></div><div>Payment verified<small>{normalize(payment.status) === "succeeded" ? "Completed" : "Not recorded"}</small></div><div>Student enrolled<small>{normalize(payment.status) === "succeeded" ? "Completed" : "Not recorded"}</small></div></div></aside></div>; }
+function Rows({ label, value }: { label: string; value: React.ReactNode }) { return <div><span>{label}</span><strong>{value}</strong></div>; }
