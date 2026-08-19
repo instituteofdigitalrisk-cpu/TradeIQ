@@ -4,7 +4,9 @@ import hashlib
 import logging
 import os
 import random
+import smtplib
 from datetime import date, datetime, timezone, timedelta
+from email.message import EmailMessage
 from functools import lru_cache
 from html import escape
 
@@ -109,24 +111,41 @@ def _hash_code(code: str) -> str:
 
 
 def _send_reset_email(to_email: str, code: str):
-    """Send a password-reset OTP through Resend."""
-    if not resend.api_key:
-        raise RuntimeError("RESEND_API_KEY is not configured on the server.")
+    """Send a password-reset OTP through the configured SMTP account."""
+    smtp_host = os.getenv("SMTP_HOST", "smtp.gmail.com")
+    smtp_port = int(os.getenv("SMTP_PORT", "587"))
+    smtp_username = (os.getenv("SMTP_USERNAME") or "").strip()
+    smtp_password = (os.getenv("SMTP_PASSWORD") or "").replace(" ", "").strip()
+    smtp_from = (os.getenv("SMTP_FROM") or smtp_username).strip()
 
-    params = {
-        "from": "TradeIQ <onboarding@resend.dev>",
-        "to": [to_email],
-        "subject": "TradeIQ - Password Reset Code",
-        "html": f"<p>Your TradeIQ password reset code is: <strong>{code}</strong></p>",
-    }
+    if not smtp_username or not smtp_password:
+        raise RuntimeError("SMTP_USERNAME and SMTP_PASSWORD are not configured on the server.")
+
+    message = EmailMessage()
+    message["Subject"] = "TradeIQ - Password Reset Code"
+    message["From"] = smtp_from
+    message["To"] = to_email
+    message.set_content(
+        "Your TradeIQ password reset code is: "
+        f"{code}\n\nThis code expires in {RESET_CODE_TTL_MINUTES} minutes."
+    )
+    message.add_alternative(
+        f"<p>Your TradeIQ password reset code is: <strong>{code}</strong></p>"
+        f"<p>This code expires in {RESET_CODE_TTL_MINUTES} minutes.</p>",
+        subtype="html",
+    )
 
     try:
-        result = resend.Emails.send(params)
-        logger.info("Password reset email sent through Resend to %s", to_email)
-        return result
+        with smtplib.SMTP(smtp_host, smtp_port, timeout=20) as server:
+            server.ehlo()
+            server.starttls()
+            server.ehlo()
+            server.login(smtp_username, smtp_password)
+            server.send_message(message)
+        logger.info("Password reset OTP sent through SMTP to %s", to_email)
     except Exception as exc:
-        logger.exception("Resend password reset email failed for %s: %s", to_email, exc)
-        raise RuntimeError("Could not send password reset email through Resend.") from exc
+        logger.exception("SMTP password reset email failed for %s: %s", to_email, exc)
+        raise RuntimeError("Could not send password reset email through SMTP.") from exc
 
 
 def _send_reset_link_email(to_email: str, reset_link: str):
