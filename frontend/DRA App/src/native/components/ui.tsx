@@ -253,7 +253,7 @@ export function Field({
   value: string;
   onChangeText: (value: string) => void;
   placeholder: string;
-  keyboardType?: "default" | "email-address" | "phone-pad" | "numeric" | "decimal-pad";
+  keyboardType?: "default" | "email-address" | "phone-pad" | "numeric" | "decimal-pad" | "number-pad";
   secureTextEntry?: boolean;
   showPasswordToggle?: boolean;
   multiline?: boolean;

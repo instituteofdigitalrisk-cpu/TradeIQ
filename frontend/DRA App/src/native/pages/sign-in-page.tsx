@@ -1,5 +1,4 @@
 import { ChevronLeft, LogIn, Mail } from "lucide-react-native";
-import { sendPasswordResetEmail } from "firebase/auth";
 import { useState } from "react";
 import { ScrollView, Text, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -8,14 +7,8 @@ import { C, font } from "../constants";
 import type { UserData } from "../types";
 import { AppButton, ErrorNotice, Field, GlassCard, GoogleAuthButton, HeaderMini } from "../components/ui";
 import { auth } from "../api";
-import { firebaseAuth } from "../../firebase";
 
-type Step = "signin" | "request";
-
-const passwordResetActionCodeSettings = {
-  url: "https://tradeiq-frontend-kl94.onrender.com",
-  handleCodeInApp: true,
-};
+type Step = "signin" | "request" | "otp" | "reset";
 
 export function SignInPage({
   onSubmit,
@@ -38,6 +31,9 @@ export function SignInPage({
   const [resetEmail, setResetEmail] = useState("");
   const [resetError, setResetError] = useState("");
   const [resetSubmitting, setResetSubmitting] = useState(false);
+  const [resetCode, setResetCode] = useState("");
+  const [resetToken, setResetToken] = useState("");
+  const [newPassword, setNewPassword] = useState("");
 
   const handleSubmit = async () => {
     setSubmitting(true);
@@ -56,7 +52,6 @@ export function SignInPage({
     setSubmitting(false);
   };
 
-  // Check the SQL database first, then let Firebase send the reset link.
   const handleRequestCode = async () => {
     setResetError("");
     if (!resetEmail.trim()) {
@@ -66,23 +61,13 @@ export function SignInPage({
     setResetSubmitting(true);
     try {
       const normalizedEmail = resetEmail.trim().toLowerCase();
-      const registered = await auth.checkRegisteredUser(normalizedEmail);
-      if (!registered.exists) {
-        setResetError(registered.error || "Email not found in database.");
-        return;
-      }
-
-      await sendPasswordResetEmail(
-        firebaseAuth,
-        normalizedEmail,
-        passwordResetActionCodeSettings,
-      );
+      await auth.forgotPassword(normalizedEmail);
       Toast.show({
         type: "success",
         text1: "Password reset email sent!",
-        text2: "Check your inbox or spam folder.",
+        text2: "Check your inbox or spam folder for the code.",
       });
-      setStep("signin");
+      setStep("otp");
     } catch (err) {
       console.error("Password reset request failed:", err);
       let message = "Could not send the reset email. Please try again.";
@@ -98,6 +83,27 @@ export function SignInPage({
     } finally {
       setResetSubmitting(false);
     }
+  };
+
+  const handleVerifyCode = async () => {
+    setResetError(""); setResetSubmitting(true);
+    try {
+      const result = await auth.verifyResetCode(resetEmail.trim().toLowerCase(), resetCode.trim());
+      setResetToken(result.reset_token); setStep("reset");
+    } catch (err) { setResetError(err instanceof Error ? err.message : "Invalid or expired code."); }
+    finally { setResetSubmitting(false); }
+  };
+
+  const handleResetPassword = async () => {
+    setResetError("");
+    if (newPassword.length < 6) { setResetError("Password must be at least 6 characters."); return; }
+    setResetSubmitting(true);
+    try {
+      await auth.resetPassword(resetToken, newPassword);
+      Toast.show({ type: "success", text1: "Password updated", text2: "You can now sign in." });
+      setStep("signin"); setPassword(""); setResetCode(""); setNewPassword("");
+    } catch (err) { setResetError(err instanceof Error ? err.message : "Could not update your password."); }
+    finally { setResetSubmitting(false); }
   };
 
   const handleGoogleSignIn = async () => {
@@ -146,6 +152,14 @@ export function SignInPage({
         </ScrollView>
       </SafeAreaView>
     );
+  }
+
+  if (step === "otp") {
+    return <SafeAreaView style={{ flex: 1, backgroundColor: C.bg0 }} edges={["top", "left", "right"]}><ScrollView contentContainerStyle={{ padding: 20, gap: 18, maxWidth: 620, width: "100%", alignSelf: "center" }}>{backButton(() => setStep("request"))}<HeaderMini title="Enter verification code" subtitle={`We sent a 6-digit code to ${resetEmail}.`} /><GlassCard style={{ padding: 18, gap: 15 }} accent={C.cyan}><Field label="Verification Code" value={resetCode} onChangeText={setResetCode} placeholder="123456" keyboardType="number-pad" />{resetError ? <ErrorNotice message={resetError} /> : null}<AppButton label={resetSubmitting ? "Verifying..." : "Verify Code"} onPress={handleVerifyCode} disabled={resetSubmitting || resetCode.length < 6} /></GlassCard></ScrollView></SafeAreaView>;
+  }
+
+  if (step === "reset") {
+    return <SafeAreaView style={{ flex: 1, backgroundColor: C.bg0 }} edges={["top", "left", "right"]}><ScrollView contentContainerStyle={{ padding: 20, gap: 18, maxWidth: 620, width: "100%", alignSelf: "center" }}>{backButton(() => setStep("otp"))}<HeaderMini title="Set a new password" subtitle="Choose a new password for your TradeIQ account." /><GlassCard style={{ padding: 18, gap: 15 }} accent={C.cyan}><Field label="New Password" value={newPassword} onChangeText={setNewPassword} placeholder="At least 6 characters" secureTextEntry showPasswordToggle />{resetError ? <ErrorNotice message={resetError} /> : null}<AppButton label={resetSubmitting ? "Updating..." : "Update Password"} onPress={handleResetPassword} disabled={resetSubmitting || newPassword.length < 6} /></GlassCard></ScrollView></SafeAreaView>;
   }
 
   // DEFAULT UI: Sign In Page

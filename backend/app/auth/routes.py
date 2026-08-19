@@ -182,6 +182,19 @@ def forgot_password():
             "error": "This email is not registered. Please sign up first."
         }), 404
 
+    # Use the same SQL password store as normal email/password sign-in.
+    code = _generate_otp()
+    reset = PasswordReset(user_id=user.user_id, email=email, code_hash=_hash_code(code), expires_at=datetime.utcnow() + timedelta(minutes=RESET_CODE_TTL_MINUTES))
+    db.session.add(reset)
+    try:
+        _send_reset_email(email, code)
+        db.session.commit()
+    except Exception as exc:
+        db.session.rollback()
+        logger.exception("Failed to send password reset code for %s: %s", email, exc)
+        return jsonify({"error": "Could not send the password reset email. Please try again shortly."}), 502
+    return jsonify({"message": "Password reset code sent."}), 200
+
     try:
         _ensure_firebase_admin_initialized()
         reset_link = firebase_auth.generate_password_reset_link(email)
