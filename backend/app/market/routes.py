@@ -12,6 +12,7 @@ from app.services.market_service import (
     batch_prices as service_batch_prices,
     indices as service_indices,
     search as service_search,
+    market_overview as service_market_overview,
     MarketError,
 )
 
@@ -119,3 +120,10 @@ def get_indices():
 def search_stocks():
     q = request.args.get("q", "")
     return jsonify(service_search(q)), 200
+
+
+@market_bp.get("/overview")
+@limiter.limit("30 per minute")
+@jwt_required()
+def get_market_overview():
+    return jsonify(service_market_overview()), 200

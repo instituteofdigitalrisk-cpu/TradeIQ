@@ -30,7 +30,7 @@ from app.services.market_service import (
 # ─────────────────────────────────────────
 
 OPENAI_SCORE_MODEL = os.getenv("OPENAI_SCORE_MODEL", "gpt-4.1-mini")
-GROQ_SCORE_MODEL = os.getenv("GROQ_SCORE_MODEL", "llama-3.3-70b-versatile")
+GROQ_SCORE_MODEL = os.getenv("GROQ_SCORE_MODEL", "openai/gpt-oss-120b")
 REFRESH_INTERVAL_SECONDS = 300  # 5 minutes
 REFRESH_LOCK_SECONDS = 30     # 30-second claim window to avoid duplicate triggers
 

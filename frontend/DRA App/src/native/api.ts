@@ -379,6 +379,39 @@ export type MarketIndex = {
   up: boolean;
 };
 
+export type MarketRow = {
+  ticker: string;
+  symbol: string;
+  sector: string;
+  price: number;
+  change: number;
+  change_pct: number;
+  volume: number;
+};
+
+export type MarketStockInfo = {
+  ticker: string;
+  company_name: string | null;
+  sector: string | null;
+  industry: string | null;
+  exchange: string | null;
+  country: string | null;
+  currency: string;
+  description: string | null;
+  market_cap: number | null;
+  open: number | null;
+  previous_close: number | null;
+  day_high: number | null;
+  day_low: number | null;
+  volume: number | null;
+  average_volume: number | null;
+  pe_ratio: number | null;
+  eps: number | null;
+  dividend_yield: number | null;
+  week52_high: number | null;
+  week52_low: number | null;
+};
+
 export const market = {
   getPrice(ticker: string): Promise<MarketPrice> {
     return apiFetch<MarketPrice>(`/market/price/${ticker}`);
@@ -390,6 +423,18 @@ export const market = {
 
   getIndices(): Promise<{ indices: MarketIndex[] }> {
     return apiFetch<{ indices: MarketIndex[] }>("/market/indices");
+  },
+
+  getOverview(): Promise<{ gainers: MarketRow[]; losers: MarketRow[]; active: MarketRow[]; sectors: { sector: string; change_pct: number }[] }> {
+    return apiFetch("/market/overview");
+  },
+
+  getStockInfo(ticker: string): Promise<MarketStockInfo> {
+    return apiFetch(`/market/stock/${encodeURIComponent(ticker)}`);
+  },
+
+  getHistory(ticker: string, start: string, end: string): Promise<{ history: { Date: string; Close: number }[] }> {
+    return apiFetch(`/market/history/${encodeURIComponent(ticker)}?start=${start}&end=${end}`);
   },
 
   getBenchmark(start: string, end: string): Promise<{ benchmark: { Date: string; Close: number }[] }> {
