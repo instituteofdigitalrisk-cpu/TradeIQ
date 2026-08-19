@@ -38,6 +38,25 @@ INDICES = [
     {"name": "NIFTY PHARMA",  "ticker": "^CNXPHARMA"},
 ]
 
+MARKET_UNIVERSE = [
+    ("TCS.NS", "TCS", "Technology"),
+    ("INFY.NS", "INFY", "Technology"),
+    ("HDFCBANK.NS", "HDFC BANK", "Banking"),
+    ("ICICIBANK.NS", "ICICI BANK", "Banking"),
+    ("BHARTIARTL.NS", "BHARTI AIRTEL", "Telecom"),
+    ("RELIANCE.NS", "RELIANCE", "Energy"),
+    ("BEL.NS", "BEL", "Industrials"),
+    ("ADANIENT.NS", "ADANIENT", "Industrials"),
+    ("TATAMOTORS.NS", "TATA MOTORS", "Automobile"),
+    ("ONGC.NS", "ONGC", "Energy"),
+    ("WIPRO.NS", "WIPRO", "Technology"),
+    ("AAPL", "AAPL", "Technology"),
+    ("MSFT", "MSFT", "Technology"),
+    ("NVDA", "NVDA", "Technology"),
+    ("AMZN", "AMZN", "Consumer"),
+]
+MARKET_OVERVIEW_CACHE_KEY = "market:overview"
+
 
 class MarketError(Exception):
     """Raised when a market data request can't be fulfilled.
@@ -222,6 +241,40 @@ def price_history(ticker: str, start: str, end: str) -> dict:
     ticker = _validate_ticker(ticker)
     start, end = _validate_date_range(start, end)
 
+    range_days = (datetime.strptime(end, "%Y-%m-%d").date() - datetime.strptime(start, "%Y-%m-%d").date()).days
+    if range_days <= 3:
+        def fetch_intraday():
+            # ``1d`` is empty outside the current trading session for many
+            # symbols. Fetch a few sessions, then use the most recent one so
+            # the 1D chart still works after market close/weekends.
+            data = yf.Ticker(ticker).history(period="5d", interval="5m", auto_adjust=False)
+            if data is None or data.empty:
+                return None
+            data = data.reset_index()
+            data = data.rename(columns={"Datetime": "Date"})
+            if "Date" not in data.columns:
+                return None
+            latest_day = data["Date"].dt.date.max()
+            data = data[data["Date"].dt.date == latest_day]
+            if len(data) < 2:
+                return None
+            return data
+
+        dataset = _fetch_with_timeout(fetch_intraday, timeout=20)
+        if dataset is not None:
+            try:
+                records = dataset[["Date", "Open", "High", "Low", "Close", "Volume"]].copy()
+                records["Date"] = records["Date"].astype(str)
+                return {
+                    "ticker": ticker,
+                    "start": start,
+                    "end": end,
+                    "rows": len(records),
+                    "history": records.to_dict(orient="records"),
+                }
+            except Exception:
+                pass
+
     dataset = _fetch_with_timeout(lambda: pipeline.build_dataset(ticker, start, end), timeout=20)
     if dataset is None:
         raise MarketError("Market data provider unavailable, please try again", 503)
@@ -279,7 +332,7 @@ def _fetch_single_index(entry: dict) -> dict | None:
             return None
 
         change_pct = (today_close - prev_close) / prev_close * 100
-        price_str = f"{today_close:,.0f}" if today_close >= 1000 else f"{today_close:,.2f}"
+        price_str = f"{today_close:,.2f}"
         change_str = f"{'+' if change_pct >= 0 else ''}{change_pct:.2f}%"
 
         return {
@@ -341,3 +394,68 @@ def search(q: str) -> dict:
         return {"results": formatted[:8]}
     except Exception:
         return {"results": []}
+
+
+def _build_market_overview() -> dict:
+    """Build the Market tab data from one yfinance batch download."""
+    symbols = [symbol for symbol, _, _ in MARKET_UNIVERSE]
+    frame = yf.download(
+        symbols,
+        period="5d",
+        interval="1d",
+        group_by="ticker",
+        auto_adjust=False,
+        progress=False,
+        threads=True,
+    )
+
+    rows = []
+    for symbol, display, sector in MARKET_UNIVERSE:
+        try:
+            data = frame[symbol] if len(symbols) > 1 else frame
+            data = data.dropna(subset=["Close"])
+            if len(data) < 2:
+                continue
+            current = float(data["Close"].iloc[-1])
+            previous = float(data["Close"].iloc[-2])
+            change = current - previous
+            change_pct = (change / previous * 100) if previous else 0
+            volume = float(data["Volume"].iloc[-1]) if "Volume" in data else 0
+            rows.append({
+                "ticker": symbol,
+                "symbol": display,
+                "sector": sector,
+                "price": round(current, 2),
+                "change": round(change, 2),
+                "change_pct": round(change_pct, 2),
+                "volume": int(volume),
+            })
+        except Exception:
+            continue
+
+    rows.sort(key=lambda row: row["change_pct"], reverse=True)
+    return {
+        "gainers": rows[:5],
+        "losers": sorted(rows, key=lambda row: row["change_pct"])[:5],
+        "active": sorted(rows, key=lambda row: row["volume"], reverse=True)[:5],
+        "sectors": [
+            {
+                "sector": sector,
+                "change_pct": round(sum(row["change_pct"] for row in rows if row["sector"] == sector) / max(1, len([row for row in rows if row["sector"] == sector])), 2),
+            }
+            for sector in sorted({row["sector"] for row in rows})
+        ],
+        "updated_at": datetime.utcnow().isoformat(),
+    }
+
+
+def market_overview() -> dict:
+    cached = cache_get(MARKET_OVERVIEW_CACHE_KEY)
+    if cached is not None:
+        return cached
+    result = _fetch_with_timeout(_build_market_overview, timeout=20)
+    if result is None:
+        raise MarketError("Market data provider unavailable, please try again", 503)
+    cache_set(MARKET_OVERVIEW_CACHE_KEY, result, 300)
+    return result
+

@@ -6,7 +6,8 @@ import { C, font } from "../constants";
 import { analytics, market, portfolio, watchlist } from "../api";
 import type { BackendHolding, BackendTrade, BackendWatchlistItem, BackendWeeklyScore, MarketIndex, PortfolioSummary } from "../api";
 import { Legend, LineChart } from "../components/charts";
-import { GlassCard, Progress, SectionTitle } from "../components/ui";
+import { GlassCard, SectionTitle } from "../components/ui";
+import { MarketTab } from "../components/market-tab";
 import { getMarketIndices } from "../market-store";
 import { getTourSeen, setTourSeen } from "../tour-store";
 
@@ -14,7 +15,7 @@ const CHART_POINTS = 7;
 const INDIAN_TICKERS = ["^NSEI", "^BSESN", "^CNXIT", "^CNXPHARMA"];
 const TRENDING_TICKERS = ["AAPL", "MSFT", "NVDA", "AMZN", "TSLA"];
 
-type DashboardTab = "portfolio" | "watchlist" | "overview" | "allocation" | "market";
+type DashboardTab = "portfolio" | "watchlist" | "overview" | "market";
 type ActiveHolding = {
   id: string;
   ticker: string;
@@ -43,11 +44,6 @@ const dashboardGuide: Record<DashboardTab, { title: string; body: string; accent
     title: "Overview",
     body: "Compare your portfolio movement against the benchmark to understand whether returns are coming from skill or market direction.",
     accent: C.green,
-  },
-  allocation: {
-    title: "Allocation",
-    body: "Check how much capital is invested versus held as cash. Keep this balanced before final submission.",
-    accent: C.purple,
   },
   market: {
     title: "Market",
@@ -106,7 +102,6 @@ export function Dashboard({ userName, studentId }: { userName: string; studentId
     { id: "portfolio", label: "Portfolio" },
     { id: "watchlist", label: "Watchlist" },
     { id: "overview", label: "Overview" },
-    { id: "allocation", label: "Allocation" },
     { id: "market", label: "Market" },
   ];
   const [summary, setSummary] = useState<PortfolioSummary | null>(null);
@@ -723,15 +718,7 @@ export function Dashboard({ userName, studentId }: { userName: string; studentId
         </>
       ) : null}
 
-      {tab === "allocation" && summary ? (
-        <GlassCard style={{ padding: 16, gap: 12 }} accent={C.purple}>
-          <SectionTitle title="Allocation" accent={C.purple} />
-          <Progress label="Holdings" value={Math.round((summary.holdings_value / summary.total_capital) * 100)} color={C.green} />
-          <Progress label="Cash" value={Math.round((summary.cash_balance / summary.total_capital) * 100)} color={C.cyan} />
-        </GlassCard>
-      ) : null}
-
-      {tab === "market" ? (
+      {false ? (
         <GlassCard style={{ padding: 16, gap: 8 }} accent={C.cyan}>
           {(() => {
             const indian = marketIndices.filter((idx) => TRENDING_TICKERS.includes(idx.ticker));
@@ -777,6 +764,7 @@ export function Dashboard({ userName, studentId }: { userName: string; studentId
         </GlassCard>
       ) : null}
 
+      {tab === "market" ? <MarketTab indices={marketIndices} /> : null}
     </View>
   );
 }
